@@ -1,0 +1,117 @@
+version: '3.8'
+
+services:
+  # Base de données MariaDB
+  db:
+    image: mariadb:10.11
+    container_name: snoezelen_db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-rootpassword}
+      MYSQL_DATABASE: ${DB_NAME:-snoezelen_db}
+      MYSQL_USER: ${DB_USER:-snoezelen}
+      MYSQL_PASSWORD: ${DB_PASS:-snoezelen_secret}
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./api/migrations/001_initial_schema.sql:/docker-entrypoint-initdb.d/001_schema.sql:ro
+      - ./api/migrations/002_seed_admin.sql:/docker-entrypoint-initdb.d/002_seed.sql:ro
+    ports:
+      - "3306:3306"
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - snoezelen_network
+
+  # API PHP
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    container_name: snoezelen_api
+    restart: unless-stopped
+    environment:
+      DB_HOST: db
+      DB_NAME: ${DB_NAME:-snoezelen_db}
+      DB_USER: ${DB_USER:-snoezelen}
+      DB_PASS: ${DB_PASS:-snoezelen_secret}
+      DB_CHARSET: utf8mb4
+      JWT_SECRET: ${JWT_SECRET:-dev-jwt-secret-change-in-production-min-32-chars}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-dev-refresh-secret-change-in-production}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:-0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef}
+      MAIL_HOST: mailhog
+      MAIL_PORT: 1025
+      MAIL_USER: ""
+      MAIL_PASS: ""
+      MAIL_FROM: noreply@sensea.local
+      MAIL_FROM_NAME: Sensea Snoezelen
+      APP_URL: http://localhost:8080
+      FRONTEND_URL: http://localhost:5173
+      ENV: development
+      DEBUG: "true"
+    volumes:
+      - ./api:/var/www/html
+      - /var/www/html/vendor
+    ports:
+      - "8080:80"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - snoezelen_network
+
+  # Frontend Vue.js (dev server)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: snoezelen_frontend
+    restart: unless-stopped
+    environment:
+      VITE_API_URL: http://localhost:8080
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "5173:5173"
+    depends_on:
+      - api
+    networks:
+      - snoezelen_network
+
+  # MailHog pour tester les emails en local
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: snoezelen_mailhog
+    restart: unless-stopped
+    ports:
+      - "1025:1025"  # SMTP
+      - "8025:8025"  # Interface web
+    networks:
+      - snoezelen_network
+
+  # phpMyAdmin (optionnel, pour gérer la BDD)
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: snoezelen_phpmyadmin
+    restart: unless-stopped
+    environment:
+      PMA_HOST: db
+      PMA_USER: ${DB_USER:-snoezelen}
+      PMA_PASSWORD: ${DB_PASS:-snoezelen_secret}
+    ports:
+      - "8081:80"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - snoezelen_network
+
+volumes:
+  db_data:
+
+networks:
+  snoezelen_network:
+    driver: bridge
