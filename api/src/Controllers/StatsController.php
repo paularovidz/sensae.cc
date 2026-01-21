@@ -138,25 +138,24 @@ class StatsController
         $discoveryPaidSessions = (int)($sessionCounts['discovery_paid'] ?? 0);
         $regularPaidSessions = (int)($sessionCounts['regular_paid'] ?? 0);
 
-        // Count confirmed bookings this month (not yet converted to sessions)
+        // Count pending/confirmed sessions this month (upcoming bookings)
         $stmt = $db->query("
             SELECT
                 SUM(CASE WHEN duration_type = 'discovery' THEN 1 ELSE 0 END) as discovery_count,
                 SUM(CASE WHEN duration_type = 'regular' THEN 1 ELSE 0 END) as regular_count
-            FROM bookings
-            WHERE session_id IS NULL
-            AND status IN ('confirmed', 'pending')
+            FROM sessions
+            WHERE status IN ('confirmed', 'pending')
             AND MONTH(session_date) = MONTH(CURRENT_DATE())
             AND YEAR(session_date) = YEAR(CURRENT_DATE())
         ");
-        $bookingCounts = $stmt->fetch();
+        $upcomingCounts = $stmt->fetch();
 
-        $discoveryBookings = (int)($bookingCounts['discovery_count'] ?? 0);
-        $regularBookings = (int)($bookingCounts['regular_count'] ?? 0);
+        $discoveryUpcoming = (int)($upcomingCounts['discovery_count'] ?? 0);
+        $regularUpcoming = (int)($upcomingCounts['regular_count'] ?? 0);
 
-        // Total paid = sessions + bookings not yet converted
-        $discoveryPaid = $discoveryPaidSessions + $discoveryBookings;
-        $regularPaid = $regularPaidSessions + $regularBookings;
+        // Total paid = completed sessions + upcoming sessions
+        $discoveryPaid = $discoveryPaidSessions + $discoveryUpcoming;
+        $regularPaid = $regularPaidSessions + $regularUpcoming;
 
         $estimatedRevenueTTC = ($discoveryPaid * $discoveryPrice) + ($regularPaid * $regularPrice);
 
@@ -196,24 +195,23 @@ class StatsController
         ]);
         $fiscalSessionCounts = $stmt->fetch();
 
-        // Bookings in fiscal year (not yet converted to sessions)
+        // Upcoming sessions in fiscal year (pending/confirmed)
         $stmt = $db->prepare("
             SELECT
                 SUM(CASE WHEN duration_type = 'discovery' THEN 1 ELSE 0 END) as discovery_count,
                 SUM(CASE WHEN duration_type = 'regular' THEN 1 ELSE 0 END) as regular_count
-            FROM bookings
-            WHERE session_id IS NULL
-            AND status IN ('confirmed', 'pending')
+            FROM sessions
+            WHERE status IN ('confirmed', 'pending')
             AND session_date >= :fiscal_start AND session_date <= :fiscal_end
         ");
         $stmt->execute([
             'fiscal_start' => $fiscalYearStart,
             'fiscal_end' => $fiscalYearEnd . ' 23:59:59'
         ]);
-        $fiscalBookingCounts = $stmt->fetch();
+        $fiscalUpcomingCounts = $stmt->fetch();
 
-        $fiscalDiscoveryPaid = (int)($fiscalSessionCounts['discovery_paid'] ?? 0) + (int)($fiscalBookingCounts['discovery_count'] ?? 0);
-        $fiscalRegularPaid = (int)($fiscalSessionCounts['regular_paid'] ?? 0) + (int)($fiscalBookingCounts['regular_count'] ?? 0);
+        $fiscalDiscoveryPaid = (int)($fiscalSessionCounts['discovery_paid'] ?? 0) + (int)($fiscalUpcomingCounts['discovery_count'] ?? 0);
+        $fiscalRegularPaid = (int)($fiscalSessionCounts['regular_paid'] ?? 0) + (int)($fiscalUpcomingCounts['regular_count'] ?? 0);
         $fiscalRevenueTTC = ($fiscalDiscoveryPaid * $discoveryPrice) + ($fiscalRegularPaid * $regularPrice);
         $fiscalRevenueHT = round($fiscalRevenueTTC / (1 + $vatRate), 2);
 
@@ -222,8 +220,8 @@ class StatsController
             'fiscal_year_ht' => $fiscalRevenueHT,
             'fiscal_year_start' => $fiscalYearStart,
             'fiscal_year_end' => $fiscalYearEnd,
-            'discovery_count' => $discoveryCount + $discoveryBookings,
-            'regular_count' => $regularCount + $regularBookings,
+            'discovery_count' => $discoveryCount + $discoveryUpcoming,
+            'regular_count' => $regularCount + $regularUpcoming,
             'free_count' => $freeCount,
             'discovery_price' => $discoveryPrice,
             'regular_price' => $regularPrice

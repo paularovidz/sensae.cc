@@ -270,11 +270,11 @@ class SMSService
             $db = Database::getInstance();
             $stmt = $db->prepare('
                 INSERT INTO sms_logs (
-                    id, booking_id, phone_number, message_type, message_content,
+                    id, session_id, phone_number, message_type, message_content,
                     provider, provider_message_id, provider_response, status,
                     sent_at, error_message
                 ) VALUES (
-                    :id, :booking_id, :phone_number, :message_type, :message_content,
+                    :id, :session_id, :phone_number, :message_type, :message_content,
                     :provider, :provider_message_id, :provider_response, :status,
                     :sent_at, :error_message
                 )
@@ -282,7 +282,7 @@ class SMSService
 
             $stmt->execute([
                 'id' => UUID::generate(),
-                'booking_id' => $bookingId,
+                'session_id' => $bookingId,
                 'phone_number' => $phone,
                 'message_type' => $type,
                 'message_content' => $message,

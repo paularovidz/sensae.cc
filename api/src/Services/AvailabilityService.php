@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Config\Database;
-use App\Models\Booking;
 use App\Models\Session;
 use App\Models\Setting;
 
@@ -232,7 +231,7 @@ class AvailabilityService
 
     /**
      * Récupère tous les événements bloquants pour une date donnée
-     * (réservations, séances sans booking, événements Google Calendar)
+     * (sessions et événements Google Calendar)
      *
      * @return array Liste de ['start' => DateTime, 'end' => DateTime, 'all_day' => bool]
      */
@@ -240,25 +239,14 @@ class AvailabilityService
     {
         $blockedSlots = [];
 
-        // Réservations en BDD (non annulées)
-        $bookings = Booking::getBookingsForDate($date);
-        foreach ($bookings as $booking) {
-            $start = new \DateTime($booking['session_date'], $timezone);
-            $end = (clone $start)->modify("+{$booking['duration_blocked_minutes']} minutes");
-            $blockedSlots[] = ['start' => $start, 'end' => $end, 'all_day' => false];
-        }
-
-        // Séances existantes (sans booking, pour éviter les doublons)
+        // Sessions en BDD (pending, confirmed, completed)
         $sessions = Session::getSessionsForDate($date);
         foreach ($sessions as $session) {
-            // Ignorer les séances qui ont déjà un booking (déjà comptées ci-dessus)
-            if (!empty($session['booking_id'])) {
-                continue;
-            }
             $start = new \DateTime($session['session_date'], $timezone);
-            $pause = self::getPauseForSessionDuration($session['duration_minutes']);
-            $totalBlocked = $session['duration_minutes'] + $pause;
-            $end = (clone $start)->modify("+{$totalBlocked} minutes");
+            // Utiliser duration_blocked_minutes si disponible, sinon calculer avec la pause
+            $blockedMinutes = $session['duration_blocked_minutes']
+                ?? ($session['duration_minutes'] + self::getPauseForSessionDuration($session['duration_minutes']));
+            $end = (clone $start)->modify("+{$blockedMinutes} minutes");
             $blockedSlots[] = ['start' => $start, 'end' => $end, 'all_day' => false];
         }
 
@@ -352,14 +340,7 @@ class AvailabilityService
         $dateStr = $date->format('Y-m-d');
         $now = new \DateTime('now', $timezone);
 
-        // Récupérer tous les événements bloquants pour cette journée
-        $dayStart = new \DateTime("$dateStr 00:00:00", $timezone);
-        $dayEnd = new \DateTime("$dateStr 23:59:59", $timezone);
-
-        // Récupérer les réservations existantes pour cette journée
-        $existingBookings = Booking::getBookingsForDate($date);
-
-        // Récupérer les séances existantes pour cette journée
+        // Récupérer les sessions existantes pour cette journée
         $existingSessions = Session::getSessionsForDate($date);
 
         // Récupérer les événements du calendrier Google
@@ -380,7 +361,7 @@ class AvailabilityService
             }
 
             // Vérifier la disponibilité
-            if (self::isSlotAvailableWithData($slotStart, $slotEnd, $existingBookings, $existingSessions, $calendarEvents)) {
+            if (self::isSlotAvailableWithData($slotStart, $slotEnd, $existingSessions, $calendarEvents)) {
                 $availableSlots[] = [
                     'time' => $slotStart->format('H:i'),
                     'datetime' => $slotStart->format('Y-m-d H:i:s'),
@@ -416,29 +397,17 @@ class AvailabilityService
     private static function isSlotAvailableWithData(
         \DateTime $start,
         \DateTime $end,
-        array $bookings,
         array $sessions,
         array $calendarEvents
     ): bool {
         $timezone = new \DateTimeZone(self::env('APP_TIMEZONE', 'Europe/Paris'));
 
-        // Vérifier les réservations
-        foreach ($bookings as $booking) {
-            $bookingStart = new \DateTime($booking['session_date'], $timezone);
-            $bookingEnd = (clone $bookingStart)->modify("+{$booking['duration_blocked_minutes']} minutes");
-
-            // Vérifier le chevauchement
-            if ($start < $bookingEnd && $end > $bookingStart) {
-                return false;
-            }
-        }
-
-        // Vérifier les séances existantes
+        // Vérifier les sessions existantes
         foreach ($sessions as $session) {
             $sessionStart = new \DateTime($session['session_date'], $timezone);
-            // Durée de la séance + pause appropriée selon le type de séance
-            $pause = self::getPauseForSessionDuration($session['duration_minutes']);
-            $sessionBlockedMinutes = $session['duration_minutes'] + $pause;
+            // Utiliser duration_blocked_minutes si disponible, sinon calculer avec la pause
+            $sessionBlockedMinutes = $session['duration_blocked_minutes']
+                ?? ($session['duration_minutes'] + self::getPauseForSessionDuration($session['duration_minutes']));
             $sessionEnd = (clone $sessionStart)->modify("+{$sessionBlockedMinutes} minutes");
 
             // Vérifier le chevauchement
@@ -467,7 +436,7 @@ class AvailabilityService
     }
 
     /**
-     * Vérifie si un créneau est disponible (ni bloqué par Google Calendar, ni par une réservation, ni par une séance)
+     * Vérifie si un créneau est disponible (ni bloqué par Google Calendar, ni par une session)
      */
     public static function isSlotAvailable(\DateTime $start, \DateTime $end): bool
     {
@@ -476,41 +445,12 @@ class AvailabilityService
             return false;
         }
 
-        // 2. Vérifier les réservations en BDD
-        if (Booking::isSlotBooked($start, $end)) {
-            return false;
-        }
-
-        // 3. Vérifier les séances existantes
-        if (self::isSlotBlockedBySession($start, $end)) {
+        // 2. Vérifier les sessions en BDD (pending, confirmed)
+        if (Session::isSlotBooked($start, $end)) {
             return false;
         }
 
         return true;
-    }
-
-    /**
-     * Vérifie si un créneau chevauche une séance existante
-     */
-    private static function isSlotBlockedBySession(\DateTime $start, \DateTime $end): bool
-    {
-        $timezone = new \DateTimeZone(self::env('APP_TIMEZONE', 'Europe/Paris'));
-        $sessions = Session::getSessionsForDate($start);
-
-        foreach ($sessions as $session) {
-            $sessionStart = new \DateTime($session['session_date'], $timezone);
-            // Utiliser la pause appropriée selon le type de séance
-            $pause = self::getPauseForSessionDuration($session['duration_minutes']);
-            $sessionBlockedMinutes = $session['duration_minutes'] + $pause;
-            $sessionEnd = (clone $sessionStart)->modify("+{$sessionBlockedMinutes} minutes");
-
-            // Vérifier le chevauchement
-            if ($start < $sessionEnd && $end > $sessionStart) {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     /**

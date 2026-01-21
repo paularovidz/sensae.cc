@@ -65,38 +65,73 @@ Application de dashboard pour le suivi de séances Snoezelen (thérapie sensorie
 - `is_global` (boolean - visible par tous si true)
 - `created_at`, `updated_at`
 
-### Sessions (Séances Snoezelen)
+### Sessions (Modèle unifié : réservation + séance)
+
+Le modèle Session représente tout le cycle de vie d'un rendez-vous :
+- **Réservation** : statut `pending` ou `confirmed`
+- **Séance effectuée** : statut `completed` avec détails cliniques
+- **Annulation** : statut `cancelled` ou `no_show`
+
+#### Champs de base
 - `id` (UUID)
-- `person_id` (FK)
-- `created_by` (FK user_id)
+- `user_id` (FK users) - Client qui a réservé
+- `person_id` (FK persons) - Personne/bénéficiaire
+- `created_by` (FK users) - Créateur de la session
 - `session_date` (datetime)
 - `duration_minutes` (int)
+- `duration_type` (enum: 'discovery', 'regular')
+- `duration_blocked_minutes` (int: 90 ou 65) - Durée totale bloquée (séance + pause)
+- `price` (DECIMAL) - Tarif de la séance
 - `sessions_per_month` (int - nombre de séances/mois)
 
-#### Début de séance
+#### Statut et confirmation
+- `status` (enum: 'pending', 'confirmed', 'completed', 'cancelled', 'no_show')
+- `confirmation_token` (hash sécurisé)
+- `confirmed_at` (datetime)
+
+#### RGPD
+- `gdpr_consent` (boolean)
+- `gdpr_consent_at` (datetime)
+
+#### Notes admin
+- `admin_notes` (texte)
+
+#### Rappels
+- `reminder_sms_sent_at` (datetime)
+- `reminder_email_sent_at` (datetime)
+
+#### Métadonnées réservation
+- `ip_address` (string)
+- `user_agent` (string)
+
+#### Détails cliniques (remplis quand status = completed)
+
+**Début de séance**
 - `behavior_start` (enum: 'calm', 'agitated', 'defensive', 'anxious', 'passive')
 - `proposal_origin` (enum: 'person', 'relative')
 - `attitude_start` (enum: 'accepts', 'indifferent', 'refuses')
 
-#### Pendant la séance
+**Pendant la séance**
 - `position` (enum: 'standing', 'lying', 'sitting', 'moving')
 - `communication` (JSON array: ['body', 'verbal', 'vocal'])
 
-#### Fin de séance
+**Fin de séance**
 - `session_end` (enum: 'accepts', 'refuses', 'interrupts')
 - `behavior_end` (enum: 'calm', 'agitated', 'tired', 'defensive', 'anxious', 'passive')
-- `wants_to_return` (boolean nullable - true=oui, false=non, null=non renseigné)
+- `wants_to_return` (boolean nullable)
 
-#### Notes privées (chiffrées)
-- `professional_notes` (texte chiffré - impressions du professionnel)
-- `person_expression` (texte chiffré - impressions et expression de la personne)
+**Notes privées (chiffrées)**
+- `professional_notes` (texte chiffré)
+- `person_expression` (texte chiffré)
 
 #### Facturation
-- `is_invoiced` (boolean) - Séance facturée
-- `is_paid` (boolean) - Séance payée
+- `is_invoiced` (boolean)
+- `is_paid` (boolean)
 - `is_free_session` (boolean) - Séance gratuite (fidélité)
 
 - `created_at`, `updated_at`
+
+**Note** : Les infos client (email, téléphone, nom, type, etc.) sont récupérées via JOIN avec la table `users`. Les infos personne sont récupérées via JOIN avec `persons`.
 
 ### SessionProposals (Propositions utilisées dans une séance)
 - `id` (UUID)
@@ -105,26 +140,6 @@ Application de dashboard pour le suivi de séances Snoezelen (thérapie sensorie
 - `appreciation` (enum: 'negative', 'neutral', 'positive')
 - `order` (int - ordre d'affichage)
 - `created_at`
-
-### Bookings (Réservations publiques)
-- `id` (UUID)
-- `user_id` (FK) - Lié à l'utilisateur (créé à la volée si nouveau)
-- `person_id` (FK) - Lié à la personne/bénéficiaire (créé à la volée si nouveau)
-- `session_id` (FK, nullable - lié après création session)
-- `session_date` (datetime)
-- `duration_type` (enum: 'discovery', 'regular')
-- `duration_display_minutes` (int: 75 ou 45)
-- `duration_blocked_minutes` (int: 90 ou 65)
-- `price` (DECIMAL) - Tarif de la séance au moment de la réservation
-- `status` (enum: 'pending', 'confirmed', 'cancelled', 'completed', 'no_show')
-- `confirmation_token` (hash sécurisé)
-- `confirmed_at`, `gdpr_consent`, `gdpr_consent_at`
-- `admin_notes` (optionnel)
-- `reminder_sms_sent_at`, `reminder_email_sent_at`
-- `ip_address`, `user_agent`
-- `created_at`, `updated_at`
-
-**Note** : Les infos client (email, téléphone, nom, type, etc.) sont récupérées via JOIN avec la table `users`. Les infos personne sont récupérées via JOIN avec `persons`.
 
 ### Settings (Configuration back-office)
 - `key` (VARCHAR PRIMARY KEY)
@@ -142,7 +157,7 @@ Application de dashboard pour le suivi de séances Snoezelen (thérapie sensorie
 
 ### SmsLogs (Historique SMS)
 - `id` (UUID)
-- `booking_id` (FK)
+- `session_id` (FK sessions)
 - `phone_number`, `message_type`, `message_content`
 - `provider`, `provider_message_id`, `provider_response`
 - `status`, `sent_at`, `error_message`
@@ -357,15 +372,15 @@ Application de dashboard pour le suivi de séances Snoezelen (thérapie sensorie
 - `GET /public/bookings/{token}/ics` - Télécharger ICS
 
 ### Bookings - Admin (authentification requise)
-- `GET /bookings` - Liste réservations
+- `GET /bookings` - Liste des sessions (filtrable par status)
 - `GET /bookings/stats` - Statistiques
-- `GET /bookings/pending-sessions` - RDV sans session
-- `GET /bookings/{id}` - Détail
-- `PUT /bookings/{id}` - Modifier
+- `GET /bookings/pending-sessions` - Sessions confirmées du jour
+- `GET /bookings/{id}` - Détail d'une session
+- `PUT /bookings/{id}` - Modifier (admin_notes, price)
 - `PATCH /bookings/{id}/status` - Changer statut
-- `DELETE /bookings/{id}` - Supprimer
+- `DELETE /bookings/{id}` - Supprimer (si pas status=completed)
 - `POST /bookings/{id}/reminder` - Envoyer rappel
-- `POST /bookings/{id}/create-session` - Créer session depuis booking
+- `POST /bookings/{id}/complete` - Marquer comme effectuée
 
 ### Settings (Admin)
 - `GET /settings` - Tous les paramètres groupés
@@ -470,10 +485,11 @@ docker exec snoezelen_api php /var/www/html/migrations/migrate.php
 
 ### Factory de données de test
 La factory permet de générer des données de test réalistes :
-- 8 utilisateurs (2 associations, 6 particuliers avec cartes fidélité)
-- 15 personnes (bénéficiaires) assignées aux utilisateurs
-- Réservations passées (3 derniers mois) avec séances liées (facturées/payées variables)
-- Réservations futures (35 prochains jours)
+- 20 utilisateurs (5 associations, 15 particuliers avec cartes fidélité)
+- 40 personnes (bénéficiaires) assignées aux utilisateurs
+- Sessions passées (6 derniers mois) avec différents statuts (completed, no_show, cancelled)
+- Sessions confirmées pour aujourd'hui
+- Sessions futures (60 prochains jours) avec statuts pending/confirmed
 
 ```bash
 # Ajouter des données de test (conserve les existantes)
@@ -596,9 +612,9 @@ Exemple pour séances classiques (45min + 20min pause) : 9h00, 10h05, 11h10, 13h
 */15 * * * * php /path/to/api/cron/booking-tasks.php
 
 # Ou tâches spécifiques:
-0 6 * * * php .../booking-tasks.php create-sessions  # Sessions du jour
 0 18 * * * php .../booking-tasks.php send-reminders  # Rappels demain
 */5 * * * * php .../booking-tasks.php refresh-calendar  # Cache iCal
+0 3 * * * php .../booking-tasks.php cleanup  # Nettoyage (magic links, tokens, sessions pending >24h)
 ```
 
 ## Notes importantes
@@ -614,6 +630,7 @@ Exemple pour séances classiques (45min + 20min pause) : 9h00, 10h05, 11h10, 13h
 9. **Types de clients** - Particuliers (personal) ou Associations (association). Les associations ont des limites de réservation plus élevées (20 vs 4)
 10. **Système de fidélité** - Carte de fidélité pour particuliers uniquement. Après 9 séances (configurable), séance gratuite offerte. Visible dans l'espace membre et dans la page admin utilisateur
 11. **Documents** - Upload images/PDF pour utilisateurs et personnes (admin only). Stockés dans `api/uploads/documents/`
+12. **Modèle Session unifié** - Une seule table `sessions` gère tout le cycle : réservation (pending/confirmed) → séance effectuée (completed) → annulation (cancelled/no_show). Plus de table `bookings` séparée.
 
 ## Services Backend
 

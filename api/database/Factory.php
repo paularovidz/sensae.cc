@@ -148,8 +148,8 @@ class Factory
 
         // Supprimer dans l'ordre pour respecter les contraintes FK
         $this->db->exec("DELETE FROM session_proposals");
+        $this->db->exec("DELETE FROM sms_logs WHERE id != ''");
         $this->db->exec("DELETE FROM sessions WHERE id != ''");
-        $this->db->exec("DELETE FROM bookings WHERE id != ''");
         $this->db->exec("DELETE FROM user_persons WHERE user_id != ''");
         $this->db->exec("DELETE FROM persons WHERE id != ''");
         $this->db->exec("DELETE FROM loyalty_cards WHERE id != ''");
@@ -435,7 +435,7 @@ class Factory
     }
 
     /**
-     * Crée une réservation passée marquée comme absent (no_show)
+     * Crée une session passée marquée comme absent (no_show)
      */
     private function createPastBookingNoShow(\DateTime $date, array $slot): void
     {
@@ -449,34 +449,34 @@ class Factory
         $isDiscovery = $slot['type'] === 'discovery';
         $durationDisplay = $isDiscovery ? 75 : 45;
         $durationBlocked = $isDiscovery ? 90 : 65;
+        $price = $isDiscovery ? 55 : 45;
 
-        $bookingId = UUID::generate();
+        $sessionId = UUID::generate();
         $confirmationToken = bin2hex(random_bytes(32));
         $createdAt = (clone $sessionDate)->modify('-' . rand(1, 14) . ' days');
 
-        $price = $isDiscovery ? 55 : 45;
-
         $stmt = $this->db->prepare("
-            INSERT INTO bookings (
-                id, user_id, person_id, session_date, duration_type,
-                duration_display_minutes, duration_blocked_minutes, price, status,
-                confirmation_token, confirmed_at, gdpr_consent, gdpr_consent_at,
-                created_at, updated_at
+            INSERT INTO sessions (
+                id, user_id, person_id, created_by, session_date,
+                duration_minutes, duration_type, duration_blocked_minutes, price,
+                status, confirmation_token, confirmed_at,
+                gdpr_consent, gdpr_consent_at, created_at, updated_at
             ) VALUES (
-                :id, :user_id, :person_id, :session_date, :duration_type,
-                :duration_display, :duration_blocked, :price, 'no_show',
-                :confirmation_token, :confirmed_at, 1, :gdpr_consent_at,
-                :created_at, :updated_at
+                :id, :user_id, :person_id, :created_by, :session_date,
+                :duration_minutes, :duration_type, :duration_blocked, :price,
+                'no_show', :confirmation_token, :confirmed_at,
+                1, :gdpr_consent_at, :created_at, :updated_at
             )
         ");
 
         $stmt->execute([
-            'id' => $bookingId,
+            'id' => $sessionId,
             'user_id' => $user['id'],
             'person_id' => $person['id'],
+            'created_by' => $user['id'],
             'session_date' => $sessionDate->format('Y-m-d H:i:s'),
+            'duration_minutes' => $durationDisplay,
             'duration_type' => $isDiscovery ? 'discovery' : 'regular',
-            'duration_display' => $durationDisplay,
             'duration_blocked' => $durationBlocked,
             'price' => $price,
             'confirmation_token' => $confirmationToken,
@@ -488,7 +488,7 @@ class Factory
     }
 
     /**
-     * Crée une réservation passée annulée
+     * Crée une session passée annulée
      */
     private function createPastBookingCancelled(\DateTime $date, array $slot): void
     {
@@ -502,33 +502,34 @@ class Factory
         $isDiscovery = $slot['type'] === 'discovery';
         $durationDisplay = $isDiscovery ? 75 : 45;
         $durationBlocked = $isDiscovery ? 90 : 65;
-
-        $bookingId = UUID::generate();
-        $confirmationToken = bin2hex(random_bytes(32));
-        $createdAt = (clone $sessionDate)->modify('-' . rand(1, 14) . ' days');
         $price = $isDiscovery ? 55 : 45;
 
+        $sessionId = UUID::generate();
+        $confirmationToken = bin2hex(random_bytes(32));
+        $createdAt = (clone $sessionDate)->modify('-' . rand(1, 14) . ' days');
+
         $stmt = $this->db->prepare("
-            INSERT INTO bookings (
-                id, user_id, person_id, session_date, duration_type,
-                duration_display_minutes, duration_blocked_minutes, price, status,
-                confirmation_token, confirmed_at, gdpr_consent, gdpr_consent_at,
-                created_at, updated_at
+            INSERT INTO sessions (
+                id, user_id, person_id, created_by, session_date,
+                duration_minutes, duration_type, duration_blocked_minutes, price,
+                status, confirmation_token, confirmed_at,
+                gdpr_consent, gdpr_consent_at, created_at, updated_at
             ) VALUES (
-                :id, :user_id, :person_id, :session_date, :duration_type,
-                :duration_display, :duration_blocked, :price, 'cancelled',
-                :confirmation_token, :confirmed_at, 1, :gdpr_consent_at,
-                :created_at, :updated_at
+                :id, :user_id, :person_id, :created_by, :session_date,
+                :duration_minutes, :duration_type, :duration_blocked, :price,
+                'cancelled', :confirmation_token, :confirmed_at,
+                1, :gdpr_consent_at, :created_at, :updated_at
             )
         ");
 
         $stmt->execute([
-            'id' => $bookingId,
+            'id' => $sessionId,
             'user_id' => $user['id'],
             'person_id' => $person['id'],
+            'created_by' => $user['id'],
             'session_date' => $sessionDate->format('Y-m-d H:i:s'),
+            'duration_minutes' => $durationDisplay,
             'duration_type' => $isDiscovery ? 'discovery' : 'regular',
-            'duration_display' => $durationDisplay,
             'duration_blocked' => $durationBlocked,
             'price' => $price,
             'confirmation_token' => $confirmationToken,
@@ -540,7 +541,7 @@ class Factory
     }
 
     /**
-     * Crée une réservation passée avec sa séance
+     * Crée une session passée complétée avec tous les détails cliniques
      */
     private function createPastBookingWithSession(\DateTime $date, array $slot): void
     {
@@ -555,68 +556,16 @@ class Factory
         $isDiscovery = $slot['type'] === 'discovery';
         $durationDisplay = $isDiscovery ? 75 : 45;
         $durationBlocked = $isDiscovery ? 90 : 65;
-
-        // Créer le booking (complété)
-        $bookingId = UUID::generate();
-        $confirmationToken = bin2hex(random_bytes(32));
         $price = $isDiscovery ? 55 : 45;
-        $createdAt = (clone $sessionDate)->modify('-' . rand(1, 14) . ' days');
 
-        $stmt = $this->db->prepare("
-            INSERT INTO bookings (
-                id, user_id, person_id, session_date, duration_type,
-                duration_display_minutes, duration_blocked_minutes, price, status,
-                confirmation_token, confirmed_at, gdpr_consent, gdpr_consent_at,
-                created_at, updated_at
-            ) VALUES (
-                :id, :user_id, :person_id, :session_date, :duration_type,
-                :duration_display, :duration_blocked, :price, 'completed',
-                :confirmation_token, :confirmed_at, 1, :gdpr_consent_at,
-                :created_at, :updated_at
-            )
-        ");
-
-        $stmt->execute([
-            'id' => $bookingId,
-            'user_id' => $user['id'],
-            'person_id' => $person['id'],
-            'session_date' => $sessionDate->format('Y-m-d H:i:s'),
-            'duration_type' => $isDiscovery ? 'discovery' : 'regular',
-            'duration_display' => $durationDisplay,
-            'duration_blocked' => $durationBlocked,
-            'price' => $price,
-            'confirmation_token' => $confirmationToken,
-            'confirmed_at' => $createdAt->format('Y-m-d H:i:s'),
-            'gdpr_consent_at' => $createdAt->format('Y-m-d H:i:s'),
-            'created_at' => $createdAt->format('Y-m-d H:i:s'),
-            'updated_at' => $sessionDate->format('Y-m-d H:i:s')
-        ]);
-
-        // Créer la séance
         $sessionId = UUID::generate();
+        $confirmationToken = bin2hex(random_bytes(32));
+        $createdAt = (clone $sessionDate)->modify('-' . rand(1, 14) . ' days');
 
         // Statuts de facturation aléatoires
         $isInvoiced = rand(0, 10) > 2; // 80% facturé
         $isPaid = $isInvoiced && rand(0, 10) > 3; // 70% des facturés sont payés
         $isFreeSession = rand(0, 20) === 0; // 5% gratuit
-
-        $stmt = $this->db->prepare("
-            INSERT INTO sessions (
-                id, person_id, created_by, session_date, duration_minutes,
-                sessions_per_month, behavior_start, proposal_origin, attitude_start,
-                position, communication, session_end, behavior_end,
-                wants_to_return, professional_notes, person_expression,
-                is_invoiced, is_paid, is_free_session,
-                booking_id, created_at, updated_at
-            ) VALUES (
-                :id, :person_id, :created_by, :session_date, :duration_minutes,
-                :sessions_per_month, :behavior_start, :proposal_origin, :attitude_start,
-                :position, :communication, :session_end, :behavior_end,
-                :wants_to_return, :professional_notes, :person_expression,
-                :is_invoiced, :is_paid, :is_free_session,
-                :booking_id, :created_at, :updated_at
-            )
-        ");
 
         $communications = $this->randomSubset($this->communications, rand(1, 3));
 
@@ -639,12 +588,43 @@ class Factory
             null
         ]) : null;
 
+        $stmt = $this->db->prepare("
+            INSERT INTO sessions (
+                id, user_id, person_id, created_by, session_date,
+                duration_minutes, duration_type, duration_blocked_minutes, price,
+                status, confirmation_token, confirmed_at,
+                gdpr_consent, gdpr_consent_at,
+                sessions_per_month, behavior_start, proposal_origin, attitude_start,
+                position, communication, session_end, behavior_end,
+                wants_to_return, professional_notes, person_expression,
+                is_invoiced, is_paid, is_free_session,
+                created_at, updated_at
+            ) VALUES (
+                :id, :user_id, :person_id, :created_by, :session_date,
+                :duration_minutes, :duration_type, :duration_blocked, :price,
+                'completed', :confirmation_token, :confirmed_at,
+                1, :gdpr_consent_at,
+                :sessions_per_month, :behavior_start, :proposal_origin, :attitude_start,
+                :position, :communication, :session_end, :behavior_end,
+                :wants_to_return, :professional_notes, :person_expression,
+                :is_invoiced, :is_paid, :is_free_session,
+                :created_at, :updated_at
+            )
+        ");
+
         $stmt->execute([
             'id' => $sessionId,
+            'user_id' => $user['id'],
             'person_id' => $person['id'],
             'created_by' => $this->adminUser['id'],
             'session_date' => $sessionDate->format('Y-m-d H:i:s'),
             'duration_minutes' => $durationDisplay,
+            'duration_type' => $isDiscovery ? 'discovery' : 'regular',
+            'duration_blocked' => $durationBlocked,
+            'price' => $price,
+            'confirmation_token' => $confirmationToken,
+            'confirmed_at' => $createdAt->format('Y-m-d H:i:s'),
+            'gdpr_consent_at' => $createdAt->format('Y-m-d H:i:s'),
             'sessions_per_month' => rand(1, 4),
             'behavior_start' => $this->randomItem($this->behaviorsStart),
             'proposal_origin' => $this->randomItem($this->proposalOrigins),
@@ -659,18 +639,13 @@ class Factory
             'is_invoiced' => $isFreeSession ? 0 : ($isInvoiced ? 1 : 0),
             'is_paid' => $isFreeSession ? 0 : ($isPaid ? 1 : 0),
             'is_free_session' => $isFreeSession ? 1 : 0,
-            'booking_id' => $bookingId,
-            'created_at' => $sessionDate->format('Y-m-d H:i:s'),
+            'created_at' => $createdAt->format('Y-m-d H:i:s'),
             'updated_at' => $sessionDate->format('Y-m-d H:i:s')
         ]);
-
-        // Mettre à jour le booking avec l'ID de session
-        $stmt = $this->db->prepare("UPDATE bookings SET session_id = :session_id WHERE id = :id");
-        $stmt->execute(['session_id' => $sessionId, 'id' => $bookingId]);
     }
 
     /**
-     * Crée des séances pour aujourd'hui (confirmées avec booking)
+     * Crée des séances confirmées pour aujourd'hui
      */
     private function createTodaySessions(): int
     {
@@ -691,7 +666,7 @@ class Factory
         $slotsToUse = array_slice($availableSlots, 0, rand(3, min(5, count($availableSlots))));
 
         foreach ($slotsToUse as $slot) {
-            $this->createTodayBookingWithSession($today, $slot);
+            $this->createTodaySession($today, $slot);
             $count++;
         }
 
@@ -699,9 +674,9 @@ class Factory
     }
 
     /**
-     * Crée une réservation avec séance pour aujourd'hui
+     * Crée une session confirmée pour aujourd'hui
      */
-    private function createTodayBookingWithSession(\DateTime $date, array $slot): void
+    private function createTodaySession(\DateTime $date, array $slot): void
     {
         $user = $this->randomItem($this->users);
         $person = $this->randomItem($this->persons);
@@ -714,34 +689,34 @@ class Factory
         $isDiscovery = $slot['type'] === 'discovery';
         $durationDisplay = $isDiscovery ? 75 : 45;
         $durationBlocked = $isDiscovery ? 90 : 65;
-
-        // Créer le booking (confirmé)
-        $bookingId = UUID::generate();
-        $confirmationToken = bin2hex(random_bytes(32));
-        $createdAt = (clone $sessionDate)->modify('-' . rand(1, 7) . ' days');
         $price = $isDiscovery ? 55 : 45;
 
+        $sessionId = UUID::generate();
+        $confirmationToken = bin2hex(random_bytes(32));
+        $createdAt = (clone $sessionDate)->modify('-' . rand(1, 7) . ' days');
+
         $stmt = $this->db->prepare("
-            INSERT INTO bookings (
-                id, user_id, person_id, session_date, duration_type,
-                duration_display_minutes, duration_blocked_minutes, price, status,
-                confirmation_token, confirmed_at, gdpr_consent, gdpr_consent_at,
-                created_at, updated_at
+            INSERT INTO sessions (
+                id, user_id, person_id, created_by, session_date,
+                duration_minutes, duration_type, duration_blocked_minutes, price,
+                status, confirmation_token, confirmed_at,
+                gdpr_consent, gdpr_consent_at, created_at, updated_at
             ) VALUES (
-                :id, :user_id, :person_id, :session_date, :duration_type,
-                :duration_display, :duration_blocked, :price, 'confirmed',
-                :confirmation_token, :confirmed_at, 1, :gdpr_consent_at,
-                :created_at, NOW()
+                :id, :user_id, :person_id, :created_by, :session_date,
+                :duration_minutes, :duration_type, :duration_blocked, :price,
+                'confirmed', :confirmation_token, :confirmed_at,
+                1, :gdpr_consent_at, :created_at, NOW()
             )
         ");
 
         $stmt->execute([
-            'id' => $bookingId,
+            'id' => $sessionId,
             'user_id' => $user['id'],
             'person_id' => $person['id'],
+            'created_by' => $user['id'],
             'session_date' => $sessionDate->format('Y-m-d H:i:s'),
+            'duration_minutes' => $durationDisplay,
             'duration_type' => $isDiscovery ? 'discovery' : 'regular',
-            'duration_display' => $durationDisplay,
             'duration_blocked' => $durationBlocked,
             'price' => $price,
             'confirmation_token' => $confirmationToken,
@@ -752,7 +727,7 @@ class Factory
     }
 
     /**
-     * Crée des réservations futures
+     * Crée des sessions futures (pending ou confirmed)
      */
     private function createFutureBookings(): int
     {
@@ -772,7 +747,7 @@ class Factory
                 $slotsToUse = array_slice($availableSlots, 0, rand(2, min(5, count($availableSlots))));
 
                 foreach ($slotsToUse as $slot) {
-                    $this->createFutureBooking($currentDate, $slot);
+                    $this->createFutureSession($currentDate, $slot);
                     $count++;
                 }
             }
@@ -783,9 +758,9 @@ class Factory
     }
 
     /**
-     * Crée une réservation future
+     * Crée une session future (pending ou confirmed)
      */
-    private function createFutureBooking(\DateTime $date, array $slot): void
+    private function createFutureSession(\DateTime $date, array $slot): void
     {
         $user = $this->randomItem($this->users);
         $person = $this->randomItem($this->persons);
@@ -800,35 +775,36 @@ class Factory
         $durationBlocked = $isDiscovery ? 90 : 65;
         $price = $isDiscovery ? 55 : 45;
 
-        // Statut aléatoire
-        $statuses = ['pending', 'confirmed', 'confirmed', 'confirmed']; // Plus de confirmés
+        // Statut aléatoire (75% confirmés, 25% pending)
+        $statuses = ['pending', 'confirmed', 'confirmed', 'confirmed'];
         $status = $this->randomItem($statuses);
 
-        $bookingId = UUID::generate();
+        $sessionId = UUID::generate();
         $confirmationToken = bin2hex(random_bytes(32));
         $confirmedAt = $status === 'confirmed' ? (new \DateTime())->format('Y-m-d H:i:s') : null;
 
         $stmt = $this->db->prepare("
-            INSERT INTO bookings (
-                id, user_id, person_id, session_date, duration_type,
-                duration_display_minutes, duration_blocked_minutes, price, status,
-                confirmation_token, confirmed_at, gdpr_consent, gdpr_consent_at,
-                created_at, updated_at
+            INSERT INTO sessions (
+                id, user_id, person_id, created_by, session_date,
+                duration_minutes, duration_type, duration_blocked_minutes, price,
+                status, confirmation_token, confirmed_at,
+                gdpr_consent, gdpr_consent_at, created_at, updated_at
             ) VALUES (
-                :id, :user_id, :person_id, :session_date, :duration_type,
-                :duration_display, :duration_blocked, :price, :status,
-                :confirmation_token, :confirmed_at, 1, :gdpr_consent_at,
-                NOW(), NOW()
+                :id, :user_id, :person_id, :created_by, :session_date,
+                :duration_minutes, :duration_type, :duration_blocked, :price,
+                :status, :confirmation_token, :confirmed_at,
+                1, :gdpr_consent_at, NOW(), NOW()
             )
         ");
 
         $stmt->execute([
-            'id' => $bookingId,
+            'id' => $sessionId,
             'user_id' => $user['id'],
             'person_id' => $person['id'],
+            'created_by' => $user['id'],
             'session_date' => $sessionDate->format('Y-m-d H:i:s'),
+            'duration_minutes' => $durationDisplay,
             'duration_type' => $isDiscovery ? 'discovery' : 'regular',
-            'duration_display' => $durationDisplay,
             'duration_blocked' => $durationBlocked,
             'price' => $price,
             'status' => $status,

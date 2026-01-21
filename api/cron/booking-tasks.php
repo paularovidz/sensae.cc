@@ -6,9 +6,6 @@
 //   Toutes les 15 min : 0,15,30,45 * * * * php booking-tasks.php >> /var/log/sensea-booking.log 2>&1
 //
 // Ou pour des tâches spécifiques :
-//   Création des sessions (tous les matins à 6h) :
-//     0 6 * * * php booking-tasks.php create-sessions
-//
 //   Envoi des rappels (tous les jours à 18h) :
 //     0 18 * * * php booking-tasks.php send-reminders
 //
@@ -17,22 +14,18 @@
 //
 //   Nettoyage complet (une fois par jour à 3h) :
 //     0 3 * * * php booking-tasks.php cleanup
-//     (magic links > 35j, refresh tokens > 30j, bookings pending > 24h)
+//     (magic links > 35j, refresh tokens > 30j, sessions pending > 24h)
 
 declare(strict_types=1);
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
 use Dotenv\Dotenv;
-use App\Models\Booking;
 use App\Models\Session;
-use App\Models\Person;
-use App\Models\User;
 use App\Models\RefreshToken;
 use App\Services\CalendarService;
 use App\Services\BookingMailService;
 use App\Services\SMSService;
-use App\Utils\UUID;
 
 // Load environment variables
 try {
@@ -48,10 +41,6 @@ $task = $argv[1] ?? 'all';
 echo "[" . date('Y-m-d H:i:s') . "] Starting booking tasks: {$task}\n";
 
 switch ($task) {
-    case 'create-sessions':
-        createSessionsFromBookings();
-        break;
-
     case 'send-reminders':
         sendReminders();
         break;
@@ -61,7 +50,7 @@ switch ($task) {
         break;
 
     case 'cleanup-expired':
-        cleanupExpiredBookings();
+        cleanupExpiredPendingSessions();
         break;
 
     case 'cleanup-magic-links':
@@ -73,23 +62,22 @@ switch ($task) {
         break;
 
     case 'cleanup':
-        cleanupExpiredBookings();
+        cleanupExpiredPendingSessions();
         cleanupOldMagicLinks();
         cleanupOldRefreshTokens();
         break;
 
     case 'all':
         refreshCalendarCache();
-        createSessionsFromBookings();
         sendReminders();
-        cleanupExpiredBookings();
+        cleanupExpiredPendingSessions();
         cleanupOldMagicLinks();
         cleanupOldRefreshTokens();
         break;
 
     default:
         echo "Unknown task: {$task}\n";
-        echo "Available tasks: create-sessions, send-reminders, refresh-calendar, cleanup-expired, cleanup-magic-links, cleanup-tokens, cleanup, all\n";
+        echo "Available tasks: send-reminders, refresh-calendar, cleanup-expired, cleanup-magic-links, cleanup-tokens, cleanup, all\n";
         exit(1);
 }
 
@@ -100,88 +88,15 @@ echo "[" . date('Y-m-d H:i:s') . "] Tasks completed.\n";
 // ========================================
 
 /**
- * Crée automatiquement des Sessions à partir des Bookings confirmés du jour
- */
-function createSessionsFromBookings(): void
-{
-    echo "  -> Creating sessions from today's bookings...\n";
-
-    $today = new DateTime();
-    $bookings = Booking::getConfirmedForDate($today);
-
-    if (empty($bookings)) {
-        echo "     No bookings to process.\n";
-        return;
-    }
-
-    $created = 0;
-    $errors = 0;
-
-    foreach ($bookings as $booking) {
-        try {
-            // Vérifier qu'une session n'existe pas déjà
-            if (!empty($booking['session_id'])) {
-                continue;
-            }
-
-            // Créer ou récupérer l'utilisateur
-            $userId = $booking['user_id'];
-            if (!$userId) {
-                $userId = getOrCreateUser($booking);
-                Booking::update($booking['id'], ['user_id' => $userId]);
-            }
-
-            // Créer ou récupérer la personne
-            $personId = $booking['person_id'];
-            if (!$personId) {
-                $personId = getOrCreatePerson($booking, $userId);
-                Booking::update($booking['id'], ['person_id' => $personId]);
-            }
-
-            // Trouver un admin pour créer la session
-            $adminId = getFirstAdminId();
-            if (!$adminId) {
-                echo "     ERROR: No admin found to create session.\n";
-                $errors++;
-                continue;
-            }
-
-            // Créer la session
-            $sessionData = [
-                'person_id' => $personId,
-                'created_by' => $adminId,
-                'session_date' => $booking['session_date'],
-                'duration_minutes' => $booking['duration_display_minutes'],
-                'booking_id' => $booking['id']
-            ];
-
-            $sessionId = Session::create($sessionData);
-
-            // Marquer le booking comme complété
-            Booking::complete($booking['id'], $sessionId);
-
-            echo "     Created session {$sessionId} from booking {$booking['id']}\n";
-            $created++;
-
-        } catch (Exception $e) {
-            echo "     ERROR processing booking {$booking['id']}: {$e->getMessage()}\n";
-            $errors++;
-        }
-    }
-
-    echo "     Sessions created: {$created}, Errors: {$errors}\n";
-}
-
-/**
- * Envoie les rappels SMS et email pour les réservations de demain
+ * Envoie les rappels SMS et email pour les sessions de demain
  */
 function sendReminders(): void
 {
-    echo "  -> Sending reminders for tomorrow's bookings...\n";
+    echo "  -> Sending reminders for tomorrow's sessions...\n";
 
-    $bookings = Booking::getPendingReminders();
+    $sessions = Session::getPendingReminders();
 
-    if (empty($bookings)) {
+    if (empty($sessions)) {
         echo "     No reminders to send.\n";
         return;
     }
@@ -192,30 +107,30 @@ function sendReminders(): void
 
     $mailService = new BookingMailService();
 
-    foreach ($bookings as $booking) {
+    foreach ($sessions as $session) {
         try {
             // Envoyer SMS si configuré et téléphone disponible
-            if (SMSService::isConfigured() && !empty($booking['client_phone'])) {
-                if (SMSService::sendReminder($booking)) {
-                    Booking::update($booking['id'], [
+            if (SMSService::isConfigured() && !empty($session['client_phone'])) {
+                if (SMSService::sendReminder($session)) {
+                    Session::update($session['id'], [
                         'reminder_sms_sent_at' => (new DateTime())->format('Y-m-d H:i:s')
                     ]);
                     $smsSent++;
-                    echo "     SMS sent to {$booking['client_phone']}\n";
+                    echo "     SMS sent to {$session['client_phone']}\n";
                 }
             }
 
             // Envoyer email de rappel
-            if ($mailService->sendReminderEmail($booking)) {
-                Booking::update($booking['id'], [
+            if ($mailService->sendReminderEmail($session)) {
+                Session::update($session['id'], [
                     'reminder_email_sent_at' => (new DateTime())->format('Y-m-d H:i:s')
                 ]);
                 $emailSent++;
-                echo "     Email sent to {$booking['client_email']}\n";
+                echo "     Email sent to {$session['client_email']}\n";
             }
 
         } catch (Exception $e) {
-            echo "     ERROR sending reminder for booking {$booking['id']}: {$e->getMessage()}\n";
+            echo "     ERROR sending reminder for session {$session['id']}: {$e->getMessage()}\n";
             $errors++;
         }
     }
@@ -242,41 +157,42 @@ function refreshCalendarCache(): void
 }
 
 /**
- * Nettoie les réservations expirées (pending depuis plus de 24h)
+ * Nettoie les sessions en attente (pending depuis plus de 24h)
  */
-function cleanupExpiredBookings(): void
+function cleanupExpiredPendingSessions(): void
 {
-    echo "  -> Cleaning up expired pending bookings...\n";
+    echo "  -> Cleaning up expired pending sessions...\n";
 
     try {
         $db = \App\Config\Database::getInstance();
 
-        // Trouver les bookings pending créés il y a plus de 24h
-        $stmt = $db->prepare('
-            SELECT id, client_email
-            FROM bookings
-            WHERE status = :pending
-            AND created_at < DATE_SUB(NOW(), INTERVAL 24 HOUR)
-        ');
-        $stmt->execute(['pending' => Booking::STATUS_PENDING]);
-        $expiredBookings = $stmt->fetchAll();
+        // Trouver les sessions pending créées il y a plus de 24h
+        $stmt = $db->prepare("
+            SELECT s.id, u.email as client_email
+            FROM sessions s
+            LEFT JOIN users u ON s.user_id = u.id
+            WHERE s.status = :pending
+            AND s.created_at < DATE_SUB(NOW(), INTERVAL 24 HOUR)
+        ");
+        $stmt->execute(['pending' => Session::STATUS_PENDING]);
+        $expiredSessions = $stmt->fetchAll();
 
-        if (empty($expiredBookings)) {
-            echo "     No expired bookings to cleanup.\n";
+        if (empty($expiredSessions)) {
+            echo "     No expired sessions to cleanup.\n";
             return;
         }
 
         $cancelled = 0;
-        foreach ($expiredBookings as $booking) {
-            Booking::cancel($booking['id']);
-            echo "     Cancelled expired booking {$booking['id']} ({$booking['client_email']})\n";
+        foreach ($expiredSessions as $session) {
+            Session::cancel($session['id']);
+            echo "     Cancelled expired session {$session['id']} ({$session['client_email']})\n";
             $cancelled++;
         }
 
-        echo "     Cancelled {$cancelled} expired bookings.\n";
+        echo "     Cancelled {$cancelled} expired session(s).\n";
 
     } catch (Exception $e) {
-        echo "     ERROR cleaning up expired bookings: {$e->getMessage()}\n";
+        echo "     ERROR cleaning up expired sessions: {$e->getMessage()}\n";
     }
 }
 
@@ -328,55 +244,4 @@ function cleanupOldRefreshTokens(): void
     } catch (Exception $e) {
         echo "     ERROR cleaning up old refresh tokens: {$e->getMessage()}\n";
     }
-}
-
-// ========================================
-// HELPER FUNCTIONS
-// ========================================
-
-/**
- * Crée ou récupère un utilisateur à partir des données de booking
- */
-function getOrCreateUser(array $booking): string
-{
-    $existingUser = User::findByEmail($booking['client_email']);
-    if ($existingUser) {
-        return $existingUser['id'];
-    }
-
-    return User::create([
-        'email' => $booking['client_email'],
-        'first_name' => $booking['client_first_name'],
-        'last_name' => $booking['client_last_name'],
-        'phone' => $booking['client_phone'],
-        'role' => 'member',
-        'is_active' => false
-    ]);
-}
-
-/**
- * Crée ou récupère une personne à partir des données de booking
- */
-function getOrCreatePerson(array $booking, string $userId): string
-{
-    $personId = Person::create([
-        'first_name' => $booking['person_first_name'],
-        'last_name' => $booking['person_last_name']
-    ]);
-
-    // Lier la personne à l'utilisateur
-    Person::assignToUser($personId, $userId);
-
-    return $personId;
-}
-
-/**
- * Récupère l'ID du premier admin trouvé
- */
-function getFirstAdminId(): ?string
-{
-    $db = \App\Config\Database::getInstance();
-    $stmt = $db->query("SELECT id FROM users WHERE role = 'admin' AND is_active = 1 LIMIT 1");
-    $result = $stmt->fetch();
-    return $result ? $result['id'] : null;
 }

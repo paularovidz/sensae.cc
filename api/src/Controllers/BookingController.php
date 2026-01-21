@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Controllers;
 
 use App\Middleware\AuthMiddleware;
-use App\Models\Booking;
 use App\Models\Session;
 use App\Models\Person;
 use App\Models\User;
@@ -65,8 +64,8 @@ class BookingController
             $filters['upcoming'] = true;
         }
 
-        $bookings = Booking::findAll($filters, $limit, $offset);
-        $total = Booking::count($filters);
+        $bookings = Session::findAll($limit, $offset, null, $filters);
+        $total = Session::count(null, $filters);
 
         Response::success([
             'bookings' => $bookings,
@@ -88,13 +87,13 @@ class BookingController
         AuthMiddleware::handle();
         AuthMiddleware::requireAdmin();
 
-        $stats = Booking::getStats();
+        $stats = Session::getBookingStats();
         $smsStats = SMSService::getStats();
 
         Response::success([
             'bookings' => $stats,
             'sms' => $smsStats,
-            'labels' => Booking::LABELS
+            'labels' => Session::LABELS
         ]);
     }
 
@@ -114,7 +113,7 @@ class BookingController
             Response::validationError(['month' => 'Mois invalide']);
         }
 
-        $calendar = Booking::getCalendarData($year, $month);
+        $calendar = Session::getCalendarData($year, $month);
 
         Response::success([
             'year' => $year,
@@ -132,7 +131,7 @@ class BookingController
         AuthMiddleware::handle();
         AuthMiddleware::requireAdmin();
 
-        $booking = Booking::findById($id);
+        $booking = Session::findById($id);
 
         if (!$booking) {
             Response::notFound('Réservation non trouvée');
@@ -140,7 +139,7 @@ class BookingController
 
         Response::success([
             'booking' => $booking,
-            'labels' => Booking::LABELS
+            'labels' => Session::LABELS
         ]);
     }
 
@@ -154,7 +153,7 @@ class BookingController
         AuthMiddleware::requireAdmin();
         $currentUser = AuthMiddleware::getCurrentUser();
 
-        $booking = Booking::findById($id);
+        $booking = Session::findById($id);
 
         if (!$booking) {
             Response::notFound('Réservation non trouvée');
@@ -176,7 +175,7 @@ class BookingController
 
         $oldValues = array_intersect_key($booking, $updateData);
 
-        Booking::update($id, $updateData);
+        Session::update($id, $updateData);
 
         AuditService::log(
             $currentUser['id'],
@@ -187,7 +186,7 @@ class BookingController
             $updateData
         );
 
-        $updatedBooking = Booking::findById($id);
+        $updatedBooking = Session::findById($id);
         Response::success(['booking' => $updatedBooking], 'Réservation mise à jour');
     }
 
@@ -201,7 +200,7 @@ class BookingController
         AuthMiddleware::requireAdmin();
         $currentUser = AuthMiddleware::getCurrentUser();
 
-        $booking = Booking::findById($id);
+        $booking = Session::findById($id);
 
         if (!$booking) {
             Response::notFound('Réservation non trouvée');
@@ -210,7 +209,7 @@ class BookingController
         $data = json_decode(file_get_contents('php://input'), true) ?? [];
 
         $validator = new Validator($data);
-        $validator->required('status')->inArray('status', Booking::STATUSES);
+        $validator->required('status')->inArray('status', Session::STATUSES);
         $errors = $validator->validate();
 
         if (!empty($errors)) {
@@ -227,34 +226,34 @@ class BookingController
 
         // Traitement selon le nouveau statut
         switch ($newStatus) {
-            case Booking::STATUS_CONFIRMED:
-                Booking::confirm($id);
-                $booking = Booking::findById($id);
+            case Session::STATUS_CONFIRMED:
+                Session::confirm($id);
+                $booking = Session::findById($id);
                 $mailService = new BookingMailService();
                 $mailService->sendBookingConfirmedEmail($booking);
                 break;
 
-            case Booking::STATUS_CANCELLED:
-                Booking::cancel($id);
-                $booking = Booking::findById($id);
+            case Session::STATUS_CANCELLED:
+                Session::cancel($id);
+                $booking = Session::findById($id);
                 $mailService = new BookingMailService();
                 $mailService->sendCancellationEmail($booking);
                 break;
 
-            case Booking::STATUS_NO_SHOW:
-                Booking::markNoShow($id);
+            case Session::STATUS_NO_SHOW:
+                Session::markNoShow($id);
                 break;
 
-            case Booking::STATUS_COMPLETED:
+            case Session::STATUS_COMPLETED:
                 // On ne peut pas passer en completed manuellement sans session
                 if (empty($booking['session_id'])) {
                     Response::error('Une session doit être liée pour marquer comme complété', 400);
                 }
-                Booking::update($id, ['status' => Booking::STATUS_COMPLETED]);
+                Session::update($id, ['status' => Session::STATUS_COMPLETED]);
                 break;
 
             default:
-                Booking::update($id, ['status' => $newStatus]);
+                Session::update($id, ['status' => $newStatus]);
         }
 
         AuditService::log(
@@ -266,7 +265,7 @@ class BookingController
             ['status' => $newStatus]
         );
 
-        $updatedBooking = Booking::findById($id);
+        $updatedBooking = Session::findById($id);
         Response::success(['booking' => $updatedBooking], 'Statut mis à jour');
     }
 
@@ -281,7 +280,7 @@ class BookingController
         AuthMiddleware::requireAdmin();
         $currentUser = AuthMiddleware::getCurrentUser();
 
-        $booking = Booking::findById($id);
+        $booking = Session::findById($id);
 
         if (!$booking) {
             Response::notFound('Réservation non trouvée');
@@ -294,12 +293,12 @@ class BookingController
 
         // Envoyer un email d'annulation si la réservation n'était pas déjà annulée
         $emailSent = false;
-        if ($booking['status'] !== Booking::STATUS_CANCELLED && !empty($booking['client_email'])) {
+        if ($booking['status'] !== Session::STATUS_CANCELLED && !empty($booking['client_email'])) {
             $mailService = new BookingMailService();
             $emailSent = $mailService->sendCancellationEmail($booking);
         }
 
-        Booking::delete($id);
+        Session::delete($id);
 
         AuditService::log(
             $currentUser['id'],
@@ -325,8 +324,8 @@ class BookingController
         $dateFrom = $_GET['date_from'] ?? (new \DateTime())->format('Y-m-d');
         $dateTo = $_GET['date_to'] ?? (new \DateTime('+3 months'))->format('Y-m-d');
 
-        $bookings = Booking::findAll([
-            'status' => Booking::STATUS_CONFIRMED,
+        $bookings = Session::findAll([
+            'status' => Session::STATUS_CONFIRMED,
             'date_from' => $dateFrom,
             'date_to' => $dateTo . ' 23:59:59'
         ], 1000, 0);
@@ -357,13 +356,13 @@ class BookingController
         AuthMiddleware::requireAdmin();
         $currentUser = AuthMiddleware::getCurrentUser();
 
-        $booking = Booking::findById($id);
+        $booking = Session::findById($id);
 
         if (!$booking) {
             Response::notFound('Réservation non trouvée');
         }
 
-        if ($booking['status'] !== Booking::STATUS_CONFIRMED) {
+        if ($booking['status'] !== Session::STATUS_CONFIRMED) {
             Response::error('Seules les réservations confirmées peuvent recevoir un rappel', 400);
         }
 
@@ -383,13 +382,13 @@ class BookingController
 
         // Mettre à jour la date d'envoi du rappel
         if ($results['email']) {
-            Booking::update($id, [
+            Session::update($id, [
                 'reminder_email_sent_at' => (new \DateTime())->format('Y-m-d H:i:s')
             ]);
         }
 
         if ($results['sms']) {
-            Booking::update($id, [
+            Session::update($id, [
                 'reminder_sms_sent_at' => (new \DateTime())->format('Y-m-d H:i:s')
             ]);
         }
@@ -409,65 +408,46 @@ class BookingController
     }
 
     /**
-     * POST /bookings/{id}/create-session
-     * Crée une session à partir d'une réservation (admin uniquement)
-     * Note: user_id et person_id sont toujours définis car créés à la réservation
+     * POST /bookings/{id}/complete
+     * Marque une réservation comme effectuée (admin uniquement)
+     * Permet ensuite de remplir les détails de la séance
      */
-    public function createSession(string $id): void
+    public function completeSession(string $id): void
     {
         AuthMiddleware::handle();
         AuthMiddleware::requireAdmin();
         $currentUser = AuthMiddleware::getCurrentUser();
 
-        $booking = Booking::findById($id);
+        $session = Session::findById($id);
 
-        if (!$booking) {
+        if (!$session) {
             Response::notFound('Réservation non trouvée');
         }
 
-        if ($booking['status'] !== Booking::STATUS_CONFIRMED) {
-            Response::error('Seules les réservations confirmées peuvent générer une session', 400);
+        if ($session['status'] !== Session::STATUS_CONFIRMED) {
+            Response::error('Seules les réservations confirmées peuvent être marquées comme effectuées', 400);
         }
 
-        if (!empty($booking['session_id'])) {
-            Response::error('Une session existe déjà pour cette réservation', 400);
+        if ($session['status'] === Session::STATUS_COMPLETED) {
+            Response::error('Cette séance est déjà marquée comme effectuée', 400);
         }
 
-        // user_id et person_id sont toujours définis (créés lors de la réservation)
-        $userId = $booking['user_id'];
-        $personId = $booking['person_id'];
-
-        if (!$userId || !$personId) {
-            Response::error('Données de réservation incomplètes (user_id ou person_id manquant)', 400);
-        }
-
-        // Créer la session
-        $sessionData = [
-            'person_id' => $personId,
-            'created_by' => $currentUser['id'],
-            'session_date' => $booking['session_date'],
-            'duration_minutes' => $booking['duration_display_minutes'],
-            'booking_id' => $id
-        ];
-
-        $sessionId = Session::create($sessionData);
-
-        // Marquer la réservation comme complétée
-        Booking::complete($id, $sessionId);
+        // Marquer la session comme complétée
+        Session::complete($id);
 
         AuditService::log(
             $currentUser['id'],
-            'session_created_from_booking',
+            'session_completed',
             'session',
-            $sessionId,
-            null,
-            ['booking_id' => $id]
+            $id,
+            ['status' => Session::STATUS_CONFIRMED],
+            ['status' => Session::STATUS_COMPLETED]
         );
 
-        $session = Session::findById($sessionId);
+        $session = Session::findById($id);
         Response::success([
             'session' => $session
-        ], 'Session créée', 201);
+        ], 'Séance marquée comme effectuée');
     }
 
     /**
@@ -480,7 +460,7 @@ class BookingController
         AuthMiddleware::requireAdmin();
 
         $today = new \DateTime();
-        $bookings = Booking::getConfirmedForDate($today);
+        $bookings = Session::getConfirmedForDate($today);
 
         Response::success([
             'bookings' => $bookings,

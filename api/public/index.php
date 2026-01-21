@@ -174,7 +174,7 @@ $routes = [
     'PATCH /bookings/([a-f0-9-]+)/status' => ['controller' => BookingController::class, 'method' => 'updateStatus'],
     'DELETE /bookings/([a-f0-9-]+)' => ['controller' => BookingController::class, 'method' => 'destroy'],
     'POST /bookings/([a-f0-9-]+)/reminder' => ['controller' => BookingController::class, 'method' => 'sendReminder'],
-    'POST /bookings/([a-f0-9-]+)/create-session' => ['controller' => BookingController::class, 'method' => 'createSession'],
+    'POST /bookings/([a-f0-9-]+)/complete' => ['controller' => BookingController::class, 'method' => 'completeSession'],
 
     // ============================================
     // DOCUMENTS ROUTES (Admin only)

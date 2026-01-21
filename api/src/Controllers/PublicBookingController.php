@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
-use App\Models\Booking;
+use App\Models\Session;
 use App\Models\Setting;
 use App\Models\User;
 use App\Models\Person;
@@ -337,7 +337,7 @@ class PublicBookingController
         $validator
             ->required('session_date')
             ->required('duration_type')
-            ->inArray('duration_type', Booking::TYPES)
+            ->inArray('duration_type', Session::TYPES)
             ->required('client_email')
             ->email('client_email')
             ->phone('client_phone')
@@ -392,13 +392,13 @@ class PublicBookingController
         }
 
         if ($clientIp) {
-            $bookingsByIp = Booking::countUpcomingByIp($clientIp);
+            $bookingsByIp = Session::countUpcomingByIp($clientIp);
             if ($bookingsByIp >= $maxPerIp) {
                 Response::error("Vous avez atteint le nombre maximum de réservations à venir ({$maxPerIp}). Veuillez annuler une réservation existante ou patienter.", 429);
             }
         }
 
-        $bookingsByEmail = Booking::countUpcomingByEmail($clientEmail);
+        $bookingsByEmail = Session::countUpcomingByEmail($clientEmail);
         if ($bookingsByEmail >= $maxPerEmail) {
             Response::error("Cette adresse email a atteint le nombre maximum de réservations à venir ({$maxPerEmail}). Veuillez annuler une réservation existante ou patienter.", 429);
         }
@@ -491,7 +491,7 @@ class PublicBookingController
         }
 
         // Récupérer le prix de la séance
-        $price = Booking::getPriceForType($data['duration_type']);
+        $price = Session::getPriceForType($data['duration_type']);
 
         // Préparer les données de la réservation
         // Les infos client/personne sont récupérées via JOINs avec users/persons
@@ -510,8 +510,8 @@ class PublicBookingController
         $emailConfirmationRequired = Setting::getBoolean('booking_email_confirmation_required', false);
 
         // Créer la réservation
-        $bookingId = Booking::create($bookingData);
-        $booking = Booking::findById($bookingId);
+        $sessionId = Session::createReservation($bookingData);
+        $booking = Session::findById($sessionId);
 
         // Envoyer l'email de confirmation au client
         $mailService = new BookingMailService();
@@ -522,8 +522,8 @@ class PublicBookingController
             $message = 'Réservation créée. Veuillez vérifier votre email pour confirmer.';
         } else {
             // Mode sans validation email: confirmer automatiquement
-            Booking::confirm($booking['id']);
-            $booking = Booking::findById($booking['id']);
+            Session::confirm($booking['id']);
+            $booking = Session::findById($booking['id']);
             $mailService->sendBookingConfirmedEmail($booking);
             $message = 'Réservation confirmée. Un email de confirmation vous a été envoyé.';
 
@@ -551,14 +551,14 @@ class PublicBookingController
      */
     public function confirmBooking(string $token): void
     {
-        $booking = Booking::findByToken($token);
+        $booking = Session::findByToken($token);
 
         if (!$booking) {
             Response::notFound('Réservation non trouvée ou lien expiré');
         }
 
         // Vérifier le statut
-        if ($booking['status'] === Booking::STATUS_CONFIRMED) {
+        if ($booking['status'] === Session::STATUS_CONFIRMED) {
             Response::success([
                 'already_confirmed' => true,
                 'booking' => $this->formatBookingForClient($booking)
@@ -566,11 +566,11 @@ class PublicBookingController
             return;
         }
 
-        if ($booking['status'] === Booking::STATUS_CANCELLED) {
+        if ($booking['status'] === Session::STATUS_CANCELLED) {
             Response::error('Cette réservation a été annulée', 400);
         }
 
-        if ($booking['status'] !== Booking::STATUS_PENDING) {
+        if ($booking['status'] !== Session::STATUS_PENDING) {
             Response::error('Cette réservation ne peut plus être confirmée', 400);
         }
 
@@ -583,10 +583,10 @@ class PublicBookingController
         }
 
         // Confirmer la réservation
-        Booking::confirm($booking['id']);
+        Session::confirm($booking['id']);
 
         // Recharger pour avoir les données à jour
-        $booking = Booking::findById($booking['id']);
+        $booking = Session::findById($booking['id']);
 
         // Envoyer l'email de confirmation finale avec le fichier ICS
         $mailService = new BookingMailService();
@@ -609,26 +609,26 @@ class PublicBookingController
      */
     public function cancelBooking(string $token): void
     {
-        $booking = Booking::findByToken($token);
+        $booking = Session::findByToken($token);
 
         if (!$booking) {
             Response::notFound('Réservation non trouvée');
         }
 
         // Vérifier le statut
-        if ($booking['status'] === Booking::STATUS_CANCELLED) {
+        if ($booking['status'] === Session::STATUS_CANCELLED) {
             Response::success([
                 'already_cancelled' => true
             ], 'Cette réservation est déjà annulée');
             return;
         }
 
-        if ($booking['status'] === Booking::STATUS_COMPLETED) {
+        if ($booking['status'] === Session::STATUS_COMPLETED) {
             Response::error('Cette séance a déjà eu lieu', 400);
         }
 
         // Annuler
-        Booking::cancel($booking['id']);
+        Session::cancel($booking['id']);
 
         // Envoyer l'email d'annulation
         $mailService = new BookingMailService();
@@ -645,7 +645,7 @@ class PublicBookingController
      */
     public function getBookingByToken(string $token): void
     {
-        $booking = Booking::findByToken($token);
+        $booking = Session::findByToken($token);
 
         if (!$booking) {
             Response::notFound('Réservation non trouvée');
@@ -662,13 +662,13 @@ class PublicBookingController
      */
     public function downloadICS(string $token): void
     {
-        $booking = Booking::findByToken($token);
+        $booking = Session::findByToken($token);
 
         if (!$booking) {
             Response::notFound('Réservation non trouvée');
         }
 
-        if ($booking['status'] !== Booking::STATUS_CONFIRMED) {
+        if ($booking['status'] !== Session::STATUS_CONFIRMED) {
             Response::error('Seules les réservations confirmées peuvent être exportées', 400);
         }
 
@@ -688,23 +688,23 @@ class PublicBookingController
      */
     private function formatBookingForClient(array $booking): array
     {
-        $clientType = $booking['client_type'] ?? Booking::CLIENT_TYPE_PERSONAL;
+        $clientType = $booking['client_type'] ?? 'personal';
 
         return [
             'id' => $booking['id'],
             'session_date' => $booking['session_date'],
             'duration_type' => $booking['duration_type'],
-            'duration_type_label' => Booking::LABELS['duration_type'][$booking['duration_type']] ?? $booking['duration_type'],
+            'duration_type_label' => Session::LABELS['duration_type'][$booking['duration_type']] ?? $booking['duration_type'],
             'duration_display_minutes' => $booking['duration_display_minutes'],
             'status' => $booking['status'],
-            'status_label' => Booking::LABELS['status'][$booking['status']] ?? $booking['status'],
+            'status_label' => Session::LABELS['status'][$booking['status']] ?? $booking['status'],
             'person_first_name' => $booking['person_first_name'],
             'person_last_name' => $booking['person_last_name'],
             'client_first_name' => $booking['client_first_name'],
             'client_last_name' => $booking['client_last_name'],
             'client_email' => $booking['client_email'],
             'client_type' => $clientType,
-            'client_type_label' => Booking::LABELS['client_type'][$clientType] ?? 'Particulier',
+            'client_type_label' => Session::LABELS['client_type'][$clientType] ?? 'Particulier',
             'company_name' => $booking['company_name'] ?? null,
             'confirmed_at' => $booking['confirmed_at'],
             'created_at' => $booking['created_at']
