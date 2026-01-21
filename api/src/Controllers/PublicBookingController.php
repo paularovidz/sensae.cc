@@ -494,22 +494,14 @@ class PublicBookingController
         $price = Booking::getPriceForType($data['duration_type']);
 
         // Préparer les données de la réservation
+        // Les infos client/personne sont récupérées via JOINs avec users/persons
         $bookingData = [
             'session_date' => $sessionDate->format('Y-m-d H:i:s'),
             'duration_type' => $data['duration_type'],
             'price' => $price,
             'user_id' => $userId,
             'person_id' => $personId,
-            'client_email' => $clientEmail,
-            'client_phone' => !empty($data['client_phone']) ? trim($data['client_phone']) : null,
-            'client_first_name' => trim($data['client_first_name']),
-            'client_last_name' => trim($data['client_last_name']),
-            'person_first_name' => trim($data['person_first_name']),
-            'person_last_name' => trim($data['person_last_name']),
             'gdpr_consent' => true,
-            'client_type' => $clientType,
-            'company_name' => $companyName,
-            'siret' => $siret,
             'ip_address' => $clientIp,
             'user_agent' => substr($_SERVER['HTTP_USER_AGENT'] ?? '', 0, 500)
         ];

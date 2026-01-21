@@ -460,17 +460,13 @@ class Factory
             INSERT INTO bookings (
                 id, user_id, person_id, session_date, duration_type,
                 duration_display_minutes, duration_blocked_minutes, price, status,
-                client_email, client_phone, client_first_name, client_last_name,
-                person_first_name, person_last_name, confirmation_token,
-                confirmed_at, gdpr_consent, gdpr_consent_at, client_type,
-                company_name, siret, created_at, updated_at
+                confirmation_token, confirmed_at, gdpr_consent, gdpr_consent_at,
+                created_at, updated_at
             ) VALUES (
                 :id, :user_id, :person_id, :session_date, :duration_type,
                 :duration_display, :duration_blocked, :price, 'no_show',
-                :client_email, :client_phone, :client_first_name, :client_last_name,
-                :person_first_name, :person_last_name, :confirmation_token,
-                :confirmed_at, 1, :gdpr_consent_at, :client_type,
-                :company_name, :siret, :created_at, :updated_at
+                :confirmation_token, :confirmed_at, 1, :gdpr_consent_at,
+                :created_at, :updated_at
             )
         ");
 
@@ -483,18 +479,9 @@ class Factory
             'duration_display' => $durationDisplay,
             'duration_blocked' => $durationBlocked,
             'price' => $price,
-            'client_email' => $user['email'],
-            'client_phone' => $user['phone'],
-            'client_first_name' => $user['first_name'],
-            'client_last_name' => $user['last_name'],
-            'person_first_name' => $person['first_name'],
-            'person_last_name' => $person['last_name'],
             'confirmation_token' => $confirmationToken,
             'confirmed_at' => $createdAt->format('Y-m-d H:i:s'),
             'gdpr_consent_at' => $createdAt->format('Y-m-d H:i:s'),
-            'client_type' => $user['client_type'],
-            'company_name' => $user['company_name'],
-            'siret' => $user['siret'],
             'created_at' => $createdAt->format('Y-m-d H:i:s'),
             'updated_at' => $sessionDate->format('Y-m-d H:i:s')
         ]);
@@ -525,17 +512,13 @@ class Factory
             INSERT INTO bookings (
                 id, user_id, person_id, session_date, duration_type,
                 duration_display_minutes, duration_blocked_minutes, price, status,
-                client_email, client_phone, client_first_name, client_last_name,
-                person_first_name, person_last_name, confirmation_token,
-                confirmed_at, gdpr_consent, gdpr_consent_at, client_type,
-                company_name, siret, created_at, updated_at
+                confirmation_token, confirmed_at, gdpr_consent, gdpr_consent_at,
+                created_at, updated_at
             ) VALUES (
                 :id, :user_id, :person_id, :session_date, :duration_type,
                 :duration_display, :duration_blocked, :price, 'cancelled',
-                :client_email, :client_phone, :client_first_name, :client_last_name,
-                :person_first_name, :person_last_name, :confirmation_token,
-                :confirmed_at, 1, :gdpr_consent_at, :client_type,
-                :company_name, :siret, :created_at, :updated_at
+                :confirmation_token, :confirmed_at, 1, :gdpr_consent_at,
+                :created_at, :updated_at
             )
         ");
 
@@ -548,18 +531,9 @@ class Factory
             'duration_display' => $durationDisplay,
             'duration_blocked' => $durationBlocked,
             'price' => $price,
-            'client_email' => $user['email'],
-            'client_phone' => $user['phone'],
-            'client_first_name' => $user['first_name'],
-            'client_last_name' => $user['last_name'],
-            'person_first_name' => $person['first_name'],
-            'person_last_name' => $person['last_name'],
             'confirmation_token' => $confirmationToken,
             'confirmed_at' => $createdAt->format('Y-m-d H:i:s'),
             'gdpr_consent_at' => $createdAt->format('Y-m-d H:i:s'),
-            'client_type' => $user['client_type'],
-            'company_name' => $user['company_name'],
-            'siret' => $user['siret'],
             'created_at' => $createdAt->format('Y-m-d H:i:s'),
             'updated_at' => $sessionDate->format('Y-m-d H:i:s')
         ]);
@@ -586,26 +560,21 @@ class Factory
         $bookingId = UUID::generate();
         $confirmationToken = bin2hex(random_bytes(32));
         $price = $isDiscovery ? 55 : 45;
+        $createdAt = (clone $sessionDate)->modify('-' . rand(1, 14) . ' days');
 
         $stmt = $this->db->prepare("
             INSERT INTO bookings (
                 id, user_id, person_id, session_date, duration_type,
                 duration_display_minutes, duration_blocked_minutes, price, status,
-                client_email, client_phone, client_first_name, client_last_name,
-                person_first_name, person_last_name, confirmation_token,
-                confirmed_at, gdpr_consent, gdpr_consent_at, client_type,
-                company_name, siret, created_at, updated_at
+                confirmation_token, confirmed_at, gdpr_consent, gdpr_consent_at,
+                created_at, updated_at
             ) VALUES (
                 :id, :user_id, :person_id, :session_date, :duration_type,
                 :duration_display, :duration_blocked, :price, 'completed',
-                :client_email, :client_phone, :client_first_name, :client_last_name,
-                :person_first_name, :person_last_name, :confirmation_token,
-                :confirmed_at, 1, :gdpr_consent_at, :client_type,
-                :company_name, :siret, :created_at, :updated_at
+                :confirmation_token, :confirmed_at, 1, :gdpr_consent_at,
+                :created_at, :updated_at
             )
         ");
-
-        $createdAt = (clone $sessionDate)->modify('-' . rand(1, 14) . ' days');
 
         $stmt->execute([
             'id' => $bookingId,
@@ -616,18 +585,9 @@ class Factory
             'duration_display' => $durationDisplay,
             'duration_blocked' => $durationBlocked,
             'price' => $price,
-            'client_email' => $user['email'],
-            'client_phone' => $user['phone'] ?? $this->generatePhone(),
-            'client_first_name' => $user['first_name'],
-            'client_last_name' => $user['last_name'],
-            'person_first_name' => $person['first_name'],
-            'person_last_name' => $person['last_name'],
             'confirmation_token' => $confirmationToken,
             'confirmed_at' => $createdAt->format('Y-m-d H:i:s'),
             'gdpr_consent_at' => $createdAt->format('Y-m-d H:i:s'),
-            'client_type' => $user['client_type'],
-            'company_name' => $user['company_name'],
-            'siret' => $user['siret'],
             'created_at' => $createdAt->format('Y-m-d H:i:s'),
             'updated_at' => $sessionDate->format('Y-m-d H:i:s')
         ]);
@@ -765,17 +725,13 @@ class Factory
             INSERT INTO bookings (
                 id, user_id, person_id, session_date, duration_type,
                 duration_display_minutes, duration_blocked_minutes, price, status,
-                client_email, client_phone, client_first_name, client_last_name,
-                person_first_name, person_last_name, confirmation_token,
-                confirmed_at, gdpr_consent, gdpr_consent_at, client_type,
-                company_name, siret, created_at, updated_at
+                confirmation_token, confirmed_at, gdpr_consent, gdpr_consent_at,
+                created_at, updated_at
             ) VALUES (
                 :id, :user_id, :person_id, :session_date, :duration_type,
                 :duration_display, :duration_blocked, :price, 'confirmed',
-                :client_email, :client_phone, :client_first_name, :client_last_name,
-                :person_first_name, :person_last_name, :confirmation_token,
-                :confirmed_at, 1, :gdpr_consent_at, :client_type,
-                :company_name, :siret, :created_at, NOW()
+                :confirmation_token, :confirmed_at, 1, :gdpr_consent_at,
+                :created_at, NOW()
             )
         ");
 
@@ -788,18 +744,9 @@ class Factory
             'duration_display' => $durationDisplay,
             'duration_blocked' => $durationBlocked,
             'price' => $price,
-            'client_email' => $user['email'],
-            'client_phone' => $user['phone'] ?? $this->generatePhone(),
-            'client_first_name' => $user['first_name'],
-            'client_last_name' => $user['last_name'],
-            'person_first_name' => $person['first_name'],
-            'person_last_name' => $person['last_name'],
             'confirmation_token' => $confirmationToken,
             'confirmed_at' => $createdAt->format('Y-m-d H:i:s'),
             'gdpr_consent_at' => $createdAt->format('Y-m-d H:i:s'),
-            'client_type' => $user['client_type'],
-            'company_name' => $user['company_name'],
-            'siret' => $user['siret'],
             'created_at' => $createdAt->format('Y-m-d H:i:s')
         ]);
     }
@@ -859,26 +806,21 @@ class Factory
 
         $bookingId = UUID::generate();
         $confirmationToken = bin2hex(random_bytes(32));
+        $confirmedAt = $status === 'confirmed' ? (new \DateTime())->format('Y-m-d H:i:s') : null;
 
         $stmt = $this->db->prepare("
             INSERT INTO bookings (
                 id, user_id, person_id, session_date, duration_type,
                 duration_display_minutes, duration_blocked_minutes, price, status,
-                client_email, client_phone, client_first_name, client_last_name,
-                person_first_name, person_last_name, confirmation_token,
-                confirmed_at, gdpr_consent, gdpr_consent_at, client_type,
-                company_name, siret, created_at, updated_at
+                confirmation_token, confirmed_at, gdpr_consent, gdpr_consent_at,
+                created_at, updated_at
             ) VALUES (
                 :id, :user_id, :person_id, :session_date, :duration_type,
                 :duration_display, :duration_blocked, :price, :status,
-                :client_email, :client_phone, :client_first_name, :client_last_name,
-                :person_first_name, :person_last_name, :confirmation_token,
-                :confirmed_at, 1, :gdpr_consent_at, :client_type,
-                :company_name, :siret, NOW(), NOW()
+                :confirmation_token, :confirmed_at, 1, :gdpr_consent_at,
+                NOW(), NOW()
             )
         ");
-
-        $confirmedAt = $status === 'confirmed' ? (new \DateTime())->format('Y-m-d H:i:s') : null;
 
         $stmt->execute([
             'id' => $bookingId,
@@ -890,18 +832,9 @@ class Factory
             'duration_blocked' => $durationBlocked,
             'price' => $price,
             'status' => $status,
-            'client_email' => $user['email'],
-            'client_phone' => $user['phone'] ?? $this->generatePhone(),
-            'client_first_name' => $user['first_name'],
-            'client_last_name' => $user['last_name'],
-            'person_first_name' => $person['first_name'],
-            'person_last_name' => $person['last_name'],
             'confirmation_token' => $confirmationToken,
             'confirmed_at' => $confirmedAt,
-            'gdpr_consent_at' => (new \DateTime())->format('Y-m-d H:i:s'),
-            'client_type' => $user['client_type'],
-            'company_name' => $user['company_name'],
-            'siret' => $user['siret']
+            'gdpr_consent_at' => (new \DateTime())->format('Y-m-d H:i:s')
         ]);
     }
 

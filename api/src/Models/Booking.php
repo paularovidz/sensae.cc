@@ -11,6 +11,9 @@ use App\Services\AvailabilityService;
 
 /**
  * Modèle de gestion des réservations
+ *
+ * Les infos client et personne sont récupérées via JOINs avec users et persons.
+ * Seuls user_id et person_id sont stockés dans bookings.
  */
 class Booking
 {
@@ -38,10 +41,6 @@ class Booking
         self::TYPE_REGULAR
     ];
 
-    // Client types (mirror from User model)
-    public const CLIENT_TYPE_PERSONAL = 'personal';
-    public const CLIENT_TYPE_ASSOCIATION = 'association';
-
     public const LABELS = [
         'status' => [
             'pending' => 'En attente de confirmation',
@@ -61,25 +60,51 @@ class Booking
     ];
 
     /**
+     * Colonnes SELECT communes pour les requêtes avec JOINs
+     */
+    private static function getSelectColumns(): string
+    {
+        return '
+            b.id, b.user_id, b.person_id, b.session_id, b.session_date,
+            b.duration_type, b.duration_display_minutes, b.duration_blocked_minutes,
+            b.price, b.status, b.confirmation_token, b.confirmed_at,
+            b.gdpr_consent, b.gdpr_consent_at, b.admin_notes,
+            b.reminder_sms_sent_at, b.reminder_email_sent_at,
+            b.ip_address, b.user_agent, b.created_at, b.updated_at,
+            -- Infos client depuis users
+            u.email AS client_email,
+            u.phone AS client_phone,
+            u.first_name AS client_first_name,
+            u.last_name AS client_last_name,
+            u.client_type,
+            u.company_name,
+            u.siret,
+            -- Infos personne depuis persons
+            p.first_name AS person_first_name,
+            p.last_name AS person_last_name,
+            -- Aliases supplémentaires pour rétro-compatibilité
+            p.first_name AS linked_person_first_name,
+            p.last_name AS linked_person_last_name,
+            u.email AS user_email
+        ';
+    }
+
+    /**
      * Trouve une réservation par son ID
      */
     public static function findById(string $id): ?array
     {
         $db = Database::getInstance();
-        $stmt = $db->prepare('
-            SELECT b.*,
-                   p.first_name as linked_person_first_name,
-                   p.last_name as linked_person_last_name,
-                   u.email as user_email,
-                   u.first_name as user_first_name,
-                   u.last_name as user_last_name,
+        $columns = self::getSelectColumns();
+        $stmt = $db->prepare("
+            SELECT {$columns},
                    s.id as linked_session_id
             FROM bookings b
-            LEFT JOIN persons p ON b.person_id = p.id
             LEFT JOIN users u ON b.user_id = u.id
+            LEFT JOIN persons p ON b.person_id = p.id
             LEFT JOIN sessions s ON b.session_id = s.id
             WHERE b.id = :id
-        ');
+        ");
         $stmt->execute(['id' => $id]);
         $booking = $stmt->fetch();
 
@@ -92,14 +117,14 @@ class Booking
     public static function findByToken(string $token): ?array
     {
         $db = Database::getInstance();
-        $stmt = $db->prepare('
-            SELECT b.*,
-                   p.first_name as linked_person_first_name,
-                   p.last_name as linked_person_last_name
+        $columns = self::getSelectColumns();
+        $stmt = $db->prepare("
+            SELECT {$columns}
             FROM bookings b
+            LEFT JOIN users u ON b.user_id = u.id
             LEFT JOIN persons p ON b.person_id = p.id
             WHERE b.confirmation_token = :token
-        ');
+        ");
         $stmt->execute(['token' => $token]);
         $booking = $stmt->fetch();
 
@@ -107,42 +132,42 @@ class Booking
     }
 
     /**
-     * Trouve les réservations par email client
+     * Trouve les réservations par email client (via user)
      */
     public static function findByEmail(string $email): array
     {
         $db = Database::getInstance();
-        $stmt = $db->prepare('
-            SELECT b.*,
-                   p.first_name as linked_person_first_name,
-                   p.last_name as linked_person_last_name
+        $columns = self::getSelectColumns();
+        $stmt = $db->prepare("
+            SELECT {$columns}
             FROM bookings b
+            JOIN users u ON b.user_id = u.id
             LEFT JOIN persons p ON b.person_id = p.id
-            WHERE b.client_email = :email
+            WHERE u.email = :email
             ORDER BY b.session_date DESC
-        ');
+        ");
         $stmt->execute(['email' => strtolower($email)]);
 
         return $stmt->fetchAll();
     }
 
     /**
-     * Trouve les personnes distinctes associées à un email
+     * Trouve les personnes distinctes associées à un email (via user)
      */
     public static function findPersonsByEmail(string $email): array
     {
         $db = Database::getInstance();
 
-        // Chercher dans les réservations les personnes distinctes
         $stmt = $db->prepare('
             SELECT DISTINCT
                 b.person_id,
-                COALESCE(p.first_name, b.person_first_name) as first_name,
-                COALESCE(p.last_name, b.person_last_name) as last_name,
+                p.first_name,
+                p.last_name,
                 p.id as linked_person_id
             FROM bookings b
-            LEFT JOIN persons p ON b.person_id = p.id
-            WHERE b.client_email = :email
+            JOIN users u ON b.user_id = u.id
+            JOIN persons p ON b.person_id = p.id
+            WHERE u.email = :email
             AND (b.status = :confirmed OR b.status = :completed)
             ORDER BY b.created_at DESC
         ');
@@ -156,15 +181,16 @@ class Booking
     }
 
     /**
-     * Vérifie si un email existe dans les réservations
+     * Vérifie si un email existe dans les réservations (via user)
      */
     public static function emailExists(string $email): bool
     {
         $db = Database::getInstance();
         $stmt = $db->prepare('
-            SELECT COUNT(*) FROM bookings
-            WHERE client_email = :email
-            AND (status = :confirmed OR status = :completed)
+            SELECT COUNT(*) FROM bookings b
+            JOIN users u ON b.user_id = u.id
+            WHERE u.email = :email
+            AND (b.status = :confirmed OR b.status = :completed)
         ');
         $stmt->execute([
             'email' => strtolower($email),
@@ -181,6 +207,7 @@ class Booking
     public static function findAll(array $filters = [], int $limit = 50, int $offset = 0): array
     {
         $db = Database::getInstance();
+        $columns = self::getSelectColumns();
 
         $where = [];
         $params = [];
@@ -221,14 +248,11 @@ class Booking
         $whereClause = !empty($where) ? 'WHERE ' . implode(' AND ', $where) : '';
 
         $stmt = $db->prepare("
-            SELECT b.*,
-                   p.first_name as linked_person_first_name,
-                   p.last_name as linked_person_last_name,
-                   u.email as user_email,
+            SELECT {$columns},
                    s.id as linked_session_id
             FROM bookings b
-            LEFT JOIN persons p ON b.person_id = p.id
             LEFT JOIN users u ON b.user_id = u.id
+            LEFT JOIN persons p ON b.person_id = p.id
             LEFT JOIN sessions s ON b.session_id = s.id
             {$whereClause}
             ORDER BY b.session_date DESC
@@ -306,45 +330,31 @@ class Booking
             INSERT INTO bookings (
                 id, user_id, person_id, session_date, duration_type,
                 duration_display_minutes, duration_blocked_minutes, price,
-                status, client_email, client_phone, client_first_name, client_last_name,
-                person_first_name, person_last_name, confirmation_token,
-                gdpr_consent, gdpr_consent_at, client_type, company_name, siret,
+                status, confirmation_token,
+                gdpr_consent, gdpr_consent_at,
                 ip_address, user_agent
             ) VALUES (
                 :id, :user_id, :person_id, :session_date, :duration_type,
                 :duration_display_minutes, :duration_blocked_minutes, :price,
-                :status, :client_email, :client_phone, :client_first_name, :client_last_name,
-                :person_first_name, :person_last_name, :confirmation_token,
-                :gdpr_consent, :gdpr_consent_at, :client_type, :company_name, :siret,
+                :status, :confirmation_token,
+                :gdpr_consent, :gdpr_consent_at,
                 :ip_address, :user_agent
             )
         ');
 
-        // Clean SIRET (remove spaces)
-        $siret = isset($data['siret']) ? preg_replace('/\s+/', '', $data['siret']) : null;
-
         $stmt->execute([
             'id' => $id,
-            'user_id' => $data['user_id'] ?? null,
-            'person_id' => $data['person_id'] ?? null,
+            'user_id' => $data['user_id'],
+            'person_id' => $data['person_id'],
             'session_date' => $data['session_date'],
             'duration_type' => $data['duration_type'],
             'duration_display_minutes' => $durations['display'],
             'duration_blocked_minutes' => $durations['blocked'],
             'price' => $data['price'] ?? null,
             'status' => self::STATUS_PENDING,
-            'client_email' => strtolower($data['client_email']),
-            'client_phone' => Validator::normalizePhone($data['client_phone'] ?? null),
-            'client_first_name' => $data['client_first_name'],
-            'client_last_name' => $data['client_last_name'],
-            'person_first_name' => $data['person_first_name'],
-            'person_last_name' => $data['person_last_name'],
             'confirmation_token' => $token,
             'gdpr_consent' => $data['gdpr_consent'] ? 1 : 0,
             'gdpr_consent_at' => $data['gdpr_consent'] ? (new \DateTime())->format('Y-m-d H:i:s') : null,
-            'client_type' => $data['client_type'] ?? self::CLIENT_TYPE_PERSONAL,
-            'company_name' => $data['company_name'] ?? null,
-            'siret' => $siret,
             'ip_address' => $data['ip_address'] ?? null,
             'user_agent' => $data['user_agent'] ?? null
         ]);
@@ -364,26 +374,14 @@ class Booking
 
         $allowedFields = [
             'user_id', 'person_id', 'session_id', 'session_date', 'duration_type',
-            'status', 'client_phone', 'admin_notes', 'confirmed_at',
-            'reminder_sms_sent_at', 'reminder_email_sent_at',
-            'client_type', 'company_name', 'siret', 'price'
+            'status', 'admin_notes', 'confirmed_at',
+            'reminder_sms_sent_at', 'reminder_email_sent_at', 'price'
         ];
 
         foreach ($allowedFields as $field) {
             if (array_key_exists($field, $data)) {
                 $fields[] = "{$field} = :{$field}";
-                $value = $data[$field];
-
-                // Normalize phone
-                if ($field === 'client_phone') {
-                    $value = Validator::normalizePhone($value);
-                }
-                // Clean SIRET (remove spaces)
-                elseif ($field === 'siret' && $value !== null) {
-                    $value = preg_replace('/\s+/', '', (string) $value);
-                }
-
-                $params[$field] = $value;
+                $params[$field] = $data[$field];
             }
         }
 
@@ -504,19 +502,18 @@ class Booking
     public static function getConfirmedForDate(\DateTime $date): array
     {
         $db = Database::getInstance();
-        $stmt = $db->prepare('
-            SELECT b.*,
-                   p.first_name as linked_person_first_name,
-                   p.last_name as linked_person_last_name,
+        $columns = self::getSelectColumns();
+        $stmt = $db->prepare("
+            SELECT {$columns},
                    u.id as linked_user_id
             FROM bookings b
-            LEFT JOIN persons p ON b.person_id = p.id
             LEFT JOIN users u ON b.user_id = u.id
+            LEFT JOIN persons p ON b.person_id = p.id
             WHERE DATE(b.session_date) = :date
             AND b.status = :confirmed
             AND b.session_id IS NULL
             ORDER BY b.session_date
-        ');
+        ");
         $stmt->execute([
             'date' => $date->format('Y-m-d'),
             'confirmed' => self::STATUS_CONFIRMED
@@ -532,20 +529,20 @@ class Booking
     public static function getPendingReminders(): array
     {
         $db = Database::getInstance();
+        $columns = self::getSelectColumns();
         $tomorrow = (new \DateTime('tomorrow'))->format('Y-m-d');
 
-        $stmt = $db->prepare('
-            SELECT b.*,
-                   p.first_name as linked_person_first_name,
-                   p.last_name as linked_person_last_name
+        $stmt = $db->prepare("
+            SELECT {$columns}
             FROM bookings b
+            JOIN users u ON b.user_id = u.id
             LEFT JOIN persons p ON b.person_id = p.id
             WHERE DATE(b.session_date) = :tomorrow
             AND b.status = :confirmed
             AND b.reminder_sms_sent_at IS NULL
-            AND b.client_phone IS NOT NULL
+            AND u.phone IS NOT NULL
             ORDER BY b.session_date
-        ');
+        ");
         $stmt->execute([
             'tomorrow' => $tomorrow,
             'confirmed' => self::STATUS_CONFIRMED
@@ -596,16 +593,17 @@ class Booking
     }
 
     /**
-     * Compte les réservations à venir par email
+     * Compte les réservations à venir par email (via user)
      */
     public static function countUpcomingByEmail(string $email): int
     {
         $db = Database::getInstance();
         $stmt = $db->prepare('
-            SELECT COUNT(*) FROM bookings
-            WHERE client_email = :email
-            AND session_date >= NOW()
-            AND status IN (:pending, :confirmed)
+            SELECT COUNT(*) FROM bookings b
+            JOIN users u ON b.user_id = u.id
+            WHERE u.email = :email
+            AND b.session_date >= NOW()
+            AND b.status IN (:pending, :confirmed)
         ');
         $stmt->execute([
             'email' => strtolower($email),

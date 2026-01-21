@@ -108,24 +108,23 @@ Application de dashboard pour le suivi de séances Snoezelen (thérapie sensorie
 
 ### Bookings (Réservations publiques)
 - `id` (UUID)
-- `user_id` (FK, nullable - lié après création compte)
-- `person_id` (FK, nullable - lié après création personne)
+- `user_id` (FK) - Lié à l'utilisateur (créé à la volée si nouveau)
+- `person_id` (FK) - Lié à la personne/bénéficiaire (créé à la volée si nouveau)
 - `session_id` (FK, nullable - lié après création session)
 - `session_date` (datetime)
 - `duration_type` (enum: 'discovery', 'regular')
 - `duration_display_minutes` (int: 75 ou 45)
-- `duration_blocked_minutes` (int: 90 ou 60)
+- `duration_blocked_minutes` (int: 90 ou 65)
+- `price` (DECIMAL) - Tarif de la séance au moment de la réservation
 - `status` (enum: 'pending', 'confirmed', 'cancelled', 'completed', 'no_show')
-- `client_email`, `client_phone`, `client_first_name`, `client_last_name`
-- `person_first_name`, `person_last_name`
 - `confirmation_token` (hash sécurisé)
 - `confirmed_at`, `gdpr_consent`, `gdpr_consent_at`
-- `client_type` (enum: 'personal', 'association') - Type de client
-- `company_name` (optionnel) - Nom de l'association si association
-- `siret` (optionnel) - N° SIRET si association
+- `admin_notes` (optionnel)
 - `reminder_sms_sent_at`, `reminder_email_sent_at`
 - `ip_address`, `user_agent`
 - `created_at`, `updated_at`
+
+**Note** : Les infos client (email, téléphone, nom, type, etc.) sont récupérées via JOIN avec la table `users`. Les infos personne sont récupérées via JOIN avec `persons`.
 
 ### Settings (Configuration back-office)
 - `key` (VARCHAR PRIMARY KEY)

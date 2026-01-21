@@ -162,7 +162,7 @@ class BookingController
 
         $data = json_decode(file_get_contents('php://input'), true) ?? [];
 
-        $allowedUpdates = ['admin_notes', 'client_phone', 'price'];
+        $allowedUpdates = ['admin_notes', 'price'];
         $updateData = array_intersect_key($data, array_flip($allowedUpdates));
 
         if (empty($updateData)) {
@@ -411,6 +411,7 @@ class BookingController
     /**
      * POST /bookings/{id}/create-session
      * Crée une session à partir d'une réservation (admin uniquement)
+     * Note: user_id et person_id sont toujours définis car créés à la réservation
      */
     public function createSession(string $id): void
     {
@@ -432,34 +433,12 @@ class BookingController
             Response::error('Une session existe déjà pour cette réservation', 400);
         }
 
-        // Créer ou récupérer l'utilisateur
+        // user_id et person_id sont toujours définis (créés lors de la réservation)
         $userId = $booking['user_id'];
-        if (!$userId) {
-            // Créer un compte utilisateur inactif
-            $userId = User::create([
-                'email' => $booking['client_email'],
-                'first_name' => $booking['client_first_name'],
-                'last_name' => $booking['client_last_name'],
-                'phone' => $booking['client_phone'],
-                'role' => 'member',
-                'is_active' => false
-            ]);
-
-            Booking::update($id, ['user_id' => $userId]);
-        }
-
-        // Créer ou récupérer la personne
         $personId = $booking['person_id'];
-        if (!$personId) {
-            $personId = Person::create([
-                'first_name' => $booking['person_first_name'],
-                'last_name' => $booking['person_last_name']
-            ]);
 
-            // Lier la personne à l'utilisateur
-            Person::assignToUser($personId, $userId);
-
-            Booking::update($id, ['person_id' => $personId]);
+        if (!$userId || !$personId) {
+            Response::error('Données de réservation incomplètes (user_id ou person_id manquant)', 400);
         }
 
         // Créer la session
