@@ -73,9 +73,16 @@ class PublicBookingController
         $schedule = AvailabilityService::getScheduleInfo();
         $durations = AvailabilityService::getDurationLabels();
 
+        // Ajouter les prix des séances
+        $prices = [
+            'discovery' => Setting::getInteger('session_discovery_price', 55),
+            'regular' => Setting::getInteger('session_regular_price', 45)
+        ];
+
         Response::success([
             'schedule' => $schedule,
             'duration_types' => $durations,
+            'prices' => $prices,
             'email_confirmation_required' => Setting::getBoolean('booking_email_confirmation_required', false)
         ]);
     }
@@ -483,10 +490,14 @@ class PublicBookingController
             Person::assignToUser($personId, $userId);
         }
 
+        // Récupérer le prix de la séance
+        $price = Booking::getPriceForType($data['duration_type']);
+
         // Préparer les données de la réservation
         $bookingData = [
             'session_date' => $sessionDate->format('Y-m-d H:i:s'),
             'duration_type' => $data['duration_type'],
+            'price' => $price,
             'user_id' => $userId,
             'person_id' => $personId,
             'client_email' => $clientEmail,

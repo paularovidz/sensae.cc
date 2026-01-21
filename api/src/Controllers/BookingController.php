@@ -162,11 +162,16 @@ class BookingController
 
         $data = json_decode(file_get_contents('php://input'), true) ?? [];
 
-        $allowedUpdates = ['admin_notes', 'client_phone'];
+        $allowedUpdates = ['admin_notes', 'client_phone', 'price'];
         $updateData = array_intersect_key($data, array_flip($allowedUpdates));
 
         if (empty($updateData)) {
             Response::validationError(['error' => 'Aucune donnée à mettre à jour']);
+        }
+
+        // Validate price if provided
+        if (isset($updateData['price'])) {
+            $updateData['price'] = max(0, (float) $updateData['price']);
         }
 
         $oldValues = array_intersect_key($booking, $updateData);

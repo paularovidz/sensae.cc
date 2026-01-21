@@ -53,6 +53,7 @@ export const useBookingStore = defineStore('booking', () => {
   // Schedule info
   const scheduleInfo = ref(null)
   const durationLabels = ref({})
+  const prices = ref({ discovery: 55, regular: 45 }) // default prices
   const emailConfirmationRequired = ref(false)
 
   // Loading states
@@ -139,13 +140,16 @@ export const useBookingStore = defineStore('booking', () => {
 
   const durationInfo = computed(() => {
     const type = durationType.value
+    const price = prices.value[type] || (type === 'discovery' ? 55 : 45)
+
     // Use dynamic values from scheduleInfo if available
     if (scheduleInfo.value?.durations?.[type]) {
       const info = scheduleInfo.value.durations[type]
       return {
         display: info.display,
         blocked: info.blocked,
-        label: type === 'discovery' ? 'Séance découverte (1h15)' : 'Séance classique (45min)'
+        label: type === 'discovery' ? 'Séance découverte (1h15)' : 'Séance classique (45min)',
+        price
       }
     }
     // Fallback defaults
@@ -153,14 +157,20 @@ export const useBookingStore = defineStore('booking', () => {
       return {
         display: 75,
         blocked: 90,
-        label: 'Séance découverte (1h15)'
+        label: 'Séance découverte (1h15)',
+        price
       }
     }
     return {
       display: 45,
       blocked: 65,
-      label: 'Séance classique (45min)'
+      label: 'Séance classique (45min)',
+      price
     }
+  })
+
+  const currentPrice = computed(() => {
+    return prices.value[durationType.value] || (durationType.value === 'discovery' ? 55 : 45)
   })
 
   // ========================================
@@ -172,6 +182,7 @@ export const useBookingStore = defineStore('booking', () => {
       const response = await publicBookingApi.getSchedule()
       scheduleInfo.value = response.data.data
       durationLabels.value = response.data.data.duration_types
+      prices.value = response.data.data.prices || { discovery: 55, regular: 45 }
       emailConfirmationRequired.value = response.data.data.email_confirmation_required || false
     } catch (err) {
       console.error('Failed to fetch schedule:', err)
@@ -488,6 +499,8 @@ export const useBookingStore = defineStore('booking', () => {
     bookingResult,
     scheduleInfo,
     durationLabels,
+    prices,
+    currentPrice,
     emailConfirmationRequired,
     loading,
     error,

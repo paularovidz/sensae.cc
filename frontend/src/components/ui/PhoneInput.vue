@@ -1,0 +1,187 @@
+<script setup>
+import { ref, computed, watch } from 'vue'
+
+const props = defineProps({
+  modelValue: {
+    type: String,
+    default: ''
+  },
+  required: {
+    type: Boolean,
+    default: false
+  },
+  disabled: {
+    type: Boolean,
+    default: false
+  },
+  placeholder: {
+    type: String,
+    default: '6 12 34 56 78'
+  }
+})
+
+const emit = defineEmits(['update:modelValue'])
+
+// Liste des pays avec indicatifs (les plus courants en premier)
+const countries = [
+  { code: 'FR', name: 'France', dial: '+33', flag: '\u{1F1EB}\u{1F1F7}' },
+  { code: 'BE', name: 'Belgique', dial: '+32', flag: '\u{1F1E7}\u{1F1EA}' },
+  { code: 'GB', name: 'Royaume-Uni', dial: '+44', flag: '\u{1F1EC}\u{1F1E7}' },
+  { code: 'CH', name: 'Suisse', dial: '+41', flag: '\u{1F1E8}\u{1F1ED}' },
+  { code: 'LU', name: 'Luxembourg', dial: '+352', flag: '\u{1F1F1}\u{1F1FA}' },
+  { code: 'DE', name: 'Allemagne', dial: '+49', flag: '\u{1F1E9}\u{1F1EA}' },
+  { code: 'ES', name: 'Espagne', dial: '+34', flag: '\u{1F1EA}\u{1F1F8}' },
+  { code: 'IT', name: 'Italie', dial: '+39', flag: '\u{1F1EE}\u{1F1F9}' },
+  { code: 'MC', name: 'Monaco', dial: '+377', flag: '\u{1F1F2}\u{1F1E8}' },
+  { code: 'NL', name: 'Pays-Bas', dial: '+31', flag: '\u{1F1F3}\u{1F1F1}' },
+  { code: 'PT', name: 'Portugal', dial: '+351', flag: '\u{1F1F5}\u{1F1F9}' }
+]
+
+const selectedCountry = ref(countries[0]) // France par défaut
+const phoneNumber = ref('')
+const dropdownOpen = ref(false)
+
+// Parser le numéro initial si fourni
+function parseInitialValue() {
+  const value = props.modelValue
+  if (!value) {
+    phoneNumber.value = ''
+    return
+  }
+
+  // Chercher si le numéro commence par un indicatif connu
+  for (const country of countries) {
+    if (value.startsWith(country.dial)) {
+      selectedCountry.value = country
+      phoneNumber.value = value.substring(country.dial.length)
+      return
+    }
+  }
+
+  // Si pas d'indicatif reconnu mais commence par +, garder tel quel
+  if (value.startsWith('+')) {
+    phoneNumber.value = value
+  } else {
+    // Sinon, considérer comme numéro français
+    phoneNumber.value = value.startsWith('0') ? value.substring(1) : value
+  }
+}
+
+// Construire la valeur complète avec indicatif
+const fullValue = computed(() => {
+  const cleaned = phoneNumber.value.replace(/[\s\-\.\(\)]/g, '')
+  if (!cleaned) return ''
+
+  // Si le numéro saisi commence par +, le garder tel quel
+  if (cleaned.startsWith('+')) {
+    return cleaned
+  }
+
+  // Si commence par 0, retirer le 0 et ajouter l'indicatif
+  if (cleaned.startsWith('0')) {
+    return selectedCountry.value.dial + cleaned.substring(1)
+  }
+
+  return selectedCountry.value.dial + cleaned
+})
+
+// Emettre la valeur quand elle change
+watch(fullValue, (newValue) => {
+  emit('update:modelValue', newValue)
+})
+
+// Initialiser au montage
+parseInitialValue()
+
+// Re-parser si la valeur externe change
+watch(() => props.modelValue, (newValue, oldValue) => {
+  // Éviter la boucle infinie
+  if (newValue !== fullValue.value) {
+    parseInitialValue()
+  }
+})
+
+function selectCountry(country) {
+  selectedCountry.value = country
+  dropdownOpen.value = false
+}
+
+function toggleDropdown() {
+  if (!props.disabled) {
+    dropdownOpen.value = !dropdownOpen.value
+  }
+}
+
+function closeDropdown() {
+  dropdownOpen.value = false
+}
+
+// Formater l'affichage du numéro (grouper par 2)
+function formatInput(e) {
+  let value = e.target.value.replace(/[^\d\s]/g, '')
+  // Limiter à 15 chiffres
+  const digits = value.replace(/\s/g, '').substring(0, 15)
+  // Grouper par 2 pour l'affichage
+  const groups = digits.match(/.{1,2}/g)
+  phoneNumber.value = groups ? groups.join(' ') : ''
+}
+</script>
+
+<template>
+  <div class="phone-input-wrapper">
+    <div class="flex">
+      <!-- Sélecteur de pays -->
+      <div class="relative">
+        <button
+          type="button"
+          @click="toggleDropdown"
+          @blur="closeDropdown"
+          :disabled="disabled"
+          class="flex items-center gap-1 px-3 py-2 text-sm bg-gray-700 border border-gray-600 border-r-0 rounded-l-lg text-white hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <span class="text-lg">{{ selectedCountry.flag }}</span>
+          <span class="text-gray-400">{{ selectedCountry.dial }}</span>
+          <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+
+        <!-- Dropdown -->
+        <div
+          v-if="dropdownOpen"
+          class="absolute z-50 mt-1 w-56 bg-gray-800 border border-gray-600 rounded-lg shadow-lg max-h-60 overflow-y-auto"
+        >
+          <button
+            v-for="country in countries"
+            :key="country.code"
+            type="button"
+            @mousedown.prevent="selectCountry(country)"
+            class="w-full flex items-center gap-2 px-3 py-2 text-sm text-left hover:bg-gray-700 text-white"
+            :class="{ 'bg-gray-700': country.code === selectedCountry.code }"
+          >
+            <span class="text-lg">{{ country.flag }}</span>
+            <span class="flex-1">{{ country.name }}</span>
+            <span class="text-gray-400">{{ country.dial }}</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Champ numéro -->
+      <input
+        type="tel"
+        :value="phoneNumber"
+        @input="formatInput"
+        :placeholder="placeholder"
+        :required="required"
+        :disabled="disabled"
+        class="flex-1 px-4 py-2 text-sm bg-gray-700 border border-gray-600 rounded-r-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+      />
+    </div>
+  </div>
+</template>
+
+<style scoped>
+.phone-input-wrapper {
+  position: relative;
+}
+</style>

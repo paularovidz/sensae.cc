@@ -4,6 +4,7 @@ import { RouterLink } from 'vue-router'
 import { bookingsApi } from '@/services/api'
 import { useToastStore } from '@/stores/toast'
 import ConfirmDialog from '@/components/ui/ConfirmDialog.vue'
+import { formatPhoneForDisplay } from '@/utils/phone'
 
 const props = defineProps({
   booking: {
@@ -12,12 +13,17 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['close', 'deleted', 'status-changed'])
+const emit = defineEmits(['close', 'deleted', 'status-changed', 'updated'])
 
 const toast = useToastStore()
 const confirmDialog = ref(null)
 const changingStatus = ref(false)
 const deleting = ref(false)
+
+// Price editing
+const editingPrice = ref(false)
+const editedPrice = ref(null)
+const savingPrice = ref(false)
 
 const statusLabels = {
   pending: 'En attente',
@@ -119,6 +125,34 @@ async function handleDelete() {
 function close() {
   emit('close')
 }
+
+// Price editing functions
+function startEditPrice() {
+  editedPrice.value = props.booking?.price ?? 0
+  editingPrice.value = true
+}
+
+function cancelEditPrice() {
+  editingPrice.value = false
+  editedPrice.value = null
+}
+
+async function savePrice() {
+  if (savingPrice.value || !props.booking) return
+
+  savingPrice.value = true
+  try {
+    await bookingsApi.update(props.booking.id, { price: editedPrice.value })
+    toast.success('Tarif mis à jour')
+    editingPrice.value = false
+    // Emit updated event with new price
+    emit('updated', { id: props.booking.id, price: editedPrice.value })
+  } catch (e) {
+    toast.apiError(e, 'Erreur lors de la mise à jour du tarif')
+  } finally {
+    savingPrice.value = false
+  }
+}
 </script>
 
 <template>
@@ -153,7 +187,7 @@ function close() {
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
             </div>
-            <div>
+            <div class="flex-1">
               <div class="font-medium text-gray-900">{{ formatDate(booking.session_date) }}</div>
               <div class="text-gray-600">{{ durationLabel }}</div>
               <div class="text-sm text-gray-500 mt-1">
@@ -164,6 +198,63 @@ function close() {
               <div class="text-sm text-gray-400">
                 Disponible à {{ formatTime(blockEndTime) }}
                 <span class="text-xs">(+{{ booking.duration_blocked_minutes - booking.duration_display_minutes }}min inter-prestation)</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Price (editable) -->
+          <div class="flex items-start">
+            <div class="p-2 bg-amber-100 rounded-lg mr-3">
+              <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.121 15.536c-1.171 1.952-3.07 1.952-4.242 0-1.172-1.953-1.172-5.119 0-7.072 1.171-1.952 3.07-1.952 4.242 0M8 10.5h4m-4 3h4m9-1.5a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div class="flex-1">
+              <div class="text-sm text-gray-500">Tarif</div>
+              <div class="flex items-center gap-2">
+                <div v-if="!editingPrice" class="flex items-center gap-2">
+                  <span class="font-medium text-gray-900">{{ booking.price ?? '-' }} €</span>
+                  <button
+                    @click="startEditPrice"
+                    class="p-1 text-gray-400 hover:text-gray-600 rounded"
+                    title="Modifier le tarif"
+                  >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                    </svg>
+                  </button>
+                </div>
+                <div v-else class="flex items-center gap-2">
+                  <input
+                    v-model.number="editedPrice"
+                    type="number"
+                    min="0"
+                    step="1"
+                    class="w-20 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-primary-500 focus:border-primary-500"
+                    @keyup.enter="savePrice"
+                    @keyup.escape="cancelEditPrice"
+                  />
+                  <span class="text-gray-500">€</span>
+                  <button
+                    @click="savePrice"
+                    :disabled="savingPrice"
+                    class="p-1 text-green-600 hover:text-green-700 rounded disabled:opacity-50"
+                    title="Enregistrer"
+                  >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                  </button>
+                  <button
+                    @click="cancelEditPrice"
+                    class="p-1 text-gray-400 hover:text-gray-600 rounded"
+                    title="Annuler"
+                  >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -205,7 +296,7 @@ function close() {
               <div class="text-sm text-gray-500">Contact ({{ clientTypeLabel }})</div>
               <div class="font-medium text-gray-900">{{ booking.client_first_name }} {{ booking.client_last_name }}</div>
               <div class="text-sm text-gray-600">{{ booking.client_email }}</div>
-              <div v-if="booking.client_phone" class="text-sm text-gray-600">{{ booking.client_phone }}</div>
+              <div v-if="booking.client_phone" class="text-sm text-gray-600">{{ formatPhoneForDisplay(booking.client_phone) }}</div>
               <div v-if="booking.company_name" class="text-sm text-violet-600 font-medium">{{ booking.company_name }}</div>
             </div>
           </div>

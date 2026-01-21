@@ -454,17 +454,19 @@ class Factory
         $confirmationToken = bin2hex(random_bytes(32));
         $createdAt = (clone $sessionDate)->modify('-' . rand(1, 14) . ' days');
 
+        $price = $isDiscovery ? 55 : 45;
+
         $stmt = $this->db->prepare("
             INSERT INTO bookings (
                 id, user_id, person_id, session_date, duration_type,
-                duration_display_minutes, duration_blocked_minutes, status,
+                duration_display_minutes, duration_blocked_minutes, price, status,
                 client_email, client_phone, client_first_name, client_last_name,
                 person_first_name, person_last_name, confirmation_token,
                 confirmed_at, gdpr_consent, gdpr_consent_at, client_type,
                 company_name, siret, created_at, updated_at
             ) VALUES (
                 :id, :user_id, :person_id, :session_date, :duration_type,
-                :duration_display, :duration_blocked, 'no_show',
+                :duration_display, :duration_blocked, :price, 'no_show',
                 :client_email, :client_phone, :client_first_name, :client_last_name,
                 :person_first_name, :person_last_name, :confirmation_token,
                 :confirmed_at, 1, :gdpr_consent_at, :client_type,
@@ -480,6 +482,7 @@ class Factory
             'duration_type' => $isDiscovery ? 'discovery' : 'regular',
             'duration_display' => $durationDisplay,
             'duration_blocked' => $durationBlocked,
+            'price' => $price,
             'client_email' => $user['email'],
             'client_phone' => $user['phone'],
             'client_first_name' => $user['first_name'],
@@ -516,18 +519,19 @@ class Factory
         $bookingId = UUID::generate();
         $confirmationToken = bin2hex(random_bytes(32));
         $createdAt = (clone $sessionDate)->modify('-' . rand(1, 14) . ' days');
+        $price = $isDiscovery ? 55 : 45;
 
         $stmt = $this->db->prepare("
             INSERT INTO bookings (
                 id, user_id, person_id, session_date, duration_type,
-                duration_display_minutes, duration_blocked_minutes, status,
+                duration_display_minutes, duration_blocked_minutes, price, status,
                 client_email, client_phone, client_first_name, client_last_name,
                 person_first_name, person_last_name, confirmation_token,
                 confirmed_at, gdpr_consent, gdpr_consent_at, client_type,
                 company_name, siret, created_at, updated_at
             ) VALUES (
                 :id, :user_id, :person_id, :session_date, :duration_type,
-                :duration_display, :duration_blocked, 'cancelled',
+                :duration_display, :duration_blocked, :price, 'cancelled',
                 :client_email, :client_phone, :client_first_name, :client_last_name,
                 :person_first_name, :person_last_name, :confirmation_token,
                 :confirmed_at, 1, :gdpr_consent_at, :client_type,
@@ -543,6 +547,7 @@ class Factory
             'duration_type' => $isDiscovery ? 'discovery' : 'regular',
             'duration_display' => $durationDisplay,
             'duration_blocked' => $durationBlocked,
+            'price' => $price,
             'client_email' => $user['email'],
             'client_phone' => $user['phone'],
             'client_first_name' => $user['first_name'],
@@ -580,18 +585,19 @@ class Factory
         // Créer le booking (complété)
         $bookingId = UUID::generate();
         $confirmationToken = bin2hex(random_bytes(32));
+        $price = $isDiscovery ? 55 : 45;
 
         $stmt = $this->db->prepare("
             INSERT INTO bookings (
                 id, user_id, person_id, session_date, duration_type,
-                duration_display_minutes, duration_blocked_minutes, status,
+                duration_display_minutes, duration_blocked_minutes, price, status,
                 client_email, client_phone, client_first_name, client_last_name,
                 person_first_name, person_last_name, confirmation_token,
                 confirmed_at, gdpr_consent, gdpr_consent_at, client_type,
                 company_name, siret, created_at, updated_at
             ) VALUES (
                 :id, :user_id, :person_id, :session_date, :duration_type,
-                :duration_display, :duration_blocked, 'completed',
+                :duration_display, :duration_blocked, :price, 'completed',
                 :client_email, :client_phone, :client_first_name, :client_last_name,
                 :person_first_name, :person_last_name, :confirmation_token,
                 :confirmed_at, 1, :gdpr_consent_at, :client_type,
@@ -609,6 +615,7 @@ class Factory
             'duration_type' => $isDiscovery ? 'discovery' : 'regular',
             'duration_display' => $durationDisplay,
             'duration_blocked' => $durationBlocked,
+            'price' => $price,
             'client_email' => $user['email'],
             'client_phone' => $user['phone'] ?? $this->generatePhone(),
             'client_first_name' => $user['first_name'],
@@ -752,18 +759,19 @@ class Factory
         $bookingId = UUID::generate();
         $confirmationToken = bin2hex(random_bytes(32));
         $createdAt = (clone $sessionDate)->modify('-' . rand(1, 7) . ' days');
+        $price = $isDiscovery ? 55 : 45;
 
         $stmt = $this->db->prepare("
             INSERT INTO bookings (
                 id, user_id, person_id, session_date, duration_type,
-                duration_display_minutes, duration_blocked_minutes, status,
+                duration_display_minutes, duration_blocked_minutes, price, status,
                 client_email, client_phone, client_first_name, client_last_name,
                 person_first_name, person_last_name, confirmation_token,
                 confirmed_at, gdpr_consent, gdpr_consent_at, client_type,
                 company_name, siret, created_at, updated_at
             ) VALUES (
                 :id, :user_id, :person_id, :session_date, :duration_type,
-                :duration_display, :duration_blocked, 'confirmed',
+                :duration_display, :duration_blocked, :price, 'confirmed',
                 :client_email, :client_phone, :client_first_name, :client_last_name,
                 :person_first_name, :person_last_name, :confirmation_token,
                 :confirmed_at, 1, :gdpr_consent_at, :client_type,
@@ -779,6 +787,7 @@ class Factory
             'duration_type' => $isDiscovery ? 'discovery' : 'regular',
             'duration_display' => $durationDisplay,
             'duration_blocked' => $durationBlocked,
+            'price' => $price,
             'client_email' => $user['email'],
             'client_phone' => $user['phone'] ?? $this->generatePhone(),
             'client_first_name' => $user['first_name'],
@@ -842,6 +851,7 @@ class Factory
         $isDiscovery = $slot['type'] === 'discovery';
         $durationDisplay = $isDiscovery ? 75 : 45;
         $durationBlocked = $isDiscovery ? 90 : 65;
+        $price = $isDiscovery ? 55 : 45;
 
         // Statut aléatoire
         $statuses = ['pending', 'confirmed', 'confirmed', 'confirmed']; // Plus de confirmés
@@ -853,14 +863,14 @@ class Factory
         $stmt = $this->db->prepare("
             INSERT INTO bookings (
                 id, user_id, person_id, session_date, duration_type,
-                duration_display_minutes, duration_blocked_minutes, status,
+                duration_display_minutes, duration_blocked_minutes, price, status,
                 client_email, client_phone, client_first_name, client_last_name,
                 person_first_name, person_last_name, confirmation_token,
                 confirmed_at, gdpr_consent, gdpr_consent_at, client_type,
                 company_name, siret, created_at, updated_at
             ) VALUES (
                 :id, :user_id, :person_id, :session_date, :duration_type,
-                :duration_display, :duration_blocked, :status,
+                :duration_display, :duration_blocked, :price, :status,
                 :client_email, :client_phone, :client_first_name, :client_last_name,
                 :person_first_name, :person_last_name, :confirmation_token,
                 :confirmed_at, 1, :gdpr_consent_at, :client_type,
@@ -878,6 +888,7 @@ class Factory
             'duration_type' => $isDiscovery ? 'discovery' : 'regular',
             'duration_display' => $durationDisplay,
             'duration_blocked' => $durationBlocked,
+            'price' => $price,
             'status' => $status,
             'client_email' => $user['email'],
             'client_phone' => $user['phone'] ?? $this->generatePhone(),
@@ -909,9 +920,27 @@ class Factory
 
     private function generatePhone(): string
     {
-        $prefixes = ['06', '07'];
-        $prefix = $this->randomItem($prefixes);
-        return $prefix . ' ' . rand(10, 99) . ' ' . rand(10, 99) . ' ' . rand(10, 99) . ' ' . rand(10, 99);
+        // 90% French, 10% other countries
+        if (rand(1, 10) <= 9) {
+            // French mobile: +33 6xx or +33 7xx
+            $prefix = rand(0, 1) === 0 ? '6' : '7';
+            return '+33' . $prefix . rand(10, 99) . rand(10, 99) . rand(10, 99) . rand(10, 99);
+        }
+
+        // Other countries
+        $countries = [
+            '+32' => [4, 4],   // Belgium: +32 4xx
+            '+44' => [7, 7],   // UK: +44 7xxx
+            '+41' => [7, 7],   // Switzerland: +41 7x
+            '+352' => [6, 6],  // Luxembourg: +352 6xx
+        ];
+
+        $codes = array_keys($countries);
+        $code = $codes[array_rand($codes)];
+        $prefixRange = $countries[$code];
+        $prefix = rand($prefixRange[0], $prefixRange[1]);
+
+        return $code . $prefix . rand(10, 99) . rand(10, 99) . rand(10, 99) . rand(10, 99);
     }
 
     private function generateSiret(): string

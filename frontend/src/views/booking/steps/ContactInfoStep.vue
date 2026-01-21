@@ -78,12 +78,7 @@
               </svg>
               <div class="flex-1">
                 <p class="text-sm text-gray-400 mb-2">Téléphone mobile (optionnel)</p>
-                <input
-                  v-model="bookingStore.clientInfo.phone"
-                  type="tel"
-                  placeholder="06 12 34 56 78"
-                  class="w-full px-4 py-2.5 bg-gray-700/50 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                />
+                <PhoneInput v-model="bookingStore.clientInfo.phone" />
                 <p class="mt-1.5 text-xs text-gray-500">
                   Ajoutez votre numéro pour recevoir un SMS de rappel la veille
                 </p>
@@ -261,17 +256,11 @@
 
         <!-- Phone (optional) -->
         <div>
-          <label for="client-phone" class="block text-sm font-medium text-gray-300 mb-1">
+          <label class="block text-sm font-medium text-gray-300 mb-1">
             Téléphone mobile
             <span class="text-gray-500 font-normal">(optionnel)</span>
           </label>
-          <input
-            id="client-phone"
-            v-model="bookingStore.clientInfo.phone"
-            type="tel"
-            placeholder="06 12 34 56 78"
-            class="w-full px-4 py-3 bg-gray-700/50 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-          />
+          <PhoneInput v-model="bookingStore.clientInfo.phone" />
           <p class="mt-1 text-xs text-gray-500">
             Pour recevoir un SMS de rappel la veille du rendez-vous
           </p>
@@ -319,6 +308,12 @@
             {{ formattedDateTime }}
           </dd>
         </div>
+        <div class="flex justify-between pt-2 border-t border-gray-600/50">
+          <dt class="text-gray-400 font-medium">Tarif :</dt>
+          <dd class="font-bold text-white">
+            {{ bookingStore.currentPrice }} &euro;
+          </dd>
+        </div>
       </dl>
     </div>
   </div>
@@ -327,6 +322,7 @@
 <script setup>
 import { computed } from 'vue'
 import { useBookingStore } from '@/stores/booking'
+import PhoneInput from '@/components/ui/PhoneInput.vue'
 
 const bookingStore = useBookingStore()
 

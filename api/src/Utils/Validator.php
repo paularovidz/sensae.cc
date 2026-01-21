@@ -166,4 +166,104 @@ class Validator
         }
         return (int)$value;
     }
+
+    /**
+     * Normalise un numéro de téléphone avec indicatif pays
+     * Stocke toujours au format international : +33612345678
+     *
+     * @param string|null $phone Le numéro de téléphone
+     * @param string $countryCode L'indicatif pays (ex: "+33", "+32")
+     * @return string|null Le numéro normalisé avec indicatif
+     */
+    public static function normalizePhone(?string $phone, string $countryCode = '+33'): ?string
+    {
+        if ($phone === null || trim($phone) === '') {
+            return null;
+        }
+
+        // Retirer espaces, tirets, points, parenthèses
+        $phone = preg_replace('/[\s\-\.\(\)]/', '', trim($phone));
+
+        // Si le numéro commence déjà par +, on le garde tel quel
+        if (str_starts_with($phone, '+')) {
+            return $phone;
+        }
+
+        // Si le numéro commence par 00, remplacer par +
+        if (str_starts_with($phone, '00')) {
+            return '+' . substr($phone, 2);
+        }
+
+        // Si le numéro commence par 0, remplacer par l'indicatif
+        if (str_starts_with($phone, '0')) {
+            return $countryCode . substr($phone, 1);
+        }
+
+        // Sinon, ajouter l'indicatif
+        return $countryCode . $phone;
+    }
+
+    /**
+     * Formate un numéro de téléphone pour l'affichage
+     * +33612345678 -> +33 6 12 34 56 78
+     */
+    public static function formatPhoneForDisplay(?string $phone): ?string
+    {
+        if ($phone === null || $phone === '') {
+            return null;
+        }
+
+        // Format français : +33 6 12 34 56 78
+        if (str_starts_with($phone, '+33') && strlen($phone) === 12) {
+            return '+33 ' . substr($phone, 3, 1) . ' ' .
+                   substr($phone, 4, 2) . ' ' .
+                   substr($phone, 6, 2) . ' ' .
+                   substr($phone, 8, 2) . ' ' .
+                   substr($phone, 10, 2);
+        }
+
+        // Format belge : +32 4 12 34 56 78
+        if (str_starts_with($phone, '+32') && strlen($phone) >= 11) {
+            $number = substr($phone, 3);
+            return '+32 ' . implode(' ', str_split($number, 2));
+        }
+
+        // Format UK : +44 7xxx xxx xxx
+        if (str_starts_with($phone, '+44') && strlen($phone) >= 12) {
+            $number = substr($phone, 3);
+            // UK mobile: 7xxx xxx xxx
+            if (str_starts_with($number, '7') && strlen($number) === 10) {
+                return '+44 ' . substr($number, 0, 4) . ' ' .
+                       substr($number, 4, 3) . ' ' .
+                       substr($number, 7, 3);
+            }
+            // Generic UK: group by 3
+            return '+44 ' . implode(' ', str_split($number, 3));
+        }
+
+        // Format suisse : +41 7x xx xx xx xx
+        if (str_starts_with($phone, '+41') && strlen($phone) >= 11) {
+            $number = substr($phone, 3);
+            return '+41 ' . implode(' ', str_split($number, 2));
+        }
+
+        // Format luxembourgeois : +352 6xx xxx xxx
+        if (str_starts_with($phone, '+352') && strlen($phone) >= 12) {
+            $number = substr($phone, 4);
+            return '+352 ' . implode(' ', str_split($number, 3));
+        }
+
+        // Format générique : grouper par 2 après l'indicatif
+        if (str_starts_with($phone, '+')) {
+            // Trouver la fin de l'indicatif (2-3 chiffres après +)
+            preg_match('/^\+(\d{1,3})(.*)$/', $phone, $matches);
+            if ($matches) {
+                $countryCode = $matches[1];
+                $number = $matches[2];
+                return '+' . $countryCode . ' ' . implode(' ', str_split($number, 2));
+            }
+        }
+
+        return $phone;
+    }
 }

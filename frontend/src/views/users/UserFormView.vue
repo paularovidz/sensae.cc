@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { usersApi, personsApi } from '@/services/api'
 import LoadingSpinner from '@/components/ui/LoadingSpinner.vue'
 import AlertMessage from '@/components/ui/AlertMessage.vue'
+import PhoneInput from '@/components/ui/PhoneInput.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -188,8 +189,8 @@ function cancel() {
             </div>
 
             <div>
-              <label for="phone" class="block text-sm font-medium text-gray-300 mb-1">Téléphone</label>
-              <input id="phone" v-model="form.phone" type="tel" class="w-full px-4 py-2 text-sm bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent" />
+              <label class="block text-sm font-medium text-gray-300 mb-1">Téléphone</label>
+              <PhoneInput v-model="form.phone" />
             </div>
           </div>
 

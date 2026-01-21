@@ -6,6 +6,7 @@ namespace App\Models;
 
 use App\Config\Database;
 use App\Utils\UUID;
+use App\Utils\Validator;
 use App\Services\AvailabilityService;
 
 /**
@@ -304,14 +305,14 @@ class Booking
         $stmt = $db->prepare('
             INSERT INTO bookings (
                 id, user_id, person_id, session_date, duration_type,
-                duration_display_minutes, duration_blocked_minutes,
+                duration_display_minutes, duration_blocked_minutes, price,
                 status, client_email, client_phone, client_first_name, client_last_name,
                 person_first_name, person_last_name, confirmation_token,
                 gdpr_consent, gdpr_consent_at, client_type, company_name, siret,
                 ip_address, user_agent
             ) VALUES (
                 :id, :user_id, :person_id, :session_date, :duration_type,
-                :duration_display_minutes, :duration_blocked_minutes,
+                :duration_display_minutes, :duration_blocked_minutes, :price,
                 :status, :client_email, :client_phone, :client_first_name, :client_last_name,
                 :person_first_name, :person_last_name, :confirmation_token,
                 :gdpr_consent, :gdpr_consent_at, :client_type, :company_name, :siret,
@@ -330,9 +331,10 @@ class Booking
             'duration_type' => $data['duration_type'],
             'duration_display_minutes' => $durations['display'],
             'duration_blocked_minutes' => $durations['blocked'],
+            'price' => $data['price'] ?? null,
             'status' => self::STATUS_PENDING,
             'client_email' => strtolower($data['client_email']),
-            'client_phone' => $data['client_phone'] ?? null,
+            'client_phone' => Validator::normalizePhone($data['client_phone'] ?? null),
             'client_first_name' => $data['client_first_name'],
             'client_last_name' => $data['client_last_name'],
             'person_first_name' => $data['person_first_name'],
@@ -364,7 +366,7 @@ class Booking
             'user_id', 'person_id', 'session_id', 'session_date', 'duration_type',
             'status', 'client_phone', 'admin_notes', 'confirmed_at',
             'reminder_sms_sent_at', 'reminder_email_sent_at',
-            'client_type', 'company_name', 'siret'
+            'client_type', 'company_name', 'siret', 'price'
         ];
 
         foreach ($allowedFields as $field) {
@@ -372,8 +374,12 @@ class Booking
                 $fields[] = "{$field} = :{$field}";
                 $value = $data[$field];
 
+                // Normalize phone
+                if ($field === 'client_phone') {
+                    $value = Validator::normalizePhone($value);
+                }
                 // Clean SIRET (remove spaces)
-                if ($field === 'siret' && $value !== null) {
+                elseif ($field === 'siret' && $value !== null) {
                     $value = preg_replace('/\s+/', '', (string) $value);
                 }
 
@@ -554,6 +560,18 @@ class Booking
     public static function generateConfirmationToken(): string
     {
         return bin2hex(random_bytes(32));
+    }
+
+    /**
+     * Récupère le prix d'une séance selon son type
+     */
+    public static function getPriceForType(string $durationType): int
+    {
+        $key = $durationType === self::TYPE_DISCOVERY
+            ? 'session_discovery_price'
+            : 'session_regular_price';
+
+        return Setting::getInteger($key, $durationType === self::TYPE_DISCOVERY ? 55 : 45);
     }
 
     /**

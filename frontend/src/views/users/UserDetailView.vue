@@ -7,6 +7,7 @@ import LoadingSpinner from '@/components/ui/LoadingSpinner.vue'
 import ConfirmDialog from '@/components/ui/ConfirmDialog.vue'
 import DocumentsSection from '@/components/documents/DocumentsSection.vue'
 import LoyaltyCard from '@/components/loyalty/LoyaltyCard.vue'
+import { formatPhoneForDisplay } from '@/utils/phone'
 
 const route = useRoute()
 const router = useRouter()
@@ -161,7 +162,7 @@ const isPersonalClient = computed(() => {
           <dl class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <dt class="text-sm text-gray-400">Telephone</dt>
-              <dd class="text-white">{{ user.phone || '-' }}</dd>
+              <dd class="text-white">{{ formatPhoneForDisplay(user.phone) || '-' }}</dd>
             </div>
             <div>
               <dt class="text-sm text-gray-400">Date de creation</dt>

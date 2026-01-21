@@ -6,6 +6,7 @@ namespace App\Models;
 
 use App\Config\Database;
 use App\Utils\UUID;
+use App\Utils\Validator;
 
 class User
 {
@@ -144,7 +145,7 @@ class User
             'email' => strtolower(trim($data['email'])),
             'first_name' => trim($data['first_name']),
             'last_name' => trim($data['last_name']),
-            'phone' => isset($data['phone']) ? trim($data['phone']) : null,
+            'phone' => Validator::normalizePhone($data['phone'] ?? null),
             'role' => $data['role'] ?? 'member',
             'is_active' => ($data['is_active'] ?? true) ? 1 : 0,
             'client_type' => $data['client_type'] ?? self::CLIENT_TYPE_PERSONAL,
@@ -171,6 +172,8 @@ class User
 
                 if ($field === 'email') {
                     $value = strtolower(trim((string)$value));
+                } elseif ($field === 'phone') {
+                    $value = Validator::normalizePhone($value);
                 } elseif ($field === 'is_active') {
                     // Convert to integer for MySQL TINYINT
                     $value = $value ? 1 : 0;
