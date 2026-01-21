@@ -36,16 +36,40 @@ class SensoryProposal
         return $proposal ?: null;
     }
 
-    public static function findAll(int $limit = 100, int $offset = 0): array
+    public static function findAll(int $limit = 100, int $offset = 0, ?string $search = null, ?string $type = null): array
     {
         $db = Database::getInstance();
-        $stmt = $db->prepare('
+
+        $sql = '
             SELECT sp.*, u.first_name as creator_first_name, u.last_name as creator_last_name
             FROM sensory_proposals sp
             LEFT JOIN users u ON sp.created_by = u.id
-            ORDER BY sp.type, sp.title
-            LIMIT :limit OFFSET :offset
-        ');
+        ';
+        $conditions = [];
+
+        if ($search !== null && $search !== '') {
+            $conditions[] = '(sp.title LIKE :s1 OR sp.description LIKE :s2)';
+        }
+
+        if ($type !== null && $type !== '' && in_array($type, self::TYPES, true)) {
+            $conditions[] = 'sp.type = :type';
+        }
+
+        if (!empty($conditions)) {
+            $sql .= ' WHERE ' . implode(' AND ', $conditions);
+        }
+
+        $sql .= ' ORDER BY sp.type, sp.title LIMIT :limit OFFSET :offset';
+
+        $stmt = $db->prepare($sql);
+        if ($search !== null && $search !== '') {
+            $searchPattern = '%' . $search . '%';
+            $stmt->bindValue(':s1', $searchPattern);
+            $stmt->bindValue(':s2', $searchPattern);
+        }
+        if ($type !== null && $type !== '' && in_array($type, self::TYPES, true)) {
+            $stmt->bindValue(':type', $type);
+        }
         $stmt->bindValue(':limit', $limit, \PDO::PARAM_INT);
         $stmt->bindValue(':offset', $offset, \PDO::PARAM_INT);
         $stmt->execute();
@@ -111,10 +135,36 @@ class SensoryProposal
         return $stmt->fetchAll();
     }
 
-    public static function count(): int
+    public static function count(?string $search = null, ?string $type = null): int
     {
         $db = Database::getInstance();
-        $stmt = $db->query('SELECT COUNT(*) FROM sensory_proposals');
+
+        $sql = 'SELECT COUNT(*) FROM sensory_proposals sp';
+        $conditions = [];
+
+        if ($search !== null && $search !== '') {
+            $conditions[] = '(sp.title LIKE :s1 OR sp.description LIKE :s2)';
+        }
+
+        if ($type !== null && $type !== '' && in_array($type, self::TYPES, true)) {
+            $conditions[] = 'sp.type = :type';
+        }
+
+        if (!empty($conditions)) {
+            $sql .= ' WHERE ' . implode(' AND ', $conditions);
+        }
+
+        $stmt = $db->prepare($sql);
+        if ($search !== null && $search !== '') {
+            $searchPattern = '%' . $search . '%';
+            $stmt->bindValue(':s1', $searchPattern);
+            $stmt->bindValue(':s2', $searchPattern);
+        }
+        if ($type !== null && $type !== '' && in_array($type, self::TYPES, true)) {
+            $stmt->bindValue(':type', $type);
+        }
+        $stmt->execute();
+
         return (int)$stmt->fetchColumn();
     }
 

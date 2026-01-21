@@ -102,12 +102,15 @@
 
               <!-- Integer input -->
               <template v-else-if="setting.type === 'integer'">
-                <input
-                  :id="setting.key"
-                  type="number"
-                  v-model.number="formData[setting.key]"
-                  class="w-24 px-3 py-1.5 bg-gray-700 border border-gray-600 rounded-lg text-sm text-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                />
+                <div class="flex items-center">
+                  <input
+                    :id="setting.key"
+                    type="number"
+                    v-model.number="formData[setting.key]"
+                    class="w-24 px-3 py-1.5 bg-gray-700 border border-gray-600 rounded-lg text-sm text-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                  />
+                  <span v-if="isPriceField(setting.key)" class="ml-2 text-gray-400">€</span>
+                </div>
               </template>
 
               <!-- Time input (for HH:MM fields) -->
@@ -300,6 +303,11 @@ const hasChanges = computed(() => {
 // Check if a field is a time field (HH:MM format)
 function isTimeField(key) {
   return key.includes('_start') || key.includes('_end') || key === 'first_slot_time'
+}
+
+// Check if a field is a price field
+function isPriceField(key) {
+  return key.includes('_price')
 }
 
 onMounted(async () => {

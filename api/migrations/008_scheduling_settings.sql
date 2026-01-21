@@ -18,7 +18,7 @@ INSERT INTO `settings` (`key`, `value`, `type`, `label`, `description`, `categor
     "4": null,
     "5": {"open": "09:00", "close": "18:00"},
     "6": {"open": "10:00", "close": "17:00"}
-}', 'json', 'Horaires d''ouverture', 'Horaires par jour de la semaine (0=Dimanche, 6=Samedi). null = fermé', 'scheduling'),
+}', 'json', 'Horaires d''ouverture', 'Horaires par jour de la semaine', 'scheduling'), -- (0=Dimanche, 6=Samedi). null = fermé
 
 -- Lunch break
 ('lunch_break_start', '12:30', 'string', 'Début pause déjeuner', 'Heure de début de la pause déjeuner (HH:MM)', 'scheduling'),

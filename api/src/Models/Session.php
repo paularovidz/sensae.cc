@@ -132,10 +132,11 @@ class Session
         return $stmt->fetchAll();
     }
 
-    public static function findByUser(string $userId, int $limit = 50, int $offset = 0): array
+    public static function findByUser(string $userId, int $limit = 50, int $offset = 0, ?string $search = null): array
     {
         $db = Database::getInstance();
-        $stmt = $db->prepare('
+
+        $sql = '
             SELECT s.*,
                    p.first_name as person_first_name,
                    p.last_name as person_last_name,
@@ -144,10 +145,28 @@ class Session
             INNER JOIN persons p ON s.person_id = p.id
             INNER JOIN user_persons up ON p.id = up.person_id
             WHERE up.user_id = :user_id
-            ORDER BY s.session_date DESC
-            LIMIT :limit OFFSET :offset
-        ');
+        ';
+
+        if ($search !== null && $search !== '') {
+            $sql .= ' AND (
+                p.first_name LIKE :s1
+                OR p.last_name LIKE :s2
+                OR CONCAT(p.first_name, " ", p.last_name) LIKE :s3
+                OR DATE_FORMAT(s.session_date, "%d/%m/%Y") LIKE :s4
+            )';
+        }
+
+        $sql .= ' ORDER BY s.session_date DESC LIMIT :limit OFFSET :offset';
+
+        $stmt = $db->prepare($sql);
         $stmt->bindValue(':user_id', $userId);
+        if ($search !== null && $search !== '') {
+            $searchPattern = '%' . $search . '%';
+            $stmt->bindValue(':s1', $searchPattern);
+            $stmt->bindValue(':s2', $searchPattern);
+            $stmt->bindValue(':s3', $searchPattern);
+            $stmt->bindValue(':s4', $searchPattern);
+        }
         $stmt->bindValue(':limit', $limit, \PDO::PARAM_INT);
         $stmt->bindValue(':offset', $offset, \PDO::PARAM_INT);
         $stmt->execute();
@@ -161,10 +180,11 @@ class Session
         return $sessions;
     }
 
-    public static function findAll(int $limit = 50, int $offset = 0): array
+    public static function findAll(int $limit = 50, int $offset = 0, ?string $search = null): array
     {
         $db = Database::getInstance();
-        $stmt = $db->prepare('
+
+        $sql = '
             SELECT s.*,
                    p.first_name as person_first_name,
                    p.last_name as person_last_name,
@@ -174,9 +194,27 @@ class Session
             FROM sessions s
             INNER JOIN persons p ON s.person_id = p.id
             INNER JOIN users u ON s.created_by = u.id
-            ORDER BY s.session_date DESC
-            LIMIT :limit OFFSET :offset
-        ');
+        ';
+
+        if ($search !== null && $search !== '') {
+            $sql .= ' WHERE (
+                p.first_name LIKE :s1
+                OR p.last_name LIKE :s2
+                OR CONCAT(p.first_name, " ", p.last_name) LIKE :s3
+                OR DATE_FORMAT(s.session_date, "%d/%m/%Y") LIKE :s4
+            )';
+        }
+
+        $sql .= ' ORDER BY s.session_date DESC LIMIT :limit OFFSET :offset';
+
+        $stmt = $db->prepare($sql);
+        if ($search !== null && $search !== '') {
+            $searchPattern = '%' . $search . '%';
+            $stmt->bindValue(':s1', $searchPattern);
+            $stmt->bindValue(':s2', $searchPattern);
+            $stmt->bindValue(':s3', $searchPattern);
+            $stmt->bindValue(':s4', $searchPattern);
+        }
         $stmt->bindValue(':limit', $limit, \PDO::PARAM_INT);
         $stmt->bindValue(':offset', $offset, \PDO::PARAM_INT);
         $stmt->execute();
@@ -190,10 +228,34 @@ class Session
         return $sessions;
     }
 
-    public static function count(): int
+    public static function count(?string $search = null): int
     {
         $db = Database::getInstance();
-        $stmt = $db->query('SELECT COUNT(*) FROM sessions');
+
+        $sql = 'SELECT COUNT(*) FROM sessions s';
+
+        if ($search !== null && $search !== '') {
+            $sql .= '
+                INNER JOIN persons p ON s.person_id = p.id
+                WHERE (
+                    p.first_name LIKE :s1
+                    OR p.last_name LIKE :s2
+                    OR CONCAT(p.first_name, " ", p.last_name) LIKE :s3
+                    OR DATE_FORMAT(s.session_date, "%d/%m/%Y") LIKE :s4
+                )
+            ';
+        }
+
+        $stmt = $db->prepare($sql);
+        if ($search !== null && $search !== '') {
+            $searchPattern = '%' . $search . '%';
+            $stmt->bindValue(':s1', $searchPattern);
+            $stmt->bindValue(':s2', $searchPattern);
+            $stmt->bindValue(':s3', $searchPattern);
+            $stmt->bindValue(':s4', $searchPattern);
+        }
+        $stmt->execute();
+
         return (int)$stmt->fetchColumn();
     }
 
@@ -205,15 +267,37 @@ class Session
         return (int)$stmt->fetchColumn();
     }
 
-    public static function countByUser(string $userId): int
+    public static function countByUser(string $userId, ?string $search = null): int
     {
         $db = Database::getInstance();
-        $stmt = $db->prepare('
+
+        $sql = '
             SELECT COUNT(*) FROM sessions s
+            INNER JOIN persons p ON s.person_id = p.id
             INNER JOIN user_persons up ON s.person_id = up.person_id
             WHERE up.user_id = :user_id
-        ');
-        $stmt->execute(['user_id' => $userId]);
+        ';
+
+        if ($search !== null && $search !== '') {
+            $sql .= ' AND (
+                p.first_name LIKE :s1
+                OR p.last_name LIKE :s2
+                OR CONCAT(p.first_name, " ", p.last_name) LIKE :s3
+                OR DATE_FORMAT(s.session_date, "%d/%m/%Y") LIKE :s4
+            )';
+        }
+
+        $stmt = $db->prepare($sql);
+        $stmt->bindValue(':user_id', $userId);
+        if ($search !== null && $search !== '') {
+            $searchPattern = '%' . $search . '%';
+            $stmt->bindValue(':s1', $searchPattern);
+            $stmt->bindValue(':s2', $searchPattern);
+            $stmt->bindValue(':s3', $searchPattern);
+            $stmt->bindValue(':s4', $searchPattern);
+        }
+        $stmt->execute();
+
         return (int)$stmt->fetchColumn();
     }
 

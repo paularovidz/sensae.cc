@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 import { usersApi } from '@/services/api'
 import LoadingSpinner from '@/components/ui/LoadingSpinner.vue'
@@ -12,15 +12,29 @@ const users = ref([])
 const pagination = ref({ page: 1, limit: 20, total: 0, pages: 0 })
 const confirmDialog = ref(null)
 const userToDelete = ref(null)
+const searchQuery = ref('')
+let searchTimeout = null
 
 onMounted(async () => {
   await loadUsers()
 })
 
+// Debounced search
+watch(searchQuery, () => {
+  if (searchTimeout) clearTimeout(searchTimeout)
+  searchTimeout = setTimeout(() => {
+    loadUsers(1)
+  }, 300)
+})
+
 async function loadUsers(page = 1) {
   loading.value = true
   try {
-    const response = await usersApi.getAll({ page, limit: 20 })
+    const params = { page, limit: 20 }
+    if (searchQuery.value.trim()) {
+      params.search = searchQuery.value.trim()
+    }
+    const response = await usersApi.getAll(params)
     users.value = response.data.data.users
     pagination.value = response.data.data.pagination
   } catch (e) {
@@ -61,8 +75,19 @@ function goToUser(userId) {
 <template>
   <div class="space-y-6">
     <!-- Header -->
-    <div class="flex items-center justify-between">
-      <RouterLink to="/app/users/new" class="btn-primary">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div class="relative flex-1 max-w-md">
+        <input
+          v-model="searchQuery"
+          type="text"
+          placeholder="Rechercher par nom, email, téléphone..."
+          class="w-full pl-10 pr-4 py-2 bg-gray-700/50 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+        />
+        <svg class="absolute left-3 top-2.5 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+      </div>
+      <RouterLink to="/app/users/new" class="btn-primary whitespace-nowrap">
         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
         </svg>
@@ -73,7 +98,17 @@ function goToUser(userId) {
     <LoadingSpinner v-if="loading" size="lg" class="py-12" />
 
     <template v-else>
-      <div class="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden">
+      <!-- Empty state -->
+      <div v-if="users.length === 0" class="bg-gray-800 rounded-xl border border-gray-700 p-12 text-center">
+        <svg class="mx-auto h-12 w-12 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+        </svg>
+        <p class="mt-4 text-gray-400">
+          {{ searchQuery ? 'Aucun utilisateur ne correspond à votre recherche' : 'Aucun utilisateur' }}
+        </p>
+      </div>
+
+      <div v-else class="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden">
         <table class="w-full text-sm text-left">
           <thead>
             <tr class="bg-gray-800/50">

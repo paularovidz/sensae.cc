@@ -149,6 +149,7 @@ $routes = [
     // ============================================
     // PUBLIC BOOKING ROUTES (No authentication)
     // ============================================
+    'GET /public/availability/next' => ['controller' => PublicBookingController::class, 'method' => 'getNextAvailability'],
     'GET /public/availability/schedule' => ['controller' => PublicBookingController::class, 'method' => 'getSchedule'],
     'GET /public/availability/dates' => ['controller' => PublicBookingController::class, 'method' => 'getAvailableDates'],
     'GET /public/availability/slots' => ['controller' => PublicBookingController::class, 'method' => 'getAvailableSlots'],

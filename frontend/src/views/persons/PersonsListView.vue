@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import { usePersonsStore } from '@/stores/persons'
 import { useAuthStore } from '@/stores/auth'
@@ -10,6 +10,8 @@ const personsStore = usePersonsStore()
 const authStore = useAuthStore()
 
 const loading = ref(true)
+const searchQuery = ref('')
+let searchTimeout = null
 
 onMounted(async () => {
   try {
@@ -19,10 +21,22 @@ onMounted(async () => {
   }
 })
 
+// Debounced search
+watch(searchQuery, () => {
+  if (searchTimeout) clearTimeout(searchTimeout)
+  searchTimeout = setTimeout(() => {
+    loadPage(1)
+  }, 300)
+})
+
 async function loadPage(page) {
   loading.value = true
   try {
-    await personsStore.fetchPersons({ page })
+    const params = { page }
+    if (searchQuery.value.trim()) {
+      params.search = searchQuery.value.trim()
+    }
+    await personsStore.fetchPersons(params)
   } finally {
     loading.value = false
   }
@@ -32,8 +46,19 @@ async function loadPage(page) {
 <template>
   <div class="space-y-6">
     <!-- Header -->
-    <div class="flex items-center justify-between">
-      <RouterLink v-if="authStore.isAdmin" to="/app/persons/new" class="btn-primary">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div class="relative flex-1 max-w-md">
+        <input
+          v-model="searchQuery"
+          type="text"
+          placeholder="Rechercher par nom..."
+          class="w-full pl-10 pr-4 py-2 bg-gray-700/50 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+        />
+        <svg class="absolute left-3 top-2.5 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+      </div>
+      <RouterLink v-if="authStore.isAdmin" to="/app/persons/new" class="btn-primary whitespace-nowrap">
         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
         </svg>
@@ -46,11 +71,11 @@ async function loadPage(page) {
     <template v-else>
       <EmptyState
         v-if="personsStore.persons.length === 0"
-        title="Aucune personne"
-        description="Aucune personne n'est assignée à votre compte."
+        :title="searchQuery ? 'Aucun résultat' : 'Aucune personne'"
+        :description="searchQuery ? 'Aucune personne ne correspond à votre recherche.' : 'Aucune personne n\'est assignée à votre compte.'"
         icon="users"
       >
-        <RouterLink v-if="authStore.isAdmin" to="/app/persons/new" class="btn-primary mt-4">
+        <RouterLink v-if="authStore.isAdmin && !searchQuery" to="/app/persons/new" class="btn-primary mt-4">
           Ajouter une personne
         </RouterLink>
       </EmptyState>

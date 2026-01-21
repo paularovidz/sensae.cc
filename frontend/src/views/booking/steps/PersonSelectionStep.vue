@@ -45,13 +45,18 @@
 
     <!-- Returning client: email lookup -->
     <template v-else>
-      <h2 class="text-xl font-semibold text-white mb-2">Retrouvez votre dossier</h2>
+      <h2 class="text-xl font-semibold text-white mb-2">
+        {{ isAuthenticatedUser ? 'Pour qui est cette séance ?' : 'Retrouvez votre dossier' }}
+      </h2>
       <p class="text-gray-400 mb-6">
-        Entrez votre adresse email pour retrouver les personnes déjà enregistrées.
+        {{ isAuthenticatedUser
+          ? 'Sélectionnez la personne qui profitera de la séance Snoezelen.'
+          : 'Entrez votre adresse email pour retrouver les personnes déjà enregistrées.'
+        }}
       </p>
 
-      <!-- Email input -->
-      <div class="mb-6">
+      <!-- Email input (hidden for authenticated users) -->
+      <div v-if="!isAuthenticatedUser" class="mb-6">
         <label for="email-lookup" class="block text-sm font-medium text-gray-300 mb-1">
           Adresse email
         </label>
@@ -87,7 +92,7 @@
 
       <!-- Existing persons list -->
       <div v-if="hasSearched && bookingStore.existingPersons.length > 0" class="mb-6">
-        <h3 class="text-sm font-medium text-gray-300 mb-3">Personnes trouvées</h3>
+        <h3 v-if="!isAuthenticatedUser" class="text-sm font-medium text-gray-300 mb-3">Personnes trouvées</h3>
         <div class="space-y-2">
           <button
             v-for="person in bookingStore.existingPersons"
@@ -128,8 +133,10 @@
       <!-- No results -->
       <div v-if="hasSearched && bookingStore.existingPersons.length === 0" class="mb-6 p-4 bg-amber-500/10 border border-amber-500/30 rounded-lg">
         <p class="text-sm text-amber-300">
-          Aucun dossier trouvé pour cette adresse email.
-          Vous pouvez créer une nouvelle fiche ci-dessous.
+          {{ isAuthenticatedUser
+            ? 'Vous n\'avez pas encore de personne enregistrée. Créez une fiche ci-dessous.'
+            : 'Aucun dossier trouvé pour cette adresse email. Vous pouvez créer une nouvelle fiche ci-dessous.'
+          }}
         </p>
       </div>
 
@@ -186,16 +193,35 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, onMounted, computed, nextTick } from 'vue'
 import { useBookingStore } from '@/stores/booking'
+import { useAuthStore } from '@/stores/auth'
 import { useToastStore } from '@/stores/toast'
 
 const bookingStore = useBookingStore()
+const authStore = useAuthStore()
 const toastStore = useToastStore()
 
 const emailLookup = ref('')
 const hasSearched = ref(false)
 const showNewPersonForm = ref(false)
+
+// Utilisateur connecté = personnes déjà chargées
+const isAuthenticatedUser = computed(() => {
+  return authStore.isAuthenticated && authStore.user
+})
+
+onMounted(() => {
+  // Si utilisateur connecté
+  if (isAuthenticatedUser.value) {
+    hasSearched.value = true
+    emailLookup.value = authStore.user.email
+    // Si pas de personnes, afficher le formulaire d'ajout
+    if (bookingStore.existingPersons.length === 0) {
+      showNewPersonForm.value = true
+    }
+  }
+})
 
 // Restore email if clientInfo already has one
 watch(() => bookingStore.clientInfo.email, (email) => {
@@ -241,6 +267,11 @@ function selectPerson(person) {
   bookingStore.selectedPersonId = person.id
   bookingStore.newPerson = { firstName: '', lastName: '' }
   showNewPersonForm.value = false
+
+  // Passer automatiquement à l'étape suivante
+  nextTick(() => {
+    bookingStore.nextStep()
+  })
 }
 
 function isPersonSelected(person) {

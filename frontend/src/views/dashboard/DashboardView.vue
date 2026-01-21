@@ -77,6 +77,23 @@ function formatDate(dateString) {
     year: 'numeric'
   })
 }
+
+function formatCurrency(amount) {
+  return new Intl.NumberFormat('fr-FR', {
+    style: 'currency',
+    currency: 'EUR',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+  }).format(amount)
+}
+
+function formatFiscalYear(startDate) {
+  if (!startDate) return ''
+  const start = new Date(startDate)
+  const startYear = start.getFullYear()
+  const endYear = startYear + 1
+  return `Oct. ${startYear} - Sept. ${endYear}`
+}
 </script>
 
 <template>
@@ -85,10 +102,26 @@ function formatDate(dateString) {
 
     <template v-else>
       <!-- Admin Stats -->
-      <div v-if="authStore.isAdmin && stats" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div v-if="authStore.isAdmin && stats" class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div class="bg-gray-800 rounded-xl border border-gray-700 p-6">
           <div class="text-sm text-gray-400 mb-1">Séances ce mois</div>
           <div class="text-3xl font-bold text-white">{{ stats.sessions.this_month }}</div>
+        </div>
+        <div class="bg-gray-800 rounded-xl border border-gray-700 p-6">
+          <div class="text-sm text-gray-400 mb-1">CA HT du mois</div>
+          <div class="text-3xl font-bold text-primary-400">{{ formatCurrency(stats.revenue?.estimated_this_month_ht || 0) }}</div>
+          <div v-if="stats.revenue" class="text-xs text-gray-500 mt-1">
+            {{ stats.revenue.discovery_count }} découverte{{ stats.revenue.discovery_count > 1 ? 's' : '' }} ·
+            {{ stats.revenue.regular_count }} classique{{ stats.revenue.regular_count > 1 ? 's' : '' }}
+            <span v-if="stats.revenue.free_count > 0"> · {{ stats.revenue.free_count }} gratuite{{ stats.revenue.free_count > 1 ? 's' : '' }}</span>
+          </div>
+        </div>
+        <div class="bg-gray-800 rounded-xl border border-gray-700 p-6">
+          <div class="text-sm text-gray-400 mb-1">CA HT année fiscale</div>
+          <div class="text-3xl font-bold text-white">{{ formatCurrency(stats.revenue?.fiscal_year_ht || 0) }}</div>
+          <div v-if="stats.revenue" class="text-xs text-gray-500 mt-1">
+            {{ formatFiscalYear(stats.revenue.fiscal_year_start) }}
+          </div>
         </div>
       </div>
 

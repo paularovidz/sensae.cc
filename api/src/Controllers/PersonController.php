@@ -23,13 +23,14 @@ class PersonController
         $page = max(1, (int)($_GET['page'] ?? 1));
         $limit = min(100, max(1, (int)($_GET['limit'] ?? 20)));
         $offset = ($page - 1) * $limit;
+        $search = isset($_GET['search']) && $_GET['search'] !== '' ? trim($_GET['search']) : null;
 
         if ($isAdmin) {
-            $persons = Person::findAll($limit, $offset);
-            $total = Person::count();
+            $persons = Person::findAll($limit, $offset, $search);
+            $total = Person::count($search);
         } else {
-            $persons = Person::findByUser($currentUser['id'], $limit, $offset);
-            $total = Person::countByUser($currentUser['id']);
+            $persons = Person::findByUser($currentUser['id'], $limit, $offset, $search);
+            $total = Person::countByUser($currentUser['id'], $search);
         }
 
         // Add age and stats to each person

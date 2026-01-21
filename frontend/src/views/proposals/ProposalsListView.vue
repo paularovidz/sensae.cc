@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import { useProposalsStore } from '@/stores/proposals'
 import { useAuthStore } from '@/stores/auth'
 import LoadingSpinner from '@/components/ui/LoadingSpinner.vue'
@@ -15,6 +15,8 @@ const editingProposal = ref(null)
 const confirmDialog = ref(null)
 const proposalToDelete = ref(null)
 const error = ref('')
+const searchQuery = ref('')
+let searchTimeout = null
 
 const form = ref({
   title: '',
@@ -25,10 +27,7 @@ const form = ref({
 const selectedType = ref('')
 
 const filteredProposals = computed(() => {
-  if (!selectedType.value) {
-    return proposalsStore.proposals
-  }
-  return proposalsStore.proposals.filter(p => p.type === selectedType.value)
+  return proposalsStore.proposals
 })
 
 onMounted(async () => {
@@ -39,6 +38,35 @@ onMounted(async () => {
     loading.value = false
   }
 })
+
+// Debounced search
+watch(searchQuery, () => {
+  if (searchTimeout) clearTimeout(searchTimeout)
+  searchTimeout = setTimeout(() => {
+    loadProposals()
+  }, 300)
+})
+
+// Reload when type changes
+watch(selectedType, () => {
+  loadProposals()
+})
+
+async function loadProposals() {
+  loading.value = true
+  try {
+    const params = { limit: 100 }
+    if (searchQuery.value.trim()) {
+      params.search = searchQuery.value.trim()
+    }
+    if (selectedType.value) {
+      params.type = selectedType.value
+    }
+    await proposalsStore.fetchProposals(params)
+  } finally {
+    loading.value = false
+  }
+}
 
 function openModal(proposal = null) {
   editingProposal.value = proposal
@@ -73,7 +101,7 @@ async function handleSubmit() {
       await proposalsStore.createProposal(form.value)
     }
     closeModal()
-    await proposalsStore.fetchProposals({ limit: 100 })
+    await loadProposals()
   } catch (e) {
     error.value = e.response?.data?.message || 'Une erreur est survenue'
   }
@@ -102,8 +130,19 @@ function canEdit(proposal) {
 <template>
   <div class="space-y-6">
     <!-- Header -->
-    <div class="flex items-center justify-between">
-      <button @click="openModal()" class="btn-primary">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div class="relative flex-1 max-w-md">
+        <input
+          v-model="searchQuery"
+          type="text"
+          placeholder="Rechercher par titre ou description..."
+          class="w-full pl-10 pr-4 py-2 bg-gray-700/50 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+        />
+        <svg class="absolute left-3 top-2.5 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+      </div>
+      <button @click="openModal()" class="btn-primary whitespace-nowrap">
         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
         </svg>
@@ -172,8 +211,13 @@ function canEdit(proposal) {
         </div>
       </div>
 
-      <div v-if="filteredProposals.length === 0" class="text-center py-12 text-gray-400">
-        Aucune proposition trouvée
+      <div v-if="filteredProposals.length === 0" class="bg-gray-800 rounded-xl border border-gray-700 p-12 text-center">
+        <svg class="mx-auto h-12 w-12 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+        </svg>
+        <p class="mt-4 text-gray-400">
+          {{ searchQuery || selectedType ? 'Aucune proposition ne correspond à vos critères' : 'Aucune proposition trouvée' }}
+        </p>
       </div>
     </template>
 

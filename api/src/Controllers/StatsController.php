@@ -6,6 +6,7 @@ namespace App\Controllers;
 
 use App\Config\Database;
 use App\Middleware\AuthMiddleware;
+use App\Models\Setting;
 use App\Services\AuditService;
 use App\Utils\Response;
 
@@ -105,6 +106,128 @@ class StatsController
             FROM sessions
         ");
         $stats['sessions']['wants_to_return'] = $stmt->fetch();
+
+        // Revenue estimation for current month
+        $regularPrice = Setting::getInteger('session_regular_price', 45);
+        $discoveryPrice = Setting::getInteger('session_discovery_price', 55);
+        $discoveryThreshold = Setting::getInteger('session_discovery_display_minutes', 75);
+
+        // Count sessions this month by type (based on duration)
+        $stmt = $db->prepare("
+            SELECT
+                SUM(CASE WHEN duration_minutes >= :threshold THEN 1 ELSE 0 END) as discovery_count,
+                SUM(CASE WHEN duration_minutes < :threshold2 THEN 1 ELSE 0 END) as regular_count,
+                SUM(CASE WHEN is_free_session = 1 THEN 1 ELSE 0 END) as free_count,
+                SUM(CASE WHEN duration_minutes >= :threshold3 AND is_free_session = 0 THEN 1 ELSE 0 END) as discovery_paid,
+                SUM(CASE WHEN duration_minutes < :threshold4 AND is_free_session = 0 THEN 1 ELSE 0 END) as regular_paid
+            FROM sessions
+            WHERE MONTH(session_date) = MONTH(CURRENT_DATE())
+            AND YEAR(session_date) = YEAR(CURRENT_DATE())
+        ");
+        $stmt->execute([
+            'threshold' => $discoveryThreshold,
+            'threshold2' => $discoveryThreshold,
+            'threshold3' => $discoveryThreshold,
+            'threshold4' => $discoveryThreshold
+        ]);
+        $sessionCounts = $stmt->fetch();
+
+        $discoveryCount = (int)($sessionCounts['discovery_count'] ?? 0);
+        $regularCount = (int)($sessionCounts['regular_count'] ?? 0);
+        $freeCount = (int)($sessionCounts['free_count'] ?? 0);
+        $discoveryPaidSessions = (int)($sessionCounts['discovery_paid'] ?? 0);
+        $regularPaidSessions = (int)($sessionCounts['regular_paid'] ?? 0);
+
+        // Count confirmed bookings this month (not yet converted to sessions)
+        $stmt = $db->query("
+            SELECT
+                SUM(CASE WHEN duration_type = 'discovery' THEN 1 ELSE 0 END) as discovery_count,
+                SUM(CASE WHEN duration_type = 'regular' THEN 1 ELSE 0 END) as regular_count
+            FROM bookings
+            WHERE session_id IS NULL
+            AND status IN ('confirmed', 'pending')
+            AND MONTH(session_date) = MONTH(CURRENT_DATE())
+            AND YEAR(session_date) = YEAR(CURRENT_DATE())
+        ");
+        $bookingCounts = $stmt->fetch();
+
+        $discoveryBookings = (int)($bookingCounts['discovery_count'] ?? 0);
+        $regularBookings = (int)($bookingCounts['regular_count'] ?? 0);
+
+        // Total paid = sessions + bookings not yet converted
+        $discoveryPaid = $discoveryPaidSessions + $discoveryBookings;
+        $regularPaid = $regularPaidSessions + $regularBookings;
+
+        $estimatedRevenueTTC = ($discoveryPaid * $discoveryPrice) + ($regularPaid * $regularPrice);
+
+        // Convert to HT (excluding 20% VAT)
+        $vatRate = 0.20;
+        $estimatedRevenueHT = round($estimatedRevenueTTC / (1 + $vatRate), 2);
+
+        // Fiscal year revenue (October 1 - September 30)
+        $now = new \DateTime();
+        $currentMonth = (int) $now->format('n');
+        $currentYear = (int) $now->format('Y');
+
+        // Determine fiscal year start
+        if ($currentMonth >= 10) {
+            // October-December: fiscal year started this year
+            $fiscalYearStart = "$currentYear-10-01";
+            $fiscalYearEnd = ($currentYear + 1) . "-09-30";
+        } else {
+            // January-September: fiscal year started last year
+            $fiscalYearStart = ($currentYear - 1) . "-10-01";
+            $fiscalYearEnd = "$currentYear-09-30";
+        }
+
+        // Sessions in fiscal year
+        $stmt = $db->prepare("
+            SELECT
+                SUM(CASE WHEN duration_minutes >= :threshold AND is_free_session = 0 THEN 1 ELSE 0 END) as discovery_paid,
+                SUM(CASE WHEN duration_minutes < :threshold2 AND is_free_session = 0 THEN 1 ELSE 0 END) as regular_paid
+            FROM sessions
+            WHERE session_date >= :fiscal_start AND session_date <= :fiscal_end
+        ");
+        $stmt->execute([
+            'threshold' => $discoveryThreshold,
+            'threshold2' => $discoveryThreshold,
+            'fiscal_start' => $fiscalYearStart,
+            'fiscal_end' => $fiscalYearEnd . ' 23:59:59'
+        ]);
+        $fiscalSessionCounts = $stmt->fetch();
+
+        // Bookings in fiscal year (not yet converted to sessions)
+        $stmt = $db->prepare("
+            SELECT
+                SUM(CASE WHEN duration_type = 'discovery' THEN 1 ELSE 0 END) as discovery_count,
+                SUM(CASE WHEN duration_type = 'regular' THEN 1 ELSE 0 END) as regular_count
+            FROM bookings
+            WHERE session_id IS NULL
+            AND status IN ('confirmed', 'pending')
+            AND session_date >= :fiscal_start AND session_date <= :fiscal_end
+        ");
+        $stmt->execute([
+            'fiscal_start' => $fiscalYearStart,
+            'fiscal_end' => $fiscalYearEnd . ' 23:59:59'
+        ]);
+        $fiscalBookingCounts = $stmt->fetch();
+
+        $fiscalDiscoveryPaid = (int)($fiscalSessionCounts['discovery_paid'] ?? 0) + (int)($fiscalBookingCounts['discovery_count'] ?? 0);
+        $fiscalRegularPaid = (int)($fiscalSessionCounts['regular_paid'] ?? 0) + (int)($fiscalBookingCounts['regular_count'] ?? 0);
+        $fiscalRevenueTTC = ($fiscalDiscoveryPaid * $discoveryPrice) + ($fiscalRegularPaid * $regularPrice);
+        $fiscalRevenueHT = round($fiscalRevenueTTC / (1 + $vatRate), 2);
+
+        $stats['revenue'] = [
+            'estimated_this_month_ht' => $estimatedRevenueHT,
+            'fiscal_year_ht' => $fiscalRevenueHT,
+            'fiscal_year_start' => $fiscalYearStart,
+            'fiscal_year_end' => $fiscalYearEnd,
+            'discovery_count' => $discoveryCount + $discoveryBookings,
+            'regular_count' => $regularCount + $regularBookings,
+            'free_count' => $freeCount,
+            'discovery_price' => $discoveryPrice,
+            'regular_price' => $regularPrice
+        ];
 
         // Recent activity (last 10 audit logs)
         $stats['recent_activity'] = AuditService::getRecent(10);

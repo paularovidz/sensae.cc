@@ -567,6 +567,12 @@ Exemple pour séances classiques (45min + 20min pause) : 9h00, 10h05, 11h10, 13h
 | booking_min_advance_hours | integer | 24 | Délai minimum avant RDV (heures) |
 | booking_max_advance_days | integer | 60 | Délai maximum pour réserver (jours) |
 
+#### Catégorie: pricing (Tarifs)
+| Clé | Type | Défaut | Description |
+|-----|------|--------|-------------|
+| session_regular_price | integer | 45 | Prix séance classique (€) |
+| session_discovery_price | integer | 55 | Prix séance découverte (€) |
+
 #### Catégorie: calendar
 | Clé | Type | Défaut | Description |
 |-----|------|--------|-------------|

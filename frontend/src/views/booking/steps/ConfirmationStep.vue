@@ -130,6 +130,7 @@ import { computed } from 'vue'
 import { useBookingStore } from '@/stores/booking'
 
 const bookingStore = useBookingStore()
+const emit = defineEmits(['new-booking'])
 
 const formattedDateTime = computed(() => {
   if (!bookingStore.selectedDate || !bookingStore.selectedTime) return '-'
@@ -147,7 +148,7 @@ const formattedDateTime = computed(() => {
 })
 
 function newBooking() {
-  bookingStore.resetWizard()
+  emit('new-booking')
 }
 
 function resendEmail() {

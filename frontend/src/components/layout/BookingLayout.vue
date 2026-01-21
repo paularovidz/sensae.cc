@@ -23,15 +23,6 @@
         <router-view />
       </div>
     </main>
-
-    <!-- Footer (can be hidden for embed mode) -->
-    <footer v-if="!isEmbed" class="mt-auto py-6">
-      <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-        <p class="text-center text-sm text-gray-500">
-          &copy; {{ new Date().getFullYear() }} sensëa Snoezelen. Tous droits réservés.
-        </p>
-      </div>
-    </footer>
   </div>
 </template>
 

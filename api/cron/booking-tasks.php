@@ -14,7 +14,11 @@
  *     0 18 * * * php booking-tasks.php send-reminders
  *
  *   Rafraîchissement du cache calendrier (toutes les 5 minutes) :
- *     0,5,10,15,20,25,30,35,40,45,50,55 * * * * php booking-tasks.php refresh-calendar
+ *     */5 * * * * php booking-tasks.php refresh-calendar
+ *
+ *   Nettoyage complet (une fois par jour à 3h) :
+ *     0 3 * * * php booking-tasks.php cleanup
+ *     (magic links > 35j, refresh tokens > 30j, bookings pending > 24h)
  */
 
 declare(strict_types=1);
@@ -26,6 +30,7 @@ use App\Models\Booking;
 use App\Models\Session;
 use App\Models\Person;
 use App\Models\User;
+use App\Models\RefreshToken;
 use App\Services\CalendarService;
 use App\Services\BookingMailService;
 use App\Services\SMSService;
@@ -61,16 +66,32 @@ switch ($task) {
         cleanupExpiredBookings();
         break;
 
+    case 'cleanup-magic-links':
+        cleanupOldMagicLinks();
+        break;
+
+    case 'cleanup-tokens':
+        cleanupOldRefreshTokens();
+        break;
+
+    case 'cleanup':
+        cleanupExpiredBookings();
+        cleanupOldMagicLinks();
+        cleanupOldRefreshTokens();
+        break;
+
     case 'all':
         refreshCalendarCache();
         createSessionsFromBookings();
         sendReminders();
         cleanupExpiredBookings();
+        cleanupOldMagicLinks();
+        cleanupOldRefreshTokens();
         break;
 
     default:
         echo "Unknown task: {$task}\n";
-        echo "Available tasks: create-sessions, send-reminders, refresh-calendar, cleanup-expired, all\n";
+        echo "Available tasks: create-sessions, send-reminders, refresh-calendar, cleanup-expired, cleanup-magic-links, cleanup-tokens, cleanup, all\n";
         exit(1);
 }
 
@@ -258,6 +279,56 @@ function cleanupExpiredBookings(): void
 
     } catch (Exception $e) {
         echo "     ERROR cleaning up expired bookings: {$e->getMessage()}\n";
+    }
+}
+
+/**
+ * Supprime les magic links de plus de 35 jours
+ */
+function cleanupOldMagicLinks(): void
+{
+    echo "  -> Cleaning up old magic links...\n";
+
+    try {
+        $db = \App\Config\Database::getInstance();
+
+        // Supprimer les magic links de plus de 35 jours
+        $stmt = $db->prepare('
+            DELETE FROM magic_links
+            WHERE created_at < DATE_SUB(NOW(), INTERVAL 35 DAY)
+        ');
+        $stmt->execute();
+        $deleted = $stmt->rowCount();
+
+        if ($deleted > 0) {
+            echo "     Deleted {$deleted} old magic link(s).\n";
+        } else {
+            echo "     No old magic links to cleanup.\n";
+        }
+
+    } catch (Exception $e) {
+        echo "     ERROR cleaning up old magic links: {$e->getMessage()}\n";
+    }
+}
+
+/**
+ * Supprime les refresh tokens expirés/révoqués de plus de 30 jours
+ */
+function cleanupOldRefreshTokens(): void
+{
+    echo "  -> Cleaning up old refresh tokens...\n";
+
+    try {
+        $deleted = RefreshToken::cleanup();
+
+        if ($deleted > 0) {
+            echo "     Deleted {$deleted} old refresh token(s).\n";
+        } else {
+            echo "     No old refresh tokens to cleanup.\n";
+        }
+
+    } catch (Exception $e) {
+        echo "     ERROR cleaning up old refresh tokens: {$e->getMessage()}\n";
     }
 }
 

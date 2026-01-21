@@ -22,9 +22,10 @@ class UserController
         $page = max(1, (int)($_GET['page'] ?? 1));
         $limit = min(100, max(1, (int)($_GET['limit'] ?? 20)));
         $offset = ($page - 1) * $limit;
+        $search = isset($_GET['search']) && $_GET['search'] !== '' ? trim($_GET['search']) : null;
 
-        $users = User::findAll($limit, $offset);
-        $total = User::count();
+        $users = User::findAll($limit, $offset, $search);
+        $total = User::count($search);
 
         Response::success([
             'users' => array_map([User::class, 'toPublic'], $users),

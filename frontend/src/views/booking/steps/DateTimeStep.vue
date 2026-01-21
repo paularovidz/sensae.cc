@@ -5,35 +5,6 @@
       Sélectionnez une date puis un horaire disponible pour votre {{ durationLabel }}.
     </p>
 
-    <!-- Duration type selector (for returning clients) -->
-    <div v-if="!bookingStore.isNewClient" class="mb-6">
-      <label class="block text-sm font-medium text-gray-300 mb-2">Type de séance</label>
-      <div class="flex space-x-3">
-        <button
-          @click="setDurationType('regular')"
-          :class="[
-            'flex-1 py-3 px-4 rounded-lg border-2 text-sm font-medium transition-all',
-            bookingStore.durationType === 'regular'
-              ? 'border-indigo-500 bg-indigo-500/20 text-indigo-300'
-              : 'border-gray-600 text-gray-400 hover:border-gray-500'
-          ]"
-        >
-          Classique (45 min)
-        </button>
-        <button
-          @click="setDurationType('discovery')"
-          :class="[
-            'flex-1 py-3 px-4 rounded-lg border-2 text-sm font-medium transition-all',
-            bookingStore.durationType === 'discovery'
-              ? 'border-indigo-500 bg-indigo-500/20 text-indigo-300'
-              : 'border-gray-600 text-gray-400 hover:border-gray-500'
-          ]"
-        >
-          Découverte (1h15)
-        </button>
-      </div>
-    </div>
-
     <div class="grid md:grid-cols-2 gap-6">
       <!-- Calendar -->
       <div>
@@ -91,7 +62,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, nextTick } from 'vue'
 import { useBookingStore } from '@/stores/booking'
 import BookingCalendar from '@/components/booking/BookingCalendar.vue'
 import TimeSlotPicker from '@/components/booking/TimeSlotPicker.vue'
@@ -123,11 +94,17 @@ const formattedSelection = computed(() => {
 })
 
 onMounted(async () => {
-  await fetchAvailableDates()
-})
+  // Déterminer automatiquement le type de séance :
+  // - Nouvelle personne (pas d'ID) = découverte
+  // - Personne existante (avec ID) = classique
+  const isNewPerson = !bookingStore.selectedPersonId
+  const newType = isNewPerson ? 'discovery' : 'regular'
 
-// Refetch when duration type changes
-watch(() => bookingStore.durationType, async () => {
+  if (bookingStore.durationType !== newType) {
+    // Utiliser setDurationType pour reset correctement toutes les données
+    bookingStore.setDurationType(newType)
+  }
+
   await fetchAvailableDates()
 })
 
@@ -160,11 +137,9 @@ async function selectDate(date) {
 
 function selectTime(time) {
   bookingStore.selectedTime = time
-}
-
-function setDurationType(type) {
-  if (type !== bookingStore.durationType) {
-    bookingStore.setDurationType(type)
-  }
+  // Passer automatiquement à l'étape suivante après sélection
+  nextTick(() => {
+    bookingStore.nextStep()
+  })
 }
 </script>

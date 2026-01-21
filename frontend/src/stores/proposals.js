@@ -26,11 +26,17 @@ export const useProposalsStore = defineStore('proposals', () => {
     error.value = null
 
     try {
-      const response = await sensoryProposalsApi.getAll({
+      const apiParams = {
         page: params.page || 1,
-        limit: params.limit || 50,
-        type: params.type
-      })
+        limit: params.limit || 50
+      }
+      if (params.type) {
+        apiParams.type = params.type
+      }
+      if (params.search) {
+        apiParams.search = params.search
+      }
+      const response = await sensoryProposalsApi.getAll(apiParams)
 
       proposals.value = response.data.data.proposals
       typeLabels.value = response.data.data.types || {}

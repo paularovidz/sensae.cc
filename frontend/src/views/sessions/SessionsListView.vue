@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useSessionsStore } from '@/stores/sessions'
 import { useAuthStore } from '@/stores/auth'
@@ -16,6 +16,8 @@ const stats = ref(null)
 const calendarData = ref({})
 const calendarYear = ref(new Date().getFullYear())
 const calendarMonth = ref(new Date().getMonth() + 1)
+const searchQuery = ref('')
+let searchTimeout = null
 
 const isAdmin = computed(() => authStore.user?.role === 'admin')
 
@@ -28,6 +30,14 @@ onMounted(async () => {
   } finally {
     loading.value = false
   }
+})
+
+// Debounced search
+watch(searchQuery, () => {
+  if (searchTimeout) clearTimeout(searchTimeout)
+  searchTimeout = setTimeout(() => {
+    loadPage(1)
+  }, 300)
 })
 
 async function loadStats() {
@@ -52,7 +62,11 @@ async function handleMonthChange({ year, month }) {
 async function loadPage(page) {
   loading.value = true
   try {
-    await sessionsStore.fetchSessions({ page })
+    const params = { page }
+    if (searchQuery.value.trim()) {
+      params.search = searchQuery.value.trim()
+    }
+    await sessionsStore.fetchSessions(params)
   } finally {
     loading.value = false
   }
@@ -94,8 +108,19 @@ function getBehaviorBadgeClass(behavior) {
 <template>
   <div class="space-y-6">
     <!-- Header -->
-    <div class="flex items-center justify-between">
-      <RouterLink to="/app/sessions/new" class="btn-primary">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div class="relative flex-1 max-w-md">
+        <input
+          v-model="searchQuery"
+          type="text"
+          placeholder="Rechercher par nom ou date (ex: 21/01/2026)..."
+          class="w-full pl-10 pr-4 py-2 bg-gray-700/50 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+        />
+        <svg class="absolute left-3 top-2.5 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+      </div>
+      <RouterLink to="/app/sessions/new" class="btn-primary whitespace-nowrap">
         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
         </svg>
@@ -156,11 +181,11 @@ function getBehaviorBadgeClass(behavior) {
         <div class="lg:col-span-2">
           <EmptyState
             v-if="sessionsStore.sessions.length === 0"
-            title="Aucune séance"
-            description="Aucune séance n'a encore été enregistrée."
+            :title="searchQuery ? 'Aucun résultat' : 'Aucune séance'"
+            :description="searchQuery ? 'Aucune séance ne correspond à votre recherche.' : 'Aucune séance n\'a encore été enregistrée.'"
             icon="calendar"
           >
-            <RouterLink to="/app/sessions/new" class="btn-primary mt-4">
+            <RouterLink v-if="!searchQuery" to="/app/sessions/new" class="btn-primary mt-4">
               Créer une séance
             </RouterLink>
           </EmptyState>

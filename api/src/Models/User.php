@@ -71,16 +71,39 @@ class User
         return $user ?: null;
     }
 
-    public static function findAll(int $limit = 100, int $offset = 0): array
+    public static function findAll(int $limit = 100, int $offset = 0, ?string $search = null): array
     {
         $db = Database::getInstance();
-        $stmt = $db->prepare('
+
+        $sql = '
             SELECT id, email, login, first_name, last_name, phone, role, is_active,
                    client_type, company_name, siret, created_at, updated_at
             FROM users
-            ORDER BY last_name, first_name
-            LIMIT :limit OFFSET :offset
-        ');
+        ';
+
+        if ($search !== null && $search !== '') {
+            $sql .= ' WHERE (
+                first_name LIKE :s1
+                OR last_name LIKE :s2
+                OR email LIKE :s3
+                OR phone LIKE :s4
+                OR login LIKE :s5
+                OR CONCAT(first_name, " ", last_name) LIKE :s6
+            )';
+        }
+
+        $sql .= ' ORDER BY last_name, first_name LIMIT :limit OFFSET :offset';
+
+        $stmt = $db->prepare($sql);
+        if ($search !== null && $search !== '') {
+            $searchPattern = '%' . $search . '%';
+            $stmt->bindValue(':s1', $searchPattern);
+            $stmt->bindValue(':s2', $searchPattern);
+            $stmt->bindValue(':s3', $searchPattern);
+            $stmt->bindValue(':s4', $searchPattern);
+            $stmt->bindValue(':s5', $searchPattern);
+            $stmt->bindValue(':s6', $searchPattern);
+        }
         $stmt->bindValue(':limit', $limit, \PDO::PARAM_INT);
         $stmt->bindValue(':offset', $offset, \PDO::PARAM_INT);
         $stmt->execute();
@@ -88,10 +111,35 @@ class User
         return $stmt->fetchAll();
     }
 
-    public static function count(): int
+    public static function count(?string $search = null): int
     {
         $db = Database::getInstance();
-        $stmt = $db->query('SELECT COUNT(*) FROM users');
+
+        $sql = 'SELECT COUNT(*) FROM users';
+
+        if ($search !== null && $search !== '') {
+            $sql .= ' WHERE (
+                first_name LIKE :s1
+                OR last_name LIKE :s2
+                OR email LIKE :s3
+                OR phone LIKE :s4
+                OR login LIKE :s5
+                OR CONCAT(first_name, " ", last_name) LIKE :s6
+            )';
+        }
+
+        $stmt = $db->prepare($sql);
+        if ($search !== null && $search !== '') {
+            $searchPattern = '%' . $search . '%';
+            $stmt->bindValue(':s1', $searchPattern);
+            $stmt->bindValue(':s2', $searchPattern);
+            $stmt->bindValue(':s3', $searchPattern);
+            $stmt->bindValue(':s4', $searchPattern);
+            $stmt->bindValue(':s5', $searchPattern);
+            $stmt->bindValue(':s6', $searchPattern);
+        }
+        $stmt->execute();
+
         return (int)$stmt->fetchColumn();
     }
 

@@ -94,7 +94,7 @@
       </div>
 
       <!-- Reminder info -->
-      <div class="p-4 bg-indigo-500/10 border border-indigo-500/30 rounded-lg mb-6">
+      <div class="p-4 bg-indigo-500/10 border border-indigo-500/30 rounded-lg mb-4">
         <div class="flex items-start">
           <svg class="w-5 h-5 text-indigo-400 mr-3 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
@@ -103,6 +103,24 @@
             <p class="text-sm text-indigo-300 font-medium">Rappel automatique</p>
             <p class="text-sm text-indigo-200/70 mt-1">
               Vous recevrez un rappel de votre rendez-vous la veille par email{{ hasPhoneForReminder ? ' et par SMS' : '' }}.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Update info notice -->
+      <div class="p-4 bg-gray-700/30 border border-gray-600/50 rounded-lg mb-6">
+        <div class="flex items-start">
+          <svg class="w-5 h-5 text-gray-400 mr-3 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <div>
+            <p class="text-sm text-gray-300">Vos informations ne sont pas à jour ?</p>
+            <p class="text-sm text-gray-400 mt-1">
+              Contactez-nous par email à
+              <a href="mailto:bonjour@sensea.cc" class="text-indigo-400 hover:text-indigo-300">bonjour@sensea.cc</a>
+              ou par téléphone au
+              <a href="tel:+33600000000" class="text-indigo-400 hover:text-indigo-300">06 00 00 00 00</a>.
             </p>
           </div>
         </div>

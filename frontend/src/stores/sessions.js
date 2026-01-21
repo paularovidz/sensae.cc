@@ -15,10 +15,14 @@ export const useSessionsStore = defineStore('sessions', () => {
     error.value = null
 
     try {
-      const response = await sessionsApi.getAll({
+      const apiParams = {
         page: params.page || 1,
         limit: params.limit || 20
-      })
+      }
+      if (params.search) {
+        apiParams.search = params.search
+      }
+      const response = await sessionsApi.getAll(apiParams)
 
       sessions.value = response.data.data.sessions
       pagination.value = response.data.data.pagination

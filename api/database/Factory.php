@@ -293,10 +293,7 @@ class Factory
                 'birth_date' => $birthDate
             ];
 
-            // Toujours assigner à l'admin
-            $this->assignPersonToUser($id, $this->adminUser['id']);
-
-            // Assigner aussi à un ou plusieurs autres utilisateurs
+            // Assigner à un ou plusieurs utilisateurs (pas l'admin, il voit tout de toute façon)
             $userCount = rand(1, 2);
             $assignedUsers = array_rand($this->users, min($userCount, count($this->users)));
             if (!is_array($assignedUsers)) {

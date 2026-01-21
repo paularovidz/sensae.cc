@@ -22,6 +22,49 @@ use App\Utils\Validator;
 class PublicBookingController
 {
     /**
+     * GET /public/availability/next
+     * Retourne le nombre de jours avant le prochain créneau disponible
+     */
+    public function getNextAvailability(): void
+    {
+        $timezone = new \DateTimeZone($_ENV['APP_TIMEZONE'] ?? 'Europe/Paris');
+        $today = new \DateTime('today', $timezone);
+        $now = new \DateTime('now', $timezone);
+
+        // Si on est après 23h, considérer le jour comme terminé
+        if ((int) $now->format('H') >= 23) {
+            $today->modify('+1 day');
+        }
+
+        // Chercher dans les 90 prochains jours
+        $maxDays = 90;
+        $daysUntilNext = null;
+
+        for ($i = 0; $i < $maxDays; $i++) {
+            $checkDate = (clone $today)->modify("+{$i} days");
+
+            // Vérifier si le jour est ouvert
+            if (!AvailabilityService::isDayOpen($checkDate)) {
+                continue;
+            }
+
+            // Vérifier s'il y a des créneaux disponibles (type regular par défaut)
+            $slots = AvailabilityService::getAvailableSlots($checkDate, AvailabilityService::TYPE_REGULAR);
+
+            if (!empty($slots)) {
+                $daysUntilNext = $i;
+                break;
+            }
+        }
+
+        Response::success([
+            'days_until_next' => $daysUntilNext,
+            'next_date' => $daysUntilNext !== null ? (clone $today)->modify("+{$daysUntilNext} days")->format('Y-m-d') : null,
+            'available' => $daysUntilNext !== null
+        ]);
+    }
+
+    /**
      * GET /public/availability/schedule
      * Récupère les informations générales sur les horaires
      */

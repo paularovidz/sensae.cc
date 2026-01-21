@@ -19,6 +19,7 @@ class SettingsController
 
         // Add category labels
         $categoryLabels = [
+            'pricing' => 'Tarifs',
             'scheduling' => 'Horaires & Durées',
             'booking' => 'Réservations',
             'calendar' => 'Calendrier',
@@ -28,7 +29,7 @@ class SettingsController
         ];
 
         // Define category order
-        $categoryOrder = ['scheduling', 'booking', 'calendar', 'sms', 'security', 'general'];
+        $categoryOrder = ['pricing', 'scheduling', 'booking', 'calendar', 'sms', 'security', 'general'];
 
         // Build response in defined order
         $response = [];

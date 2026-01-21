@@ -18,10 +18,14 @@ export const usePersonsStore = defineStore('persons', () => {
     error.value = null
 
     try {
-      const response = await personsApi.getAll({
+      const apiParams = {
         page: params.page || 1,
         limit: params.limit || 20
-      })
+      }
+      if (params.search) {
+        apiParams.search = params.search
+      }
+      const response = await personsApi.getAll(apiParams)
 
       persons.value = response.data.data.persons
       pagination.value = response.data.data.pagination

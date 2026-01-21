@@ -19,19 +19,15 @@ class SensoryProposalController
         $page = max(1, (int)($_GET['page'] ?? 1));
         $limit = min(100, max(1, (int)($_GET['limit'] ?? 50)));
         $offset = ($page - 1) * $limit;
+        $search = isset($_GET['search']) && $_GET['search'] !== '' ? trim($_GET['search']) : null;
+        $type = isset($_GET['type']) && $_GET['type'] !== '' ? $_GET['type'] : null;
 
-        $type = $_GET['type'] ?? null;
-
-        if ($type) {
-            if (!in_array($type, SensoryProposal::TYPES, true)) {
-                Response::validationError(['type' => 'Type de proposition invalide']);
-            }
-            $proposals = SensoryProposal::findByType($type, $limit);
-            $total = count($proposals);
-        } else {
-            $proposals = SensoryProposal::findAll($limit, $offset);
-            $total = SensoryProposal::count();
+        if ($type && !in_array($type, SensoryProposal::TYPES, true)) {
+            Response::validationError(['type' => 'Type de proposition invalide']);
         }
+
+        $proposals = SensoryProposal::findAll($limit, $offset, $search, $type);
+        $total = SensoryProposal::count($search, $type);
 
         Response::success([
             'proposals' => $proposals,
