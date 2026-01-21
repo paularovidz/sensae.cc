@@ -173,13 +173,12 @@ class Factory
         // Créer un admin par défaut
         $id = UUID::generate();
         $stmt = $this->db->prepare("
-            INSERT INTO users (id, email, login, first_name, last_name, role, is_active, client_type, created_at, updated_at)
-            VALUES (:id, :email, :login, :first_name, :last_name, 'admin', 1, 'personal', NOW(), NOW())
+            INSERT INTO users (id, email, first_name, last_name, role, is_active, client_type, created_at, updated_at)
+            VALUES (:id, :email, :first_name, :last_name, 'admin', 1, 'personal', NOW(), NOW())
         ");
         $stmt->execute([
             'id' => $id,
             'email' => 'bonjour@sensea.cc',
-            'login' => 'celine',
             'first_name' => 'Céline',
             'last_name' => 'Delcloy'
         ]);
@@ -205,8 +204,8 @@ class Factory
 
             $id = UUID::generate();
             $stmt = $this->db->prepare("
-                INSERT INTO users (id, email, login, first_name, last_name, phone, role, client_type, company_name, siret, is_active, created_at, updated_at)
-                VALUES (:id, :email, :login, :first_name, :last_name, :phone, 'member', :client_type, :company_name, :siret, 1, NOW(), NOW())
+                INSERT INTO users (id, email, first_name, last_name, phone, role, client_type, company_name, siret, is_active, created_at, updated_at)
+                VALUES (:id, :email, :first_name, :last_name, :phone, 'member', :client_type, :company_name, :siret, 1, NOW(), NOW())
             ");
 
             $companyName = $isAssociation ? $this->randomItem($this->associationNames) : null;
@@ -216,7 +215,6 @@ class Factory
             $stmt->execute([
                 'id' => $id,
                 'email' => $email,
-                'login' => strtolower($firstName . $lastName . $i),
                 'first_name' => $firstName,
                 'last_name' => $lastName,
                 'phone' => $phone,

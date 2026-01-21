@@ -160,10 +160,6 @@ const isPersonalClient = computed(() => {
         <div class="p-6">
           <dl class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <dt class="text-sm text-gray-400">Login</dt>
-              <dd class="text-white">{{ user.login }}</dd>
-            </div>
-            <div>
               <dt class="text-sm text-gray-400">Telephone</dt>
               <dd class="text-white">{{ user.phone || '-' }}</dd>
             </div>

@@ -61,22 +61,12 @@ class User
         return $user ?: null;
     }
 
-    public static function findByLogin(string $login): ?array
-    {
-        $db = Database::getInstance();
-        $stmt = $db->prepare('SELECT * FROM users WHERE login = :login');
-        $stmt->execute(['login' => strtolower(trim($login))]);
-        $user = $stmt->fetch();
-
-        return $user ?: null;
-    }
-
     public static function findAll(int $limit = 100, int $offset = 0, ?string $search = null): array
     {
         $db = Database::getInstance();
 
         $sql = '
-            SELECT id, email, login, first_name, last_name, phone, role, is_active,
+            SELECT id, email, first_name, last_name, phone, role, is_active,
                    client_type, company_name, siret, created_at, updated_at
             FROM users
         ';
@@ -87,8 +77,7 @@ class User
                 OR last_name LIKE :s2
                 OR email LIKE :s3
                 OR phone LIKE :s4
-                OR login LIKE :s5
-                OR CONCAT(first_name, " ", last_name) LIKE :s6
+                OR CONCAT(first_name, " ", last_name) LIKE :s5
             )';
         }
 
@@ -102,7 +91,6 @@ class User
             $stmt->bindValue(':s3', $searchPattern);
             $stmt->bindValue(':s4', $searchPattern);
             $stmt->bindValue(':s5', $searchPattern);
-            $stmt->bindValue(':s6', $searchPattern);
         }
         $stmt->bindValue(':limit', $limit, \PDO::PARAM_INT);
         $stmt->bindValue(':offset', $offset, \PDO::PARAM_INT);
@@ -123,8 +111,7 @@ class User
                 OR last_name LIKE :s2
                 OR email LIKE :s3
                 OR phone LIKE :s4
-                OR login LIKE :s5
-                OR CONCAT(first_name, " ", last_name) LIKE :s6
+                OR CONCAT(first_name, " ", last_name) LIKE :s5
             )';
         }
 
@@ -136,7 +123,6 @@ class User
             $stmt->bindValue(':s3', $searchPattern);
             $stmt->bindValue(':s4', $searchPattern);
             $stmt->bindValue(':s5', $searchPattern);
-            $stmt->bindValue(':s6', $searchPattern);
         }
         $stmt->execute();
 
@@ -149,14 +135,13 @@ class User
         $id = UUID::generate();
 
         $stmt = $db->prepare('
-            INSERT INTO users (id, email, login, first_name, last_name, phone, role, is_active, client_type, company_name, siret)
-            VALUES (:id, :email, :login, :first_name, :last_name, :phone, :role, :is_active, :client_type, :company_name, :siret)
+            INSERT INTO users (id, email, first_name, last_name, phone, role, is_active, client_type, company_name, siret)
+            VALUES (:id, :email, :first_name, :last_name, :phone, :role, :is_active, :client_type, :company_name, :siret)
         ');
 
         $stmt->execute([
             'id' => $id,
             'email' => strtolower(trim($data['email'])),
-            'login' => strtolower(trim($data['login'])),
             'first_name' => trim($data['first_name']),
             'last_name' => trim($data['last_name']),
             'phone' => isset($data['phone']) ? trim($data['phone']) : null,
@@ -177,14 +162,14 @@ class User
         $fields = [];
         $params = ['id' => $id];
 
-        $allowedFields = ['email', 'login', 'first_name', 'last_name', 'phone', 'role', 'is_active', 'client_type', 'company_name', 'siret'];
+        $allowedFields = ['email', 'first_name', 'last_name', 'phone', 'role', 'is_active', 'client_type', 'company_name', 'siret'];
 
         foreach ($allowedFields as $field) {
             if (array_key_exists($field, $data)) {
                 $fields[] = "{$field} = :{$field}";
                 $value = $data[$field];
 
-                if (in_array($field, ['email', 'login'])) {
+                if ($field === 'email') {
                     $value = strtolower(trim((string)$value));
                 } elseif ($field === 'is_active') {
                     // Convert to integer for MySQL TINYINT
@@ -229,24 +214,6 @@ class User
 
         $sql = 'SELECT COUNT(*) FROM users WHERE email = :email';
         $params = ['email' => strtolower(trim($email))];
-
-        if ($excludeId) {
-            $sql .= ' AND id != :exclude_id';
-            $params['exclude_id'] = $excludeId;
-        }
-
-        $stmt = $db->prepare($sql);
-        $stmt->execute($params);
-
-        return (int)$stmt->fetchColumn() > 0;
-    }
-
-    public static function loginExists(string $login, ?string $excludeId = null): bool
-    {
-        $db = Database::getInstance();
-
-        $sql = 'SELECT COUNT(*) FROM users WHERE login = :login';
-        $params = ['login' => strtolower(trim($login))];
 
         if ($excludeId) {
             $sql .= ' AND id != :exclude_id';

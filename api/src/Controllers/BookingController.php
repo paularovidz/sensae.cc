@@ -433,7 +433,6 @@ class BookingController
             // Créer un compte utilisateur inactif
             $userId = User::create([
                 'email' => $booking['client_email'],
-                'login' => $this->generateLoginFromEmail($booking['client_email']),
                 'first_name' => $booking['client_first_name'],
                 'last_name' => $booking['client_last_name'],
                 'phone' => $booking['client_phone'],
@@ -505,23 +504,4 @@ class BookingController
         ]);
     }
 
-    /**
-     * Génère un login unique à partir de l'email
-     */
-    private function generateLoginFromEmail(string $email): string
-    {
-        $base = explode('@', $email)[0];
-        $base = preg_replace('/[^a-zA-Z0-9]/', '', $base);
-        $base = strtolower(substr($base, 0, 20));
-
-        $login = $base;
-        $counter = 1;
-
-        while (User::findByLogin($login)) {
-            $login = $base . $counter;
-            $counter++;
-        }
-
-        return $login;
-    }
 }

@@ -1,25 +1,23 @@
 #!/usr/bin/env php
 <?php
-/**
- * Tâches planifiées pour le système de réservation
- *
- * À exécuter via cron, par exemple :
- *   Toutes les 15 min : 0,15,30,45 * * * * php booking-tasks.php >> /var/log/sensea-booking.log 2>&1
- *
- * Ou pour des tâches spécifiques :
- *   Création des sessions (tous les matins à 6h) :
- *     0 6 * * * php booking-tasks.php create-sessions
- *
- *   Envoi des rappels (tous les jours à 18h) :
- *     0 18 * * * php booking-tasks.php send-reminders
- *
- *   Rafraîchissement du cache calendrier (toutes les 5 minutes) :
- *     */5 * * * * php booking-tasks.php refresh-calendar
- *
- *   Nettoyage complet (une fois par jour à 3h) :
- *     0 3 * * * php booking-tasks.php cleanup
- *     (magic links > 35j, refresh tokens > 30j, bookings pending > 24h)
- */
+// Tâches planifiées pour le système de réservation
+//
+// À exécuter via cron, par exemple :
+//   Toutes les 15 min : 0,15,30,45 * * * * php booking-tasks.php >> /var/log/sensea-booking.log 2>&1
+//
+// Ou pour des tâches spécifiques :
+//   Création des sessions (tous les matins à 6h) :
+//     0 6 * * * php booking-tasks.php create-sessions
+//
+//   Envoi des rappels (tous les jours à 18h) :
+//     0 18 * * * php booking-tasks.php send-reminders
+//
+//   Rafraîchissement du cache calendrier (toutes les 5 minutes) :
+//     */5 * * * * php booking-tasks.php refresh-calendar
+//
+//   Nettoyage complet (une fois par jour à 3h) :
+//     0 3 * * * php booking-tasks.php cleanup
+//     (magic links > 35j, refresh tokens > 30j, bookings pending > 24h)
 
 declare(strict_types=1);
 
@@ -346,21 +344,8 @@ function getOrCreateUser(array $booking): string
         return $existingUser['id'];
     }
 
-    // Générer un login unique
-    $base = explode('@', $booking['client_email'])[0];
-    $base = preg_replace('/[^a-zA-Z0-9]/', '', $base);
-    $base = strtolower(substr($base, 0, 20));
-    $login = $base;
-    $counter = 1;
-
-    while (User::findByLogin($login)) {
-        $login = $base . $counter;
-        $counter++;
-    }
-
     return User::create([
         'email' => $booking['client_email'],
-        'login' => $login,
         'first_name' => $booking['client_first_name'],
         'last_name' => $booking['client_last_name'],
         'phone' => $booking['client_phone'],

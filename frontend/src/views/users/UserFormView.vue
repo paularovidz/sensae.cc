@@ -16,7 +16,6 @@ const allPersons = ref([])
 
 const form = ref({
   email: '',
-  login: '',
   first_name: '',
   last_name: '',
   phone: '',
@@ -45,7 +44,6 @@ onMounted(async () => {
       const user = response.data.data
       form.value = {
         email: user.email || '',
-        login: user.login || '',
         first_name: user.first_name || '',
         last_name: user.last_name || '',
         phone: user.phone || '',
@@ -190,17 +188,12 @@ function cancel() {
             </div>
 
             <div>
-              <label for="login" class="block text-sm font-medium text-gray-300 mb-1">Login *</label>
-              <input id="login" v-model="form.login" type="text" class="w-full px-4 py-2 text-sm bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent" required />
+              <label for="phone" class="block text-sm font-medium text-gray-300 mb-1">Téléphone</label>
+              <input id="phone" v-model="form.phone" type="tel" class="w-full px-4 py-2 text-sm bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent" />
             </div>
           </div>
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label for="phone" class="block text-sm font-medium text-gray-300 mb-1">Téléphone</label>
-              <input id="phone" v-model="form.phone" type="tel" class="w-full px-4 py-2 text-sm bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent" />
-            </div>
-
             <div>
               <label for="role" class="block text-sm font-medium text-gray-300 mb-1">Rôle *</label>
               <select id="role" v-model="form.role" class="w-full px-4 py-2 text-sm bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent">
@@ -208,9 +201,7 @@ function cancel() {
                 <option value="admin">Administrateur</option>
               </select>
             </div>
-          </div>
 
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label for="client_type" class="block text-sm font-medium text-gray-300 mb-1">Type de client *</label>
               <select id="client_type" v-model="form.client_type" class="w-full px-4 py-2 text-sm bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent">

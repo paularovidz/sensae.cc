@@ -85,7 +85,6 @@ class UserController
         $validator = new Validator($data);
         $validator
             ->required('email')->email('email')
-            ->required('login')->minLength('login', 3)->maxLength('login', 100)
             ->required('first_name')->minLength('first_name', 1)->maxLength('first_name', 100)
             ->required('last_name')->minLength('last_name', 1)->maxLength('last_name', 100)
             ->phone('phone')
@@ -95,10 +94,6 @@ class UserController
         // Check uniqueness
         if (User::emailExists($data['email'])) {
             Response::validationError(['email' => 'Cette adresse email est déjà utilisée']);
-        }
-
-        if (User::loginExists($data['login'])) {
-            Response::validationError(['login' => 'Ce login est déjà utilisé']);
         }
 
         $userId = User::create($data);
@@ -147,13 +142,6 @@ class UserController
             $validator->email('email');
             if (User::emailExists($data['email'], $id)) {
                 Response::validationError(['email' => 'Cette adresse email est déjà utilisée']);
-            }
-        }
-
-        if (isset($data['login'])) {
-            $validator->minLength('login', 3)->maxLength('login', 100);
-            if (User::loginExists($data['login'], $id)) {
-                Response::validationError(['login' => 'Ce login est déjà utilisé']);
             }
         }
 

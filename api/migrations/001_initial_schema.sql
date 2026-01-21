@@ -10,7 +10,6 @@ SET FOREIGN_KEY_CHECKS = 0;
 CREATE TABLE IF NOT EXISTS `users` (
     `id` CHAR(36) NOT NULL,
     `email` VARCHAR(255) NOT NULL,
-    `login` VARCHAR(100) NOT NULL,
     `first_name` VARCHAR(100) NOT NULL,
     `last_name` VARCHAR(100) NOT NULL,
     `phone` VARCHAR(20) DEFAULT NULL,
@@ -20,7 +19,6 @@ CREATE TABLE IF NOT EXISTS `users` (
     `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`),
     UNIQUE KEY `idx_users_email` (`email`),
-    UNIQUE KEY `idx_users_login` (`login`),
     KEY `idx_users_role` (`role`),
     KEY `idx_users_active` (`is_active`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

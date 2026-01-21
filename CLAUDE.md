@@ -35,7 +35,6 @@ Application de dashboard pour le suivi de séances Snoezelen (thérapie sensorie
 ### Users (Comptes professionnels)
 - `id` (UUID)
 - `email` (unique, requis)
-- `login` (unique, requis)
 - `first_name` (requis)
 - `last_name` (requis)
 - `phone` (optionnel)

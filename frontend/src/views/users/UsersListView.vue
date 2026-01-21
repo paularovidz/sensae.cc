@@ -133,7 +133,6 @@ function goToUser(userId) {
                   </div>
                   <div>
                     <div class="font-medium text-gray-100">{{ user.first_name }} {{ user.last_name }}</div>
-                    <div class="text-sm text-gray-400">@{{ user.login }}</div>
                   </div>
                 </div>
               </td>

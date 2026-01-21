@@ -429,7 +429,6 @@ class PublicBookingController
             // Créer un nouvel utilisateur (role member, inactif par défaut pour sécurité)
             $userId = User::create([
                 'email' => $clientEmail,
-                'login' => $this->generateLoginFromEmail($clientEmail),
                 'first_name' => trim($data['client_first_name']),
                 'last_name' => trim($data['client_last_name']),
                 'phone' => !empty($data['client_phone']) ? trim($data['client_phone']) : null,
@@ -707,28 +706,5 @@ class PublicBookingController
             'confirmed_at' => $booking['confirmed_at'],
             'created_at' => $booking['created_at']
         ];
-    }
-
-    /**
-     * Génère un login unique à partir d'un email
-     */
-    private function generateLoginFromEmail(string $email): string
-    {
-        // Extraire la partie avant @
-        $login = strtolower(explode('@', $email)[0]);
-
-        // Nettoyer (garder uniquement lettres, chiffres, tirets, underscores)
-        $login = preg_replace('/[^a-z0-9_-]/', '', $login);
-
-        // Si le login existe déjà, ajouter un suffixe numérique
-        $baseLogin = $login;
-        $counter = 1;
-
-        while (User::loginExists($login)) {
-            $login = $baseLogin . $counter;
-            $counter++;
-        }
-
-        return $login;
     }
 }

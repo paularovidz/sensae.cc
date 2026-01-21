@@ -106,7 +106,6 @@ class AuthController
             'user' => [
                 'id' => $user['id'],
                 'email' => $user['email'],
-                'login' => $user['login'],
                 'first_name' => $user['first_name'],
                 'last_name' => $user['last_name'],
                 'role' => $user['role'],
@@ -251,7 +250,6 @@ class AuthController
             'user' => [
                 'id' => $targetUser['id'],
                 'email' => $targetUser['email'],
-                'login' => $targetUser['login'],
                 'first_name' => $targetUser['first_name'],
                 'last_name' => $targetUser['last_name'],
                 'role' => $targetUser['role'],
@@ -331,7 +329,6 @@ class AuthController
             'user' => [
                 'id' => $admin['id'],
                 'email' => $admin['email'],
-                'login' => $admin['login'],
                 'first_name' => $admin['first_name'],
                 'last_name' => $admin['last_name'],
                 'role' => $admin['role'],
