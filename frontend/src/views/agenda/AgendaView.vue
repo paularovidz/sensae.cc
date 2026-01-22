@@ -62,15 +62,15 @@ const durationLabels = {
 }
 
 // Bookings filtrés pour le calendrier
+// Par défaut, masquer les annulés et absents sauf si filtré explicitement
 const calendarBookings = computed(() => {
-  if (!calendarDateRange.value.start || !calendarDateRange.value.end) {
-    return bookings.value
-  }
   return bookings.value.filter(b => {
-    if (filterStatus.value && b.status !== filterStatus.value) {
-      return false
+    // Si un statut spécifique est sélectionné, respecter ce filtre
+    if (filterStatus.value) {
+      return b.status === filterStatus.value
     }
-    return true
+    // Sinon, masquer les annulés et absents du calendrier
+    return b.status !== 'cancelled' && b.status !== 'no_show'
   })
 })
 

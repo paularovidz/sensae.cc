@@ -1127,7 +1127,7 @@ class Session
         $stmt = $db->query("
             SELECT COUNT(*) FROM sessions
             WHERE DATE(session_date) = CURDATE()
-            AND status IN ('pending', 'confirmed')
+            AND status IN ('pending', 'confirmed', 'completed')
         ");
         $today = (int)$stmt->fetchColumn();
 
