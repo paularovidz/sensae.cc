@@ -137,22 +137,19 @@ class AuthController
             Response::unauthorized('Compte désactivé');
         }
 
-        // Check if there's an impersonation state to preserve from the old access token
-        $impersonatorId = null;
-        $oldToken = JWTService::extractTokenFromHeader();
-        if ($oldToken) {
-            $oldPayload = JWTService::verifyAccessToken($oldToken);
-            if ($oldPayload && !empty($oldPayload['impersonator_id'])) {
-                $impersonatorId = $oldPayload['impersonator_id'];
-            }
-        }
-
-        // Rotate refresh token
-        $newRefreshToken = RefreshToken::rotate(
+        // Rotate refresh token (preserves impersonator_id if present)
+        $rotateResult = RefreshToken::rotate(
             $data['refresh_token'],
             AuditService::getClientIp(),
             $_SERVER['HTTP_USER_AGENT'] ?? null
         );
+
+        if (!$rotateResult) {
+            Response::unauthorized('Impossible de renouveler le token');
+        }
+
+        $newRefreshToken = $rotateResult['token'];
+        $impersonatorId = $rotateResult['impersonator_id'];
 
         // Generate new access token (preserve impersonation state if present)
         $tokenPayload = [
@@ -221,11 +218,12 @@ class AuthController
             'impersonator_id' => $admin['id'] // Store the original admin's ID
         ]);
 
-        // Create a new refresh token for the impersonated session
+        // Create a new refresh token for the impersonated session (with impersonator_id)
         $refreshToken = RefreshToken::create(
             $targetUser['id'],
             AuditService::getClientIp(),
-            $_SERVER['HTTP_USER_AGENT'] ?? null
+            $_SERVER['HTTP_USER_AGENT'] ?? null,
+            $admin['id'] // Store impersonator in refresh token too
         );
 
         // Audit log

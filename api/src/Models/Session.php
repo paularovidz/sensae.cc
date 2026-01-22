@@ -563,6 +563,19 @@ class Session
         return (int)$stmt->fetchColumn();
     }
 
+    public static function countUpcomingByPerson(string $personId): int
+    {
+        $db = Database::getInstance();
+        $stmt = $db->prepare("
+            SELECT COUNT(*) FROM sessions
+            WHERE person_id = :person_id
+            AND session_date >= NOW()
+            AND status IN ('pending', 'confirmed')
+        ");
+        $stmt->execute(['person_id' => $personId]);
+        return (int)$stmt->fetchColumn();
+    }
+
     // =========================================================================
     // CRÉATION
     // =========================================================================

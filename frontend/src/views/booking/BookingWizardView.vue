@@ -1,5 +1,8 @@
 <template>
   <div>
+    <!-- Impersonation Banner -->
+    <ImpersonationBanner class="mb-4" />
+
     <!-- Loading state -->
     <template v-if="initializing">
       <div class="card-dark shadow-lg overflow-hidden p-12">
@@ -74,6 +77,7 @@ import { useAuthStore } from '@/stores/auth'
 import { useToastStore } from '@/stores/toast'
 import { personsApi } from '@/services/api'
 import BookingProgressBar from '@/components/booking/BookingProgressBar.vue'
+import ImpersonationBanner from '@/components/ui/ImpersonationBanner.vue'
 import ClientTypeStep from './steps/ClientTypeStep.vue'
 import PersonSelectionStep from './steps/PersonSelectionStep.vue'
 import DateTimeStep from './steps/DateTimeStep.vue'

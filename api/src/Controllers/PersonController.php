@@ -78,7 +78,10 @@ class PersonController
 
     public function store(): void
     {
-        AuthMiddleware::requireAdmin();
+        AuthMiddleware::handle();
+
+        $currentUser = AuthMiddleware::getCurrentUser();
+        $isAdmin = AuthMiddleware::isAdmin();
 
         $data = json_decode(file_get_contents('php://input'), true) ?? [];
 
@@ -92,11 +95,14 @@ class PersonController
         $personId = Person::create($data);
         $person = Person::findById($personId);
 
-        // Assign to users if provided
-        if (!empty($data['assign_to_users']) && is_array($data['assign_to_users'])) {
+        // Admin can assign to specific users
+        if ($isAdmin && !empty($data['assign_to_users']) && is_array($data['assign_to_users'])) {
             foreach ($data['assign_to_users'] as $userId) {
                 Person::assignToUser($personId, $userId);
             }
+        } else if (!$isAdmin) {
+            // Non-admin: auto-assign to the current user
+            Person::assignToUser($personId, $currentUser['id']);
         }
 
         AuditService::log(
@@ -181,12 +187,20 @@ class PersonController
 
     public function destroy(string $id): void
     {
-        AuthMiddleware::requireAdmin();
+        AuthMiddleware::handle();
+
+        $currentUser = AuthMiddleware::getCurrentUser();
+        $isAdmin = AuthMiddleware::isAdmin();
 
         $person = Person::findById($id);
 
         if (!$person) {
             Response::notFound('Personne non trouvée');
+        }
+
+        // Check access: admin can delete any, member can only delete their assigned persons
+        if (!$isAdmin && !Person::isAssignedToUser($id, $currentUser['id'])) {
+            Response::forbidden('Accès non autorisé');
         }
 
         // Check if person has sessions

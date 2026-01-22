@@ -132,7 +132,7 @@ class UserController
 
         // Members can only update limited fields
         if ($currentUser['role'] !== 'admin') {
-            $allowedFields = ['first_name', 'last_name', 'phone'];
+            $allowedFields = ['first_name', 'last_name', 'email', 'phone'];
             $data = array_intersect_key($data, array_flip($allowedFields));
         }
 

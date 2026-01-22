@@ -375,7 +375,7 @@ class PublicBookingController
             }
         }
 
-        // Rate limiting: vérifier le nombre de réservations par IP et email
+        // Rate limiting: vérifier le nombre de réservations par IP (anti-spam)
         $clientEmail = strtolower(trim($data['client_email']));
         $clientIp = $_SERVER['REMOTE_ADDR'] ?? null;
 
@@ -383,25 +383,16 @@ class PublicBookingController
         $existingUser = User::findByEmail($clientEmail);
         $isAssociation = $existingUser && ($existingUser['client_type'] ?? User::CLIENT_TYPE_PERSONAL) === User::CLIENT_TYPE_ASSOCIATION;
 
-        // Limites différentes selon le type de client
-        if ($isAssociation) {
-            $maxPerIp = Setting::getInteger('booking_max_per_ip_association', 20);
-            $maxPerEmail = Setting::getInteger('booking_max_per_email_association', 20);
-        } else {
-            $maxPerIp = Setting::getInteger('booking_max_per_ip', 4);
-            $maxPerEmail = Setting::getInteger('booking_max_per_email', 4);
-        }
+        // Limite IP différente selon le type de client
+        $maxPerIp = $isAssociation
+            ? Setting::getInteger('booking_max_per_ip_association', 20)
+            : Setting::getInteger('booking_max_per_ip', 4);
 
         if ($clientIp) {
             $bookingsByIp = Session::countUpcomingByIp($clientIp);
             if ($bookingsByIp >= $maxPerIp) {
                 Response::error("Vous avez atteint le nombre maximum de réservations à venir ({$maxPerIp}). Veuillez annuler une réservation existante ou patienter.", 429);
             }
-        }
-
-        $bookingsByEmail = Session::countUpcomingByEmail($clientEmail);
-        if ($bookingsByEmail >= $maxPerEmail) {
-            Response::error("Cette adresse email a atteint le nombre maximum de réservations à venir ({$maxPerEmail}). Veuillez annuler une réservation existante ou patienter.", 429);
         }
 
         // Valider le créneau
@@ -489,6 +480,13 @@ class PublicBookingController
 
             // Lier la personne à l'utilisateur
             Person::assignToUser($personId, $userId);
+        }
+
+        // Vérifier la limite de séances par personne (4 max en parallèle)
+        $maxPerPerson = Setting::getInteger('booking_max_per_person', 4);
+        $bookingsByPerson = Session::countUpcomingByPerson($personId);
+        if ($bookingsByPerson >= $maxPerPerson) {
+            Response::error("Cette personne a déjà {$maxPerPerson} séance(s) à venir. Veuillez annuler une réservation existante ou attendre qu'une séance soit passée.", 429);
         }
 
         // Récupérer le prix de la séance

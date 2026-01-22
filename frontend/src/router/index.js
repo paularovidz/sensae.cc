@@ -14,6 +14,7 @@ import DashboardView from '@/views/dashboard/DashboardView.vue'
 
 // Member Views
 import MemberView from '@/views/member/MemberView.vue'
+import MemberPersonDetailView from '@/views/member/MemberPersonDetailView.vue'
 import MemberSessionDetailView from '@/views/member/MemberSessionDetailView.vue'
 
 // Persons Views
@@ -82,6 +83,12 @@ const routes = [
     path: '/app/member',
     name: 'member',
     component: MemberView,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/app/member/persons/:id',
+    name: 'member-person-detail',
+    component: MemberPersonDetailView,
     meta: { requiresAuth: true }
   },
   {

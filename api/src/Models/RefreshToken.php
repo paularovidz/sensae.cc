@@ -11,8 +11,12 @@ class RefreshToken
 {
     private const EXPIRY_DAYS = 7;
 
-    public static function create(string $userId, string $ipAddress = null, string $userAgent = null): string
-    {
+    public static function create(
+        string $userId,
+        string $ipAddress = null,
+        string $userAgent = null,
+        string $impersonatorId = null
+    ): string {
         $db = Database::getInstance();
 
         // Generate secure token
@@ -23,13 +27,14 @@ class RefreshToken
         $expiresAt = (new \DateTime())->modify('+' . self::EXPIRY_DAYS . ' days');
 
         $stmt = $db->prepare('
-            INSERT INTO refresh_tokens (id, user_id, token_hash, expires_at, ip_address, user_agent)
-            VALUES (:id, :user_id, :token_hash, :expires_at, :ip_address, :user_agent)
+            INSERT INTO refresh_tokens (id, user_id, impersonator_id, token_hash, expires_at, ip_address, user_agent)
+            VALUES (:id, :user_id, :impersonator_id, :token_hash, :expires_at, :ip_address, :user_agent)
         ');
 
         $stmt->execute([
             'id' => $id,
             'user_id' => $userId,
+            'impersonator_id' => $impersonatorId,
             'token_hash' => $tokenHash,
             'expires_at' => $expiresAt->format('Y-m-d H:i:s'),
             'ip_address' => $ipAddress,
@@ -108,7 +113,7 @@ class RefreshToken
         return $stmt->rowCount();
     }
 
-    public static function rotate(string $oldToken, string $ipAddress = null, string $userAgent = null): ?string
+    public static function rotate(string $oldToken, string $ipAddress = null, string $userAgent = null): ?array
     {
         $tokenData = self::verify($oldToken);
 
@@ -119,7 +124,17 @@ class RefreshToken
         // Revoke old token
         self::revoke($oldToken);
 
-        // Create new token
-        return self::create($tokenData['user_id'], $ipAddress, $userAgent);
+        // Create new token, preserving impersonator_id if present
+        $newToken = self::create(
+            $tokenData['user_id'],
+            $ipAddress,
+            $userAgent,
+            $tokenData['impersonator_id'] ?? null
+        );
+
+        return [
+            'token' => $newToken,
+            'impersonator_id' => $tokenData['impersonator_id'] ?? null
+        ];
     }
 }
