@@ -290,8 +290,13 @@ class AvailabilityService
     /**
      * Récupère les dates disponibles pour un mois donné
      * Ne retourne que les dates qui ont au moins un créneau disponible
+     *
+     * @param int $year Année
+     * @param int $month Mois
+     * @param string $durationType Type de séance
+     * @param int|null $maxAdvanceDays Nombre de jours max à l'avance (null = pas de limite)
      */
-    public static function getAvailableDates(int $year, int $month, string $durationType = self::TYPE_REGULAR): array
+    public static function getAvailableDates(int $year, int $month, string $durationType = self::TYPE_REGULAR, ?int $maxAdvanceDays = null): array
     {
         $timezone = new \DateTimeZone(self::env('APP_TIMEZONE', 'Europe/Paris'));
         $startDate = new \DateTime("$year-$month-01", $timezone);
@@ -305,12 +310,24 @@ class AvailabilityService
             $today->modify('+1 day');
         }
 
+        // Calculer la date limite si maxAdvanceDays est spécifié
+        $maxDate = null;
+        if ($maxAdvanceDays !== null) {
+            $maxDate = (clone $now)->modify("+{$maxAdvanceDays} days");
+        }
+
         $availableDates = [];
 
         $current = clone $startDate;
         while ($current <= $endDate) {
             // Ne pas proposer les dates passées
             if ($current >= $today && self::isDayOpen($current)) {
+                // Ne pas proposer les dates au-delà de la limite
+                if ($maxDate !== null && $current > $maxDate) {
+                    $current->modify('+1 day');
+                    continue;
+                }
+
                 // Vérifier s'il reste au moins un créneau disponible
                 $slots = self::getAvailableSlots($current, $durationType);
                 if (!empty($slots)) {

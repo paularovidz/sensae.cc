@@ -80,6 +80,73 @@
         </div>
 
         <div class="divide-y divide-gray-700">
+          <!-- Pricing category: Group by client type -->
+          <template v-if="category.category === 'pricing'">
+            <!-- Particuliers section -->
+            <div class="px-6 py-3 bg-gray-750">
+              <h3 class="text-sm font-medium text-primary-400 uppercase tracking-wide">Particuliers</h3>
+            </div>
+            <div
+              v-for="setting in getPersonalPricingSettings(category.settings)"
+              :key="setting.key"
+              class="px-6 py-4 flex items-center justify-between"
+            >
+              <div class="flex-1">
+                <label :for="setting.key" class="text-sm font-medium text-white">
+                  {{ formatPricingLabel(setting.label, 'personal') }}
+                </label>
+                <p v-if="setting.description" class="text-sm text-gray-400 mt-0.5">
+                  {{ formatPricingDescription(setting.description, 'personal') }}
+                </p>
+              </div>
+              <div class="ml-4">
+                <div class="flex items-center">
+                  <input
+                    :id="setting.key"
+                    type="number"
+                    v-model.number="formData[setting.key]"
+                    class="w-24 px-3 py-1.5 bg-gray-700 border border-gray-600 rounded-lg text-sm text-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                    @wheel.prevent
+                  />
+                  <span class="ml-2 text-gray-400">€</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Associations section -->
+            <div class="px-6 py-3 bg-gray-750 border-t border-gray-700">
+              <h3 class="text-sm font-medium text-amber-400 uppercase tracking-wide">Professionnels / Associations</h3>
+            </div>
+            <div
+              v-for="setting in getAssociationPricingSettings(category.settings)"
+              :key="setting.key"
+              class="px-6 py-4 flex items-center justify-between"
+            >
+              <div class="flex-1">
+                <label :for="setting.key" class="text-sm font-medium text-white">
+                  {{ formatPricingLabel(setting.label, 'association') }}
+                </label>
+                <p v-if="setting.description" class="text-sm text-gray-400 mt-0.5">
+                  {{ formatPricingDescription(setting.description, 'association') }}
+                </p>
+              </div>
+              <div class="ml-4">
+                <div class="flex items-center">
+                  <input
+                    :id="setting.key"
+                    type="number"
+                    v-model.number="formData[setting.key]"
+                    class="w-24 px-3 py-1.5 bg-gray-700 border border-gray-600 rounded-lg text-sm text-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                    @wheel.prevent
+                  />
+                  <span class="ml-2 text-gray-400">€</span>
+                </div>
+              </div>
+            </div>
+          </template>
+
+          <!-- Other categories: Normal display -->
+          <template v-else>
           <div
             v-for="setting in category.settings"
             :key="setting.key"
@@ -164,6 +231,7 @@
               </template>
             </div>
           </div>
+          </template>
         </div>
       </div>
 
@@ -325,6 +393,32 @@ function isTimeField(key) {
 // Check if a field is a price field
 function isPriceField(key) {
   return key.includes('_price')
+}
+
+// Filter pricing settings for personal clients (non-association)
+function getPersonalPricingSettings(settings) {
+  return settings.filter(s => !s.key.includes('_association'))
+}
+
+// Filter pricing settings for associations
+function getAssociationPricingSettings(settings) {
+  return settings.filter(s => s.key.includes('_association'))
+}
+
+// Format pricing label to remove "associations" suffix
+function formatPricingLabel(label, clientType) {
+  if (clientType === 'association') {
+    return label.replace(/ associations/i, '').replace(/ - Associations/i, '')
+  }
+  return label
+}
+
+// Format pricing description to remove "associations" mention
+function formatPricingDescription(description, clientType) {
+  if (clientType === 'association') {
+    return description.replace(/ - Associations/i, '')
+  }
+  return description
 }
 
 // Format cache time for display

@@ -172,8 +172,8 @@ export const statsApi = {
 export const publicBookingApi = {
   // Availability
   getSchedule: () => api.get('/public/availability/schedule'),
-  getAvailableDates: (year, month, type) =>
-    api.get('/public/availability/dates', { params: { year, month, type } }),
+  getAvailableDates: (year, month, type, clientType = 'personal') =>
+    api.get('/public/availability/dates', { params: { year, month, type, client_type: clientType } }),
   getAvailableSlots: (date, type) =>
     api.get('/public/availability/slots', { params: { date, type } }),
 

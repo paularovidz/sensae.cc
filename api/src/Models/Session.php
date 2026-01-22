@@ -1014,13 +1014,19 @@ class Session
         return bin2hex(random_bytes(32));
     }
 
-    public static function getPriceForType(string $durationType): int
+    public static function getPriceForType(string $durationType, string $clientType = 'personal'): int
     {
-        $key = $durationType === self::TYPE_DISCOVERY
-            ? 'session_discovery_price'
-            : 'session_regular_price';
+        $isAssociation = $clientType === 'association';
 
-        return Setting::getInteger($key, $durationType === self::TYPE_DISCOVERY ? 55 : 45);
+        if ($durationType === self::TYPE_DISCOVERY) {
+            return $isAssociation
+                ? Setting::getInteger('session_discovery_price_association', 50)
+                : Setting::getInteger('session_discovery_price', 55);
+        }
+
+        return $isAssociation
+            ? Setting::getInteger('session_regular_price_association', 40)
+            : Setting::getInteger('session_regular_price', 45);
     }
 
     public static function canAccess(string $sessionId, string $userId, bool $isAdmin): bool

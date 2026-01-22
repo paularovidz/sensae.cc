@@ -74,22 +74,38 @@ class PublicBookingController
         $schedule = AvailabilityService::getScheduleInfo();
         $durations = AvailabilityService::getDurationLabels();
 
-        // Ajouter les prix des séances
+        // Ajouter les prix des séances par type de client
         $prices = [
             'discovery' => Setting::getInteger('session_discovery_price', 55),
             'regular' => Setting::getInteger('session_regular_price', 45)
+        ];
+
+        $pricesAssociation = [
+            'discovery' => Setting::getInteger('session_discovery_price_association', 50),
+            'regular' => Setting::getInteger('session_regular_price_association', 40)
+        ];
+
+        // Délais de réservation
+        $bookingDelays = [
+            'personal' => Setting::getInteger('booking_max_advance_days', 60),
+            'association' => Setting::getInteger('booking_max_advance_days_association', 90)
         ];
 
         Response::success([
             'schedule' => $schedule,
             'duration_types' => $durations,
             'prices' => $prices,
+            'prices_by_client_type' => [
+                'personal' => $prices,
+                'association' => $pricesAssociation
+            ],
+            'booking_delays' => $bookingDelays,
             'email_confirmation_required' => Setting::getBoolean('booking_email_confirmation_required', false)
         ]);
     }
 
     /**
-     * GET /public/availability/dates?year=2024&month=1&type=regular
+     * GET /public/availability/dates?year=2024&month=1&type=regular&client_type=personal
      * Récupère les dates disponibles pour un mois
      */
     public function getAvailableDates(): void
@@ -97,6 +113,7 @@ class PublicBookingController
         $year = (int) ($_GET['year'] ?? date('Y'));
         $month = (int) ($_GET['month'] ?? date('n'));
         $type = $_GET['type'] ?? AvailabilityService::TYPE_REGULAR;
+        $clientType = $_GET['client_type'] ?? User::CLIENT_TYPE_PERSONAL;
 
         // Validation
         if ($month < 1 || $month > 12) {
@@ -105,6 +122,11 @@ class PublicBookingController
 
         if (!in_array($type, [AvailabilityService::TYPE_DISCOVERY, AvailabilityService::TYPE_REGULAR])) {
             Response::validationError(['type' => 'Type de séance invalide']);
+        }
+
+        // Valider le client_type
+        if (!in_array($clientType, User::CLIENT_TYPES)) {
+            $clientType = User::CLIENT_TYPE_PERSONAL;
         }
 
         // Ne pas permettre de remonter trop loin dans le passé
@@ -122,8 +144,12 @@ class PublicBookingController
             return;
         }
 
-        // Limiter à 3 mois dans le futur
-        $maxDate = (clone $now)->modify('+3 months');
+        // Limiter selon le type de client
+        $maxAdvanceDays = $clientType === User::CLIENT_TYPE_ASSOCIATION
+            ? Setting::getInteger('booking_max_advance_days_association', 90)
+            : Setting::getInteger('booking_max_advance_days', 60);
+
+        $maxDate = (clone $now)->modify("+{$maxAdvanceDays} days");
         $requestedDate = new \DateTime("$year-$month-01");
 
         if ($requestedDate > $maxDate) {
@@ -132,12 +158,12 @@ class PublicBookingController
                 'month' => $month,
                 'type' => $type,
                 'available_dates' => [],
-                'message' => 'Les réservations sont ouvertes jusqu\'à 3 mois à l\'avance'
+                'message' => "Les réservations sont ouvertes jusqu'à {$maxAdvanceDays} jours à l'avance"
             ]);
             return;
         }
 
-        $availableDates = AvailabilityService::getAvailableDates($year, $month, $type);
+        $availableDates = AvailabilityService::getAvailableDates($year, $month, $type, $maxAdvanceDays);
 
         Response::success([
             'year' => $year,
@@ -403,6 +429,16 @@ class PublicBookingController
             return;
         }
 
+        // Vérifier le délai max de réservation selon le type de client
+        $maxAdvanceDays = $isAssociation
+            ? Setting::getInteger('booking_max_advance_days_association', 90)
+            : Setting::getInteger('booking_max_advance_days', 60);
+
+        $maxDate = (new \DateTime())->modify("+{$maxAdvanceDays} days");
+        if ($sessionDate > $maxDate) {
+            Response::validationError(['session_date' => "Les réservations sont limitées à {$maxAdvanceDays} jours à l'avance"]);
+        }
+
         $slotErrors = AvailabilityService::validateSlot($sessionDate, $data['duration_type']);
         if (!empty($slotErrors)) {
             Response::validationError(['session_date' => implode(', ', $slotErrors)]);
@@ -489,8 +525,8 @@ class PublicBookingController
             Response::error("Cette personne a déjà {$maxPerPerson} séance(s) à venir. Veuillez annuler une réservation existante ou attendre qu'une séance soit passée.", 429);
         }
 
-        // Récupérer le prix de la séance
-        $originalPrice = Session::getPriceForType($data['duration_type']);
+        // Récupérer le prix de la séance selon le type de client
+        $originalPrice = Session::getPriceForType($data['duration_type'], $clientType);
         $price = $originalPrice;
         $promoCodeId = null;
         $discountAmount = null;

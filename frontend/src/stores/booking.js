@@ -53,7 +53,12 @@ export const useBookingStore = defineStore('booking', () => {
   // Schedule info
   const scheduleInfo = ref(null)
   const durationLabels = ref({})
-  const prices = ref({ discovery: 55, regular: 45 }) // default prices
+  const prices = ref({ discovery: 55, regular: 45 }) // default prices for personal
+  const pricesByClientType = ref({
+    personal: { discovery: 55, regular: 45 },
+    association: { discovery: 50, regular: 40 }
+  })
+  const bookingDelays = ref({ personal: 60, association: 90 })
   const emailConfirmationRequired = ref(false)
 
   // Promo codes
@@ -157,7 +162,8 @@ export const useBookingStore = defineStore('booking', () => {
 
   const durationInfo = computed(() => {
     const type = durationType.value
-    const price = prices.value[type] || (type === 'discovery' ? 55 : 45)
+    const clientPrices = pricesForCurrentClient.value
+    const price = clientPrices[type] || (type === 'discovery' ? 55 : 45)
 
     // Use dynamic values from scheduleInfo if available
     if (scheduleInfo.value?.durations?.[type]) {
@@ -186,16 +192,29 @@ export const useBookingStore = defineStore('booking', () => {
     }
   })
 
+  // Get the current client type (from existingClientInfo or clientInfo)
+  const currentClientType = computed(() => {
+    return existingClientInfo.value?.client_type || clientInfo.value.clientType || 'personal'
+  })
+
+  // Get prices for the current client type
+  const pricesForCurrentClient = computed(() => {
+    const clientType = currentClientType.value
+    return pricesByClientType.value[clientType] || prices.value
+  })
+
   const currentPrice = computed(() => {
     // If promo is applied, return the final price
     if (promoPricing.value) {
       return promoPricing.value.final_price
     }
-    return prices.value[durationType.value] || (durationType.value === 'discovery' ? 55 : 45)
+    const clientPrices = pricesForCurrentClient.value
+    return clientPrices[durationType.value] || (durationType.value === 'discovery' ? 55 : 45)
   })
 
   const originalPrice = computed(() => {
-    return prices.value[durationType.value] || (durationType.value === 'discovery' ? 55 : 45)
+    const clientPrices = pricesForCurrentClient.value
+    return clientPrices[durationType.value] || (durationType.value === 'discovery' ? 55 : 45)
   })
 
   const hasPromoApplied = computed(() => {
@@ -212,6 +231,11 @@ export const useBookingStore = defineStore('booking', () => {
       scheduleInfo.value = response.data.data
       durationLabels.value = response.data.data.duration_types
       prices.value = response.data.data.prices || { discovery: 55, regular: 45 }
+      pricesByClientType.value = response.data.data.prices_by_client_type || {
+        personal: { discovery: 55, regular: 45 },
+        association: { discovery: 50, regular: 40 }
+      }
+      bookingDelays.value = response.data.data.booking_delays || { personal: 60, association: 90 }
       emailConfirmationRequired.value = response.data.data.email_confirmation_required || false
     } catch (err) {
       console.error('Failed to fetch schedule:', err)
@@ -355,7 +379,8 @@ export const useBookingStore = defineStore('booking', () => {
     error.value = null
 
     try {
-      const response = await publicBookingApi.getAvailableDates(year, month, durationType.value)
+      const clientType = currentClientType.value
+      const response = await publicBookingApi.getAvailableDates(year, month, durationType.value, clientType)
       availableDates.value = response.data.data.available_dates || []
       currentYear.value = year
       currentMonth.value = month
@@ -615,8 +640,12 @@ export const useBookingStore = defineStore('booking', () => {
     scheduleInfo,
     durationLabels,
     prices,
+    pricesByClientType,
+    bookingDelays,
     currentPrice,
     originalPrice,
+    currentClientType,
+    pricesForCurrentClient,
     emailConfirmationRequired,
     loading,
     error,
