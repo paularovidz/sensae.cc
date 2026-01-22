@@ -59,8 +59,8 @@ async function handleImpersonate() {
 }
 
 const canImpersonate = computed(() => {
-  // Can impersonate if: user is loaded, not impersonating self, and current user is admin
-  return user.value && authStore.user?.id !== user.value.id && authStore.isAdmin && !authStore.isImpersonating
+  // Can impersonate if: user is loaded, active, not impersonating self, and current user is admin
+  return user.value && user.value.is_active && authStore.user?.id !== user.value.id && authStore.isAdmin && !authStore.isImpersonating
 })
 
 function formatDate(dateString) {
