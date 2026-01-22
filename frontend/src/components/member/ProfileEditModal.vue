@@ -41,7 +41,7 @@ watch(() => props.modelValue, (isOpen) => {
     }
     error.value = ''
   }
-})
+}, { immediate: true })
 
 function close() {
   emit('update:modelValue', false)
