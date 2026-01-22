@@ -95,6 +95,31 @@
         </div>
       </div>
 
+      <!-- CGR Consent (existing clients) -->
+      <div
+        id="cgr-consent-section"
+        :class="[
+          'pt-4 border-t transition-all duration-300',
+          cgrError ? 'border-red-500 animate-shake' : 'border-gray-700'
+        ]"
+      >
+        <label class="flex items-start cursor-pointer">
+          <input
+            v-model="bookingStore.cgrConsent"
+            type="checkbox"
+            :class="[
+              'mt-1 h-4 w-4 text-indigo-600 focus:ring-indigo-500 rounded transition-all',
+              cgrError ? 'border-red-500 ring-2 ring-red-500' : 'border-gray-600 bg-gray-700'
+            ]"
+          />
+          <span :class="['ml-3 text-sm', cgrError ? 'text-red-400' : 'text-gray-400']">
+            J'ai pris connaissance et j'accepte les
+            <a href="#" class="text-indigo-400 hover:text-indigo-300 underline" @click.prevent>conditions générales de réservation</a>.
+            <span class="text-red-400">*</span>
+          </span>
+        </label>
+      </div>
+
     </template>
 
     <!-- New client: show full form -->
@@ -177,16 +202,46 @@
             <input
               v-model="bookingStore.gdprConsent"
               type="checkbox"
-              class="mt-1 h-4 w-4 text-indigo-600 focus:ring-indigo-500 rounded transition-all border-gray-600 bg-gray-700"
+              :class="[
+                'mt-1 h-4 w-4 text-indigo-600 focus:ring-indigo-500 rounded transition-all',
+                gdprError ? 'border-red-500 ring-2 ring-red-500' : 'border-gray-600 bg-gray-700'
+              ]"
             />
             <span :class="['ml-3 text-sm', gdprError ? 'text-red-400' : 'text-gray-400']">
-              J'accepte que mes données personnelles soient enregistrées pour la gestion de mon rendez-vous et le suivi des séances.
+              J'ai pris connaissance de la
+              <a href="#" class="text-indigo-400 hover:text-indigo-300 underline" @click.prevent>politique de confidentialité</a>
+              et j'accepte le traitement de mes données personnelles pour la gestion des réservations, le suivi des séances snoezelen et l'accès à mon espace personnel.
               <span class="text-red-400">*</span>
             </span>
           </label>
           <p class="mt-2 ml-7 text-xs text-gray-500">
             Conformément au RGPD, vous pouvez demander l'accès, la rectification ou la suppression de vos données à tout moment.
           </p>
+        </div>
+
+        <!-- CGR Consent -->
+        <div
+          id="cgr-consent-section-new"
+          :class="[
+            'pt-4 border-t transition-all duration-300',
+            cgrError ? 'border-red-500 animate-shake' : 'border-gray-700'
+          ]"
+        >
+          <label class="flex items-start cursor-pointer">
+            <input
+              v-model="bookingStore.cgrConsent"
+              type="checkbox"
+              :class="[
+                'mt-1 h-4 w-4 text-indigo-600 focus:ring-indigo-500 rounded transition-all',
+                cgrError ? 'border-red-500 ring-2 ring-red-500' : 'border-gray-600 bg-gray-700'
+              ]"
+            />
+            <span :class="['ml-3 text-sm', cgrError ? 'text-red-400' : 'text-gray-400']">
+              J'ai pris connaissance et j'accepte les
+              <a href="#" class="text-indigo-400 hover:text-indigo-300 underline" @click.prevent>conditions générales de réservation</a>.
+              <span class="text-red-400">*</span>
+            </span>
+          </label>
         </div>
       </div>
     </template>
@@ -261,10 +316,14 @@ const props = defineProps({
   gdprError: {
     type: Boolean,
     default: false
+  },
+  cgrError: {
+    type: Boolean,
+    default: false
   }
 })
 
-const emit = defineEmits(['update:gdprError'])
+const emit = defineEmits(['update:gdprError', 'update:cgrError'])
 
 const bookingStore = useBookingStore()
 
@@ -272,6 +331,12 @@ const bookingStore = useBookingStore()
 watch(() => bookingStore.gdprConsent, (newValue) => {
   if (newValue && props.gdprError) {
     emit('update:gdprError', false)
+  }
+})
+
+watch(() => bookingStore.cgrConsent, (newValue) => {
+  if (newValue && props.cgrError) {
+    emit('update:cgrError', false)
   }
 })
 

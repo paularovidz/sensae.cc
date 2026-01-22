@@ -22,7 +22,7 @@
         <ClientTypeStep v-if="bookingStore.currentStep === 1" />
         <PersonSelectionStep v-else-if="bookingStore.currentStep === 2" />
         <DateTimeStep v-else-if="bookingStore.currentStep === 3" />
-        <ContactInfoStep v-else-if="bookingStore.currentStep === 4" v-model:gdpr-error="gdprError" />
+        <ContactInfoStep v-else-if="bookingStore.currentStep === 4" v-model:gdpr-error="gdprError" v-model:cgr-error="cgrError" />
         <ConfirmationStep v-else-if="bookingStore.currentStep === 5" @new-booking="handleNewBooking" />
       </div>
 
@@ -96,6 +96,7 @@ const toastStore = useToastStore()
 
 const initializing = ref(true)
 const gdprError = ref(false)
+const cgrError = ref(false)
 
 // Afficher le bouton retour sauf à l'étape 1, à l'étape 5, et à l'étape 2 pour les utilisateurs connectés
 const showBackButton = computed(() => {
@@ -213,22 +214,35 @@ async function handleNext() {
 }
 
 function handleButtonAreaClick() {
-  // Check if button is disabled due to missing GDPR consent on step 4
-  if (bookingStore.currentStep === 4 && !bookingStore.gdprConsent) {
-    // Show error state on GDPR checkbox
-    gdprError.value = true
+  // Check if button is disabled due to missing consents on step 4
+  if (bookingStore.currentStep === 4) {
+    const missingGdpr = !bookingStore.gdprConsent && !bookingStore.existingClientInfo // Only for new clients
+    const missingCgr = !bookingStore.cgrConsent
 
-    // Show toast error
-    toastStore.error('Veuillez accepter les conditions de traitement des données pour continuer')
+    if (missingGdpr || missingCgr) {
+      // Show error states
+      if (missingGdpr) gdprError.value = true
+      if (missingCgr) cgrError.value = true
 
-    // Scroll to GDPR section if out of viewport
-    const gdprSection = document.getElementById('gdpr-consent-section')
-    if (gdprSection) {
-      const rect = gdprSection.getBoundingClientRect()
-      const isInViewport = rect.top >= 0 && rect.bottom <= window.innerHeight
+      // Show toast error
+      if (missingGdpr && missingCgr) {
+        toastStore.error('Veuillez accepter les conditions obligatoires pour continuer')
+      } else if (missingGdpr) {
+        toastStore.error('Veuillez accepter la politique de confidentialité pour continuer')
+      } else {
+        toastStore.error('Veuillez accepter les conditions générales de réservation pour continuer')
+      }
 
-      if (!isInViewport) {
-        gdprSection.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      // Scroll to first missing section
+      const sectionId = missingGdpr ? 'gdpr-consent-section' : (bookingStore.existingClientInfo ? 'cgr-consent-section' : 'cgr-consent-section-new')
+      const section = document.getElementById(sectionId)
+      if (section) {
+        const rect = section.getBoundingClientRect()
+        const isInViewport = rect.top >= 0 && rect.bottom <= window.innerHeight
+
+        if (!isInViewport) {
+          section.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        }
       }
     }
   }

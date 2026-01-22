@@ -42,6 +42,7 @@ export const useBookingStore = defineStore('booking', () => {
     siret: ''
   })
   const gdprConsent = ref(false)
+  const cgrConsent = ref(false) // Conditions Générales de Réservation
   const captchaToken = ref(null)
 
   // Existing client info (masked for security)
@@ -93,7 +94,8 @@ export const useBookingStore = defineStore('booking', () => {
           clientInfo.value.email.trim() &&
           clientInfo.value.firstName.trim() &&
           clientInfo.value.lastName.trim() &&
-          gdprConsent.value
+          gdprConsent.value &&
+          cgrConsent.value
         )
       case 5:
         return true
@@ -556,6 +558,7 @@ export const useBookingStore = defineStore('booking', () => {
     availableSlots.value = []
     clientInfo.value = { email: '', phone: '', firstName: '', lastName: '', clientType: 'personal', companyName: '', siret: '' }
     gdprConsent.value = false
+    cgrConsent.value = false
     captchaToken.value = null
     existingClientInfo.value = null
     bookingResult.value = null
@@ -607,6 +610,7 @@ export const useBookingStore = defineStore('booking', () => {
       siret: ''
     }
     gdprConsent.value = false
+    cgrConsent.value = false
     existingClientInfo.value = null
   }
 
@@ -634,6 +638,7 @@ export const useBookingStore = defineStore('booking', () => {
     currentYear,
     clientInfo,
     gdprConsent,
+    cgrConsent,
     captchaToken,
     existingClientInfo,
     bookingResult,
