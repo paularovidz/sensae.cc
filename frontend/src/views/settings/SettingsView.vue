@@ -1,9 +1,5 @@
 <template>
   <div class="space-y-6">
-    <!-- Header -->
-    <div class="flex items-center justify-between">
-    </div>
-
     <!-- Loading -->
     <div v-if="loading" class="flex justify-center py-12">
       <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500"></div>
@@ -16,232 +12,529 @@
 
     <!-- Settings Content -->
     <template v-else>
-      <!-- SMS Credits Card -->
-      <div class="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden">
-        <div class="px-6 py-4 border-b border-gray-700 flex items-center">
-          <svg class="w-5 h-5 text-primary-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-          </svg>
-          <h2 class="text-lg font-medium text-white">Crédits SMS</h2>
-        </div>
-        <div class="px-6 py-4">
-          <div v-if="smsCredits.loading" class="text-gray-400">
-            Chargement des crédits...
-          </div>
-          <div v-else-if="!smsCredits.configured" class="text-amber-400 flex items-center">
-            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
-            Service SMS non configuré
-          </div>
-          <div v-else-if="smsCredits.error" class="text-red-400">
-            {{ smsCredits.error }}
-          </div>
-          <div v-else class="flex items-center justify-between">
-            <div class="flex items-center space-x-6">
-              <div>
-                <span class="text-3xl font-bold text-primary-400">{{ smsCredits.credits_left }}</span>
-                <span class="text-gray-400 ml-1">crédits restants</span>
-              </div>
-              <div class="text-sm text-gray-400">
-                Service: {{ smsCredits.service_name || 'OVH SMS' }}
-              </div>
-              <div v-if="smsCredits.cached_at" class="text-xs text-gray-500">
-                Mis à jour: {{ formatCacheTime(smsCredits.cached_at) }}
-              </div>
-            </div>
-            <button
-              @click="refreshSmsCredits"
-              :disabled="smsCredits.refreshing"
-              class="flex items-center px-3 py-1.5 text-sm bg-gray-700 hover:bg-gray-600 text-gray-200 rounded-lg transition-colors disabled:opacity-50"
-            >
-              <svg
-                :class="['w-4 h-4 mr-1.5', smsCredits.refreshing ? 'animate-spin' : '']"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
-              {{ smsCredits.refreshing ? 'Actualisation...' : 'Actualiser' }}
-            </button>
-          </div>
-        </div>
+      <!-- Tabs Navigation -->
+      <div class="border-b border-gray-700">
+        <nav class="flex space-x-1 overflow-x-auto pb-px" aria-label="Tabs">
+          <button
+            v-for="tab in tabs"
+            :key="tab.id"
+            @click="activeTab = tab.id"
+            :class="[
+              'px-4 py-2.5 text-sm font-medium rounded-t-lg whitespace-nowrap transition-colors',
+              activeTab === tab.id
+                ? 'bg-gray-800 text-white border-b-2 border-primary-500'
+                : 'text-gray-400 hover:text-gray-200 hover:bg-gray-800/50'
+            ]"
+          >
+            <span class="flex items-center">
+              <component :is="tab.icon" class="w-4 h-4 mr-2" />
+              {{ tab.label }}
+            </span>
+          </button>
+        </nav>
       </div>
 
-      <!-- Settings Categories -->
-      <div
-        v-for="category in settingsGroups"
-        :key="category.category"
-        class="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden"
-      >
-        <div class="px-6 py-4 border-b border-gray-700">
-          <h2 class="text-lg font-medium text-white">{{ category.label }}</h2>
+      <!-- Tab Content -->
+      <div class="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden">
+        <!-- Tarifs Tab -->
+        <div v-show="activeTab === 'pricing'" class="p-6 space-y-6">
+          <div class="grid md:grid-cols-2 gap-6">
+            <!-- Particuliers -->
+            <div class="space-y-4">
+              <h3 class="text-sm font-semibold text-primary-400 uppercase tracking-wide flex items-center">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+                Particuliers
+              </h3>
+              <div class="bg-gray-900/50 rounded-lg p-4 space-y-4">
+                <div class="flex items-center justify-between">
+                  <label class="text-sm text-gray-300">Séance classique (45min)</label>
+                  <div class="flex items-center">
+                    <input
+                      type="number"
+                      v-model.number="formData.session_regular_price"
+                      class="w-20 px-3 py-1.5 bg-gray-700 border border-gray-600 rounded-lg text-sm text-white text-right"
+                      @wheel.prevent
+                    />
+                    <span class="ml-2 text-gray-400 w-6">€</span>
+                  </div>
+                </div>
+                <div class="flex items-center justify-between">
+                  <label class="text-sm text-gray-300">Séance découverte (1h15)</label>
+                  <div class="flex items-center">
+                    <input
+                      type="number"
+                      v-model.number="formData.session_discovery_price"
+                      class="w-20 px-3 py-1.5 bg-gray-700 border border-gray-600 rounded-lg text-sm text-white text-right"
+                      @wheel.prevent
+                    />
+                    <span class="ml-2 text-gray-400 w-6">€</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Associations -->
+            <div class="space-y-4">
+              <h3 class="text-sm font-semibold text-amber-400 uppercase tracking-wide flex items-center">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                </svg>
+                Associations
+              </h3>
+              <div class="bg-gray-900/50 rounded-lg p-4 space-y-4">
+                <div class="flex items-center justify-between">
+                  <label class="text-sm text-gray-300">Séance classique (45min)</label>
+                  <div class="flex items-center">
+                    <input
+                      type="number"
+                      v-model.number="formData.session_regular_price_association"
+                      class="w-20 px-3 py-1.5 bg-gray-700 border border-gray-600 rounded-lg text-sm text-white text-right"
+                      @wheel.prevent
+                    />
+                    <span class="ml-2 text-gray-400 w-6">€</span>
+                  </div>
+                </div>
+                <div class="flex items-center justify-between">
+                  <label class="text-sm text-gray-300">Séance découverte (1h15)</label>
+                  <div class="flex items-center">
+                    <input
+                      type="number"
+                      v-model.number="formData.session_discovery_price_association"
+                      class="w-20 px-3 py-1.5 bg-gray-700 border border-gray-600 rounded-lg text-sm text-white text-right"
+                      @wheel.prevent
+                    />
+                    <span class="ml-2 text-gray-400 w-6">€</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Fidélité -->
+          <div class="pt-4 border-t border-gray-700">
+            <h3 class="text-sm font-semibold text-gray-300 uppercase tracking-wide mb-4">Programme de fidélité</h3>
+            <div class="flex items-center justify-between max-w-md">
+              <label class="text-sm text-gray-300">Séances pour carte complète</label>
+              <input
+                type="number"
+                v-model.number="formData.loyalty_sessions_required"
+                class="w-20 px-3 py-1.5 bg-gray-700 border border-gray-600 rounded-lg text-sm text-white text-right"
+                @wheel.prevent
+              />
+            </div>
+            <p class="text-xs text-gray-500 mt-2">Après ce nombre de séances, le client reçoit une séance gratuite.</p>
+          </div>
         </div>
 
-        <div class="divide-y divide-gray-700">
-          <!-- Pricing category: Group by client type -->
-          <template v-if="category.category === 'pricing'">
-            <!-- Particuliers section -->
-            <div class="px-6 py-3 bg-gray-750">
-              <h3 class="text-sm font-medium text-primary-400 uppercase tracking-wide">Particuliers</h3>
+        <!-- Horaires Tab -->
+        <div v-show="activeTab === 'scheduling'" class="p-6 space-y-6">
+          <!-- Horaires d'ouverture -->
+          <div>
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-sm font-semibold text-gray-300 uppercase tracking-wide">Horaires d'ouverture</h3>
+              <button
+                @click="showBusinessHoursModal = true"
+                class="px-3 py-1.5 text-sm bg-gray-700 hover:bg-gray-600 text-gray-200 rounded-lg transition-colors"
+              >
+                Modifier
+              </button>
             </div>
-            <div
-              v-for="setting in getPersonalPricingSettings(category.settings)"
-              :key="setting.key"
-              class="px-6 py-4 flex items-center justify-between"
-            >
-              <div class="flex-1">
-                <label :for="setting.key" class="text-sm font-medium text-white">
-                  {{ formatPricingLabel(setting.label, 'personal') }}
-                </label>
-                <p v-if="setting.description" class="text-sm text-gray-400 mt-0.5">
-                  {{ formatPricingDescription(setting.description, 'personal') }}
-                </p>
+            <div class="bg-gray-900/50 rounded-lg p-4">
+              <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
+                <div v-for="(dayName, dayIndex) in dayNames" :key="dayIndex" class="flex flex-col">
+                  <span class="text-gray-500 text-xs">{{ dayName }}</span>
+                  <span v-if="businessHours[dayIndex]" class="text-gray-300">
+                    {{ businessHours[dayIndex].open }} - {{ businessHours[dayIndex].close }}
+                  </span>
+                  <span v-else class="text-gray-600 italic">Fermé</span>
+                </div>
               </div>
-              <div class="ml-4">
-                <div class="flex items-center">
+            </div>
+          </div>
+
+          <!-- Créneaux -->
+          <div class="grid md:grid-cols-2 gap-6">
+            <div class="space-y-4">
+              <h3 class="text-sm font-semibold text-gray-300 uppercase tracking-wide">Créneaux</h3>
+              <div class="bg-gray-900/50 rounded-lg p-4 space-y-3">
+                <div class="flex items-center justify-between">
+                  <label class="text-sm text-gray-300">Premier créneau</label>
                   <input
-                    :id="setting.key"
-                    type="number"
-                    v-model.number="formData[setting.key]"
-                    class="w-24 px-3 py-1.5 bg-gray-700 border border-gray-600 rounded-lg text-sm text-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                    @wheel.prevent
+                    type="time"
+                    v-model="formData.first_slot_time"
+                    class="w-28 px-2 py-1.5 bg-gray-700 border border-gray-600 rounded-lg text-sm text-white"
                   />
-                  <span class="ml-2 text-gray-400">€</span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <label class="text-sm text-gray-300">Début pause déjeuner</label>
+                  <input
+                    type="time"
+                    v-model="formData.lunch_break_start"
+                    class="w-28 px-2 py-1.5 bg-gray-700 border border-gray-600 rounded-lg text-sm text-white"
+                  />
+                </div>
+                <div class="flex items-center justify-between">
+                  <label class="text-sm text-gray-300">Fin pause déjeuner</label>
+                  <input
+                    type="time"
+                    v-model="formData.lunch_break_end"
+                    class="w-28 px-2 py-1.5 bg-gray-700 border border-gray-600 rounded-lg text-sm text-white"
+                  />
                 </div>
               </div>
             </div>
 
-            <!-- Associations section -->
-            <div class="px-6 py-3 bg-gray-750 border-t border-gray-700">
-              <h3 class="text-sm font-medium text-amber-400 uppercase tracking-wide">Professionnels / Associations</h3>
-            </div>
-            <div
-              v-for="setting in getAssociationPricingSettings(category.settings)"
-              :key="setting.key"
-              class="px-6 py-4 flex items-center justify-between"
-            >
-              <div class="flex-1">
-                <label :for="setting.key" class="text-sm font-medium text-white">
-                  {{ formatPricingLabel(setting.label, 'association') }}
-                </label>
-                <p v-if="setting.description" class="text-sm text-gray-400 mt-0.5">
-                  {{ formatPricingDescription(setting.description, 'association') }}
-                </p>
-              </div>
-              <div class="ml-4">
-                <div class="flex items-center">
-                  <input
-                    :id="setting.key"
-                    type="number"
-                    v-model.number="formData[setting.key]"
-                    class="w-24 px-3 py-1.5 bg-gray-700 border border-gray-600 rounded-lg text-sm text-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                    @wheel.prevent
-                  />
-                  <span class="ml-2 text-gray-400">€</span>
+            <div class="space-y-4">
+              <h3 class="text-sm font-semibold text-gray-300 uppercase tracking-wide">Durées des séances</h3>
+              <div class="bg-gray-900/50 rounded-lg p-4 space-y-3">
+                <div class="text-xs text-gray-500 mb-2">Séance classique</div>
+                <div class="flex items-center justify-between">
+                  <label class="text-sm text-gray-300">Durée affichée</label>
+                  <div class="flex items-center">
+                    <input
+                      type="number"
+                      v-model.number="formData.session_regular_display_minutes"
+                      class="w-16 px-2 py-1.5 bg-gray-700 border border-gray-600 rounded-lg text-sm text-white text-right"
+                      @wheel.prevent
+                    />
+                    <span class="ml-2 text-gray-400 text-sm">min</span>
+                  </div>
+                </div>
+                <div class="flex items-center justify-between">
+                  <label class="text-sm text-gray-300">Pause après</label>
+                  <div class="flex items-center">
+                    <input
+                      type="number"
+                      v-model.number="formData.session_regular_pause_minutes"
+                      class="w-16 px-2 py-1.5 bg-gray-700 border border-gray-600 rounded-lg text-sm text-white text-right"
+                      @wheel.prevent
+                    />
+                    <span class="ml-2 text-gray-400 text-sm">min</span>
+                  </div>
+                </div>
+                <div class="border-t border-gray-700 my-3"></div>
+                <div class="text-xs text-gray-500 mb-2">Séance découverte</div>
+                <div class="flex items-center justify-between">
+                  <label class="text-sm text-gray-300">Durée affichée</label>
+                  <div class="flex items-center">
+                    <input
+                      type="number"
+                      v-model.number="formData.session_discovery_display_minutes"
+                      class="w-16 px-2 py-1.5 bg-gray-700 border border-gray-600 rounded-lg text-sm text-white text-right"
+                      @wheel.prevent
+                    />
+                    <span class="ml-2 text-gray-400 text-sm">min</span>
+                  </div>
+                </div>
+                <div class="flex items-center justify-between">
+                  <label class="text-sm text-gray-300">Pause après</label>
+                  <div class="flex items-center">
+                    <input
+                      type="number"
+                      v-model.number="formData.session_discovery_pause_minutes"
+                      class="w-16 px-2 py-1.5 bg-gray-700 border border-gray-600 rounded-lg text-sm text-white text-right"
+                      @wheel.prevent
+                    />
+                    <span class="ml-2 text-gray-400 text-sm">min</span>
+                  </div>
                 </div>
               </div>
             </div>
-          </template>
+          </div>
+        </div>
 
-          <!-- Other categories: Normal display -->
-          <template v-else>
-          <div
-            v-for="setting in category.settings"
-            :key="setting.key"
-            class="px-6 py-4 flex items-center justify-between"
-          >
-            <div class="flex-1">
-              <label :for="setting.key" class="text-sm font-medium text-white">
-                {{ setting.label }}
-              </label>
-              <p v-if="setting.description" class="text-sm text-gray-400 mt-0.5">
-                {{ setting.description }}
-              </p>
+        <!-- Réservations Tab -->
+        <div v-show="activeTab === 'booking'" class="p-6 space-y-6">
+          <!-- Délais -->
+          <div>
+            <h3 class="text-sm font-semibold text-gray-300 uppercase tracking-wide mb-4">Délais de réservation</h3>
+            <div class="grid md:grid-cols-3 gap-4">
+              <div class="bg-gray-900/50 rounded-lg p-4">
+                <label class="text-sm text-gray-300 block mb-2">Délai minimum</label>
+                <div class="flex items-center">
+                  <input
+                    type="number"
+                    v-model.number="formData.booking_min_advance_hours"
+                    class="w-20 px-3 py-1.5 bg-gray-700 border border-gray-600 rounded-lg text-sm text-white text-right"
+                    @wheel.prevent
+                  />
+                  <span class="ml-2 text-gray-400 text-sm">heures</span>
+                </div>
+              </div>
+              <div class="bg-gray-900/50 rounded-lg p-4">
+                <label class="text-sm text-gray-300 block mb-2">Délai max (particuliers)</label>
+                <div class="flex items-center">
+                  <input
+                    type="number"
+                    v-model.number="formData.booking_max_advance_days"
+                    class="w-20 px-3 py-1.5 bg-gray-700 border border-gray-600 rounded-lg text-sm text-white text-right"
+                    @wheel.prevent
+                  />
+                  <span class="ml-2 text-gray-400 text-sm">jours</span>
+                </div>
+              </div>
+              <div class="bg-gray-900/50 rounded-lg p-4">
+                <label class="text-sm text-gray-300 block mb-2">Délai max (associations)</label>
+                <div class="flex items-center">
+                  <input
+                    type="number"
+                    v-model.number="formData.booking_max_advance_days_association"
+                    class="w-20 px-3 py-1.5 bg-gray-700 border border-gray-600 rounded-lg text-sm text-white text-right"
+                    @wheel.prevent
+                  />
+                  <span class="ml-2 text-gray-400 text-sm">jours</span>
+                </div>
+              </div>
             </div>
+          </div>
 
-            <div class="ml-4">
-              <!-- Boolean toggle -->
-              <template v-if="setting.type === 'boolean'">
+          <!-- Limites -->
+          <div>
+            <h3 class="text-sm font-semibold text-gray-300 uppercase tracking-wide mb-4">Limites anti-spam (par IP)</h3>
+            <div class="grid md:grid-cols-2 gap-6">
+              <!-- Particuliers -->
+              <div class="bg-gray-900/50 rounded-lg p-4">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <label class="text-sm text-gray-300">Particuliers</label>
+                    <p class="text-xs text-gray-500">Max réservations à venir par IP</p>
+                  </div>
+                  <input
+                    type="number"
+                    v-model.number="formData.booking_max_per_ip"
+                    class="w-16 px-2 py-1.5 bg-gray-700 border border-gray-600 rounded-lg text-sm text-white text-right"
+                    @wheel.prevent
+                  />
+                </div>
+              </div>
+              <!-- Associations -->
+              <div class="bg-gray-900/50 rounded-lg p-4">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <label class="text-sm text-gray-300">Associations</label>
+                    <p class="text-xs text-gray-500">Max réservations à venir par IP</p>
+                  </div>
+                  <input
+                    type="number"
+                    v-model.number="formData.booking_max_per_ip_association"
+                    class="w-16 px-2 py-1.5 bg-gray-700 border border-gray-600 rounded-lg text-sm text-white text-right"
+                    @wheel.prevent
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Autres options -->
+          <div class="grid md:grid-cols-2 gap-6">
+            <div class="bg-gray-900/50 rounded-lg p-4">
+              <div class="flex items-center justify-between">
+                <div>
+                  <label class="text-sm text-gray-300 font-medium">Confirmation email requise</label>
+                  <p class="text-xs text-gray-500 mt-1">Les réservations doivent être confirmées par email</p>
+                </div>
                 <button
                   type="button"
-                  @click="toggleBoolean(setting.key)"
+                  @click="formData.booking_email_confirmation_required = !formData.booking_email_confirmation_required"
                   :class="[
-                    formData[setting.key] ? 'bg-primary-600' : 'bg-gray-600',
-                    'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus:ring-offset-gray-800'
+                    formData.booking_email_confirmation_required ? 'bg-primary-600' : 'bg-gray-600',
+                    'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full transition-colors'
                   ]"
                 >
                   <span
                     :class="[
-                      formData[setting.key] ? 'translate-x-5' : 'translate-x-0',
-                      'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out'
+                      formData.booking_email_confirmation_required ? 'translate-x-5' : 'translate-x-0',
+                      'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow mt-0.5 ml-0.5 transition'
                     ]"
                   />
                 </button>
-              </template>
-
-              <!-- Integer input -->
-              <template v-else-if="setting.type === 'integer'">
-                <div class="flex items-center">
-                  <input
-                    :id="setting.key"
-                    type="number"
-                    v-model.number="formData[setting.key]"
-                    class="w-24 px-3 py-1.5 bg-gray-700 border border-gray-600 rounded-lg text-sm text-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                    @wheel.prevent
-                  />
-                  <span v-if="isPriceField(setting.key)" class="ml-2 text-gray-400">€</span>
-                </div>
-              </template>
-
-              <!-- Time input (for HH:MM fields) -->
-              <template v-else-if="isTimeField(setting.key)">
+              </div>
+            </div>
+            <div class="bg-gray-900/50 rounded-lg p-4">
+              <div class="flex items-center justify-between">
+                <label class="text-sm text-gray-300">Max séances par personne</label>
                 <input
-                  :id="setting.key"
-                  type="time"
-                  v-model="formData[setting.key]"
-                  class="w-32 px-3 py-1.5 bg-gray-700 border border-gray-600 rounded-lg text-sm text-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                  type="number"
+                  v-model.number="formData.booking_max_per_person"
+                  class="w-16 px-2 py-1.5 bg-gray-700 border border-gray-600 rounded-lg text-sm text-white text-right"
+                  @wheel.prevent
                 />
-              </template>
-
-              <!-- JSON business hours (special case) -->
-              <template v-else-if="setting.key === 'business_hours'">
-                <button
-                  type="button"
-                  @click="showBusinessHoursModal = true"
-                  class="px-4 py-2 text-sm bg-gray-700 hover:bg-gray-600 text-gray-200 rounded-lg transition-colors"
-                >
-                  Modifier les horaires
-                </button>
-              </template>
-
-              <!-- String input -->
-              <template v-else>
-                <input
-                  :id="setting.key"
-                  type="text"
-                  v-model="formData[setting.key]"
-                  :class="[
-                    'px-3 py-1.5 bg-gray-700 border border-gray-600 rounded-lg text-sm text-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500',
-                    setting.key.includes('secret') || setting.key.includes('key') ? 'w-64 font-mono text-xs' : 'w-48'
-                  ]"
-                  :placeholder="setting.key.includes('secret') ? '••••••••' : ''"
-                />
-              </template>
+              </div>
+              <p class="text-xs text-gray-500 mt-2">Nombre max de séances à venir par bénéficiaire</p>
             </div>
           </div>
-          </template>
+        </div>
+
+        <!-- Notifications Tab -->
+        <div v-show="activeTab === 'notifications'" class="p-6 space-y-6">
+          <!-- SMS Credits -->
+          <div class="bg-gray-900/50 rounded-lg p-4">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center space-x-4">
+                <div class="p-3 rounded-full bg-primary-900/50">
+                  <svg class="w-6 h-6 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                  </svg>
+                </div>
+                <div>
+                  <div v-if="smsCredits.loading" class="text-gray-400">Chargement...</div>
+                  <div v-else-if="!smsCredits.configured" class="text-amber-400">Service SMS non configuré</div>
+                  <div v-else-if="smsCredits.error" class="text-red-400">{{ smsCredits.error }}</div>
+                  <div v-else>
+                    <span class="text-2xl font-bold text-primary-400">{{ smsCredits.credits_left }}</span>
+                    <span class="text-gray-400 ml-2">crédits SMS restants</span>
+                  </div>
+                </div>
+              </div>
+              <button
+                v-if="smsCredits.configured && !smsCredits.error"
+                @click="refreshSmsCredits"
+                :disabled="smsCredits.refreshing"
+                class="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-colors disabled:opacity-50"
+                title="Actualiser"
+              >
+                <svg :class="['w-5 h-5', smsCredits.refreshing ? 'animate-spin' : '']" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- SMS Settings -->
+          <div class="grid md:grid-cols-2 gap-6">
+            <div class="bg-gray-900/50 rounded-lg p-4">
+              <div class="flex items-center justify-between">
+                <div>
+                  <label class="text-sm text-gray-300 font-medium">Rappels SMS activés</label>
+                  <p class="text-xs text-gray-500 mt-1">Envoyer un rappel la veille des RDV</p>
+                </div>
+                <button
+                  type="button"
+                  @click="formData.sms_reminders_enabled = !formData.sms_reminders_enabled"
+                  :class="[
+                    formData.sms_reminders_enabled ? 'bg-primary-600' : 'bg-gray-600',
+                    'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full transition-colors'
+                  ]"
+                >
+                  <span
+                    :class="[
+                      formData.sms_reminders_enabled ? 'translate-x-5' : 'translate-x-0',
+                      'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow mt-0.5 ml-0.5 transition'
+                    ]"
+                  />
+                </button>
+              </div>
+            </div>
+            <div class="bg-gray-900/50 rounded-lg p-4">
+              <label class="text-sm text-gray-300 font-medium block mb-2">Nom d'expéditeur SMS</label>
+              <input
+                type="text"
+                v-model="formData.sms_sender_name"
+                class="w-full px-3 py-1.5 bg-gray-700 border border-gray-600 rounded-lg text-sm text-white"
+                maxlength="11"
+              />
+              <p class="text-xs text-gray-500 mt-1">Max 11 caractères, sans espaces</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Technique Tab -->
+        <div v-show="activeTab === 'technical'" class="p-6 space-y-6">
+          <!-- Captcha -->
+          <div>
+            <h3 class="text-sm font-semibold text-gray-300 uppercase tracking-wide mb-4">Protection Captcha</h3>
+            <div class="space-y-4">
+              <div class="bg-gray-900/50 rounded-lg p-4">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <label class="text-sm text-gray-300 font-medium">Captcha activé</label>
+                    <p class="text-xs text-gray-500 mt-1">Protection anti-bot sur le formulaire de réservation</p>
+                  </div>
+                  <button
+                    type="button"
+                    @click="formData.captcha_enabled = !formData.captcha_enabled"
+                    :class="[
+                      formData.captcha_enabled ? 'bg-primary-600' : 'bg-gray-600',
+                      'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full transition-colors'
+                    ]"
+                  >
+                    <span
+                      :class="[
+                        formData.captcha_enabled ? 'translate-x-5' : 'translate-x-0',
+                        'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow mt-0.5 ml-0.5 transition'
+                      ]"
+                    />
+                  </button>
+                </div>
+              </div>
+
+              <div v-if="formData.captcha_enabled" class="grid md:grid-cols-2 gap-4">
+                <div class="bg-gray-900/50 rounded-lg p-4">
+                  <label class="text-sm text-gray-300 block mb-2">Fournisseur</label>
+                  <select
+                    v-model="formData.captcha_provider"
+                    class="w-full px-3 py-1.5 bg-gray-700 border border-gray-600 rounded-lg text-sm text-white"
+                  >
+                    <option value="hcaptcha">hCaptcha</option>
+                    <option value="recaptcha">reCAPTCHA</option>
+                  </select>
+                </div>
+                <div></div>
+                <div class="bg-gray-900/50 rounded-lg p-4">
+                  <label class="text-sm text-gray-300 block mb-2">Clé publique (Site Key)</label>
+                  <input
+                    type="text"
+                    v-model="formData.captcha_site_key"
+                    class="w-full px-3 py-1.5 bg-gray-700 border border-gray-600 rounded-lg text-sm text-white font-mono"
+                    placeholder="Clé publique..."
+                  />
+                </div>
+                <div class="bg-gray-900/50 rounded-lg p-4">
+                  <label class="text-sm text-gray-300 block mb-2">Clé secrète (Secret Key)</label>
+                  <input
+                    type="password"
+                    v-model="formData.captcha_secret_key"
+                    class="w-full px-3 py-1.5 bg-gray-700 border border-gray-600 rounded-lg text-sm text-white font-mono"
+                    placeholder="••••••••"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Cache -->
+          <div>
+            <h3 class="text-sm font-semibold text-gray-300 uppercase tracking-wide mb-4">Cache</h3>
+            <div class="bg-gray-900/50 rounded-lg p-4 max-w-md">
+              <div class="flex items-center justify-between">
+                <div>
+                  <label class="text-sm text-gray-300">Cache calendrier Google</label>
+                  <p class="text-xs text-gray-500 mt-1">Durée de mise en cache des événements</p>
+                </div>
+                <div class="flex items-center">
+                  <input
+                    type="number"
+                    v-model.number="formData.calendar_cache_ttl"
+                    class="w-20 px-3 py-1.5 bg-gray-700 border border-gray-600 rounded-lg text-sm text-white text-right"
+                    @wheel.prevent
+                  />
+                  <span class="ml-2 text-gray-400 text-sm">sec</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
-      <!-- Save Button -->
-      <div class="flex justify-end">
+      <!-- Save Button (sticky) -->
+      <div class="sticky bottom-4 flex justify-end">
         <button
           @click="saveSettings"
           :disabled="saving || !hasChanges"
           :class="[
-            'px-6 py-2 rounded-lg font-medium transition-all duration-200',
+            'px-6 py-2.5 rounded-lg font-medium transition-all duration-200 shadow-lg',
             hasChanges && !saving
               ? 'bg-primary-600 text-white hover:bg-primary-700'
               : 'bg-gray-700 text-gray-500 cursor-not-allowed'
@@ -254,179 +547,131 @@
             </svg>
             Enregistrement...
           </span>
-          <span v-else>Enregistrer les modifications</span>
+          <span v-else-if="hasChanges">Enregistrer les modifications</span>
+          <span v-else>Aucune modification</span>
         </button>
       </div>
 
       <!-- Success toast -->
-      <div
-        v-if="showSuccess"
-        class="fixed bottom-4 right-4 bg-green-900/50 border border-green-700 rounded-lg px-4 py-3 shadow-lg flex items-center"
+      <Transition
+        enter-active-class="transition ease-out duration-200"
+        enter-from-class="opacity-0 translate-y-2"
+        enter-to-class="opacity-100 translate-y-0"
+        leave-active-class="transition ease-in duration-150"
+        leave-from-class="opacity-100 translate-y-0"
+        leave-to-class="opacity-0 translate-y-2"
       >
-        <svg class="w-5 h-5 text-green-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-        </svg>
-        <span class="text-green-300">Paramètres enregistrés</span>
-      </div>
+        <div
+          v-if="showSuccess"
+          class="fixed bottom-4 left-1/2 -translate-x-1/2 bg-green-900/90 border border-green-700 rounded-lg px-4 py-3 shadow-lg flex items-center"
+        >
+          <svg class="w-5 h-5 text-green-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+          </svg>
+          <span class="text-green-300">Paramètres enregistrés</span>
+        </div>
+      </Transition>
     </template>
 
     <!-- Business Hours Modal -->
-    <div
-      v-if="showBusinessHoursModal"
-      class="fixed inset-0 z-50 overflow-y-auto"
-      aria-modal="true"
-    >
-      <div class="flex min-h-screen items-center justify-center p-4">
-        <!-- Backdrop -->
-        <div
-          class="fixed inset-0 bg-black/70 transition-opacity"
-          @click="showBusinessHoursModal = false"
-        ></div>
-
-        <!-- Modal -->
-        <div class="relative bg-gray-800 rounded-xl shadow-xl max-w-lg w-full p-6 border border-gray-700">
-          <h3 class="text-lg font-semibold text-white mb-4">Horaires d'ouverture</h3>
-
-          <div class="space-y-3">
-            <div
-              v-for="(dayName, dayIndex) in dayNames"
-              :key="dayIndex"
-              class="flex items-center justify-between py-2 border-b border-gray-700 last:border-0"
-            >
-              <div class="flex items-center space-x-3">
-                <input
-                  type="checkbox"
-                  :id="'day-' + dayIndex"
-                  :checked="businessHours[dayIndex] !== null"
-                  @change="toggleDay(dayIndex)"
-                  class="h-4 w-4 text-primary-600 border-gray-600 bg-gray-700 rounded focus:ring-primary-500"
-                />
-                <label :for="'day-' + dayIndex" class="text-sm font-medium text-white w-24">
-                  {{ dayName }}
-                </label>
-              </div>
-
-              <div v-if="businessHours[dayIndex]" class="flex items-center space-x-2">
-                <input
-                  type="time"
-                  v-model="businessHours[dayIndex].open"
-                  class="w-28 px-2 py-1 text-sm bg-gray-700 border border-gray-600 text-white rounded-lg focus:ring-2 focus:ring-primary-500"
-                />
-                <span class="text-gray-500">-</span>
-                <input
-                  type="time"
-                  v-model="businessHours[dayIndex].close"
-                  class="w-28 px-2 py-1 text-sm bg-gray-700 border border-gray-600 text-white rounded-lg focus:ring-2 focus:ring-primary-500"
-                />
-              </div>
-              <div v-else class="text-sm text-gray-500 italic">
-                Fermé
+    <Teleport to="body">
+      <div
+        v-if="showBusinessHoursModal"
+        class="fixed inset-0 z-50 overflow-y-auto"
+        aria-modal="true"
+      >
+        <div class="flex min-h-screen items-center justify-center p-4">
+          <div class="fixed inset-0 bg-black/70" @click="showBusinessHoursModal = false"></div>
+          <div class="relative bg-gray-800 rounded-xl shadow-xl max-w-lg w-full p-6 border border-gray-700">
+            <h3 class="text-lg font-semibold text-white mb-4">Horaires d'ouverture</h3>
+            <div class="space-y-3">
+              <div
+                v-for="(dayName, dayIndex) in dayNames"
+                :key="dayIndex"
+                class="flex items-center justify-between py-2 border-b border-gray-700 last:border-0"
+              >
+                <div class="flex items-center space-x-3">
+                  <input
+                    type="checkbox"
+                    :id="'day-' + dayIndex"
+                    :checked="businessHours[dayIndex] !== null"
+                    @change="toggleDay(dayIndex)"
+                    class="h-4 w-4 text-primary-600 border-gray-600 bg-gray-700 rounded"
+                  />
+                  <label :for="'day-' + dayIndex" class="text-sm font-medium text-white w-24">{{ dayName }}</label>
+                </div>
+                <div v-if="businessHours[dayIndex]" class="flex items-center space-x-2">
+                  <input type="time" v-model="businessHours[dayIndex].open" class="w-28 px-2 py-1 text-sm bg-gray-700 border border-gray-600 text-white rounded-lg" />
+                  <span class="text-gray-500">-</span>
+                  <input type="time" v-model="businessHours[dayIndex].close" class="w-28 px-2 py-1 text-sm bg-gray-700 border border-gray-600 text-white rounded-lg" />
+                </div>
+                <div v-else class="text-sm text-gray-500 italic">Fermé</div>
               </div>
             </div>
-          </div>
-
-          <div class="mt-6 flex justify-end space-x-3">
-            <button
-              @click="showBusinessHoursModal = false"
-              class="px-4 py-2 text-sm font-medium text-gray-300 hover:bg-gray-700 rounded-lg transition-colors"
-            >
-              Annuler
-            </button>
-            <button
-              @click="saveBusinessHours"
-              class="px-4 py-2 text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 rounded-lg transition-colors"
-            >
-              Appliquer
-            </button>
+            <div class="mt-6 flex justify-end space-x-3">
+              <button @click="showBusinessHoursModal = false" class="px-4 py-2 text-sm font-medium text-gray-300 hover:bg-gray-700 rounded-lg">Annuler</button>
+              <button @click="saveBusinessHours" class="px-4 py-2 text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 rounded-lg">Appliquer</button>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </Teleport>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted, h } from 'vue'
 import { settingsApi } from '@/services/api'
 
+// Icons as render functions
+const IconPricing = () => h('svg', { class: 'w-4 h-4', fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' }, [
+  h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z' })
+])
+const IconScheduling = () => h('svg', { class: 'w-4 h-4', fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' }, [
+  h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z' })
+])
+const IconBooking = () => h('svg', { class: 'w-4 h-4', fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' }, [
+  h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z' })
+])
+const IconNotifications = () => h('svg', { class: 'w-4 h-4', fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' }, [
+  h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9' })
+])
+const IconTechnical = () => h('svg', { class: 'w-4 h-4', fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' }, [
+  h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z' }),
+  h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M15 12a3 3 0 11-6 0 3 3 0 016 0z' })
+])
+
+const tabs = [
+  { id: 'pricing', label: 'Tarifs', icon: IconPricing },
+  { id: 'scheduling', label: 'Horaires', icon: IconScheduling },
+  { id: 'booking', label: 'Réservations', icon: IconBooking },
+  { id: 'notifications', label: 'Notifications', icon: IconNotifications },
+  { id: 'technical', label: 'Technique', icon: IconTechnical }
+]
+
+const activeTab = ref('pricing')
 const loading = ref(true)
 const saving = ref(false)
 const error = ref(null)
 const showSuccess = ref(false)
 const showBusinessHoursModal = ref(false)
 
-const settingsGroups = ref([])
 const formData = reactive({})
 const originalData = ref({})
 
-// Business hours editing
 const dayNames = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi']
 const businessHours = reactive({
-  0: null,
-  1: { open: '09:00', close: '18:00' },
-  2: { open: '09:00', close: '18:00' },
-  3: { open: '09:00', close: '18:00' },
-  4: null,
-  5: { open: '09:00', close: '18:00' },
+  0: null, 1: { open: '09:00', close: '18:00' }, 2: { open: '09:00', close: '18:00' },
+  3: { open: '09:00', close: '18:00' }, 4: null, 5: { open: '09:00', close: '18:00' },
   6: { open: '10:00', close: '17:00' }
 })
 
 const smsCredits = reactive({
-  loading: true,
-  refreshing: false,
-  configured: false,
-  credits_left: 0,
-  service_name: null,
-  cached_at: null,
-  error: null
+  loading: true, refreshing: false, configured: false,
+  credits_left: 0, service_name: null, cached_at: null, error: null
 })
 
-const hasChanges = computed(() => {
-  return JSON.stringify(formData) !== JSON.stringify(originalData.value)
-})
-
-// Check if a field is a time field (HH:MM format)
-function isTimeField(key) {
-  return key.includes('_start') || key.includes('_end') || key === 'first_slot_time'
-}
-
-// Check if a field is a price field
-function isPriceField(key) {
-  return key.includes('_price')
-}
-
-// Filter pricing settings for personal clients (non-association)
-function getPersonalPricingSettings(settings) {
-  return settings.filter(s => !s.key.includes('_association'))
-}
-
-// Filter pricing settings for associations
-function getAssociationPricingSettings(settings) {
-  return settings.filter(s => s.key.includes('_association'))
-}
-
-// Format pricing label to remove "associations" suffix
-function formatPricingLabel(label, clientType) {
-  if (clientType === 'association') {
-    return label.replace(/ associations/i, '').replace(/ - Associations/i, '')
-  }
-  return label
-}
-
-// Format pricing description to remove "associations" mention
-function formatPricingDescription(description, clientType) {
-  if (clientType === 'association') {
-    return description.replace(/ - Associations/i, '')
-  }
-  return description
-}
-
-// Format cache time for display
-function formatCacheTime(dateStr) {
-  if (!dateStr) return ''
-  const date = new Date(dateStr)
-  return date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
-}
+const hasChanges = computed(() => JSON.stringify(formData) !== JSON.stringify(originalData.value))
 
 onMounted(async () => {
   await Promise.all([loadSettings(), loadSmsCredits()])
@@ -435,30 +680,21 @@ onMounted(async () => {
 async function loadSettings() {
   loading.value = true
   error.value = null
-
   try {
     const response = await settingsApi.getAll()
-    settingsGroups.value = response.data.data || response.data
-
-    // Populate form data
-    for (const category of settingsGroups.value) {
+    const groups = response.data.data || response.data
+    for (const category of groups) {
       for (const setting of category.settings) {
         formData[setting.key] = setting.value
-
-        // Initialize business hours if present
         if (setting.key === 'business_hours' && setting.value) {
           const hours = typeof setting.value === 'string' ? JSON.parse(setting.value) : setting.value
-          for (const day in hours) {
-            businessHours[day] = hours[day]
-          }
+          for (const day in hours) businessHours[day] = hours[day]
         }
       }
     }
-
-    // Save original data for comparison
     originalData.value = JSON.parse(JSON.stringify(formData))
   } catch (err) {
-    error.value = err.response?.data?.message || 'Erreur lors du chargement des paramètres'
+    error.value = err.response?.data?.message || 'Erreur lors du chargement'
   } finally {
     loading.value = false
   }
@@ -466,18 +702,14 @@ async function loadSettings() {
 
 async function loadSmsCredits() {
   smsCredits.loading = true
-  smsCredits.error = null
-
   try {
     const response = await settingsApi.getSmsCredits()
     const data = response.data.data || response.data
-
     smsCredits.configured = data.configured
     smsCredits.credits_left = data.credits_left || 0
     smsCredits.service_name = data.service_name
-    smsCredits.cached_at = data.cached_at || null
   } catch (err) {
-    smsCredits.error = err.response?.data?.message || 'Erreur lors du chargement des crédits SMS'
+    smsCredits.error = err.response?.data?.message || 'Erreur'
   } finally {
     smsCredits.loading = false
   }
@@ -485,70 +717,42 @@ async function loadSmsCredits() {
 
 async function refreshSmsCredits() {
   smsCredits.refreshing = true
-  smsCredits.error = null
-
   try {
     const response = await settingsApi.refreshSmsCredits()
     const data = response.data.data || response.data
-
-    smsCredits.configured = data.configured
     smsCredits.credits_left = data.credits_left || 0
-    smsCredits.service_name = data.service_name
-    smsCredits.cached_at = data.cached_at || null
   } catch (err) {
-    smsCredits.error = err.response?.data?.message || 'Erreur lors du rafraîchissement des crédits SMS'
+    smsCredits.error = err.response?.data?.message || 'Erreur'
   } finally {
     smsCredits.refreshing = false
   }
 }
 
-function toggleBoolean(key) {
-  formData[key] = !formData[key]
-}
-
 function toggleDay(dayIndex) {
-  if (businessHours[dayIndex] === null) {
-    // Enable day with default hours
-    businessHours[dayIndex] = { open: '09:00', close: '18:00' }
-  } else {
-    businessHours[dayIndex] = null
-  }
+  businessHours[dayIndex] = businessHours[dayIndex] === null ? { open: '09:00', close: '18:00' } : null
 }
 
 function saveBusinessHours() {
-  // Convert reactive to plain object
   const hours = {}
-  for (let i = 0; i <= 6; i++) {
-    hours[i] = businessHours[i]
-  }
+  for (let i = 0; i <= 6; i++) hours[i] = businessHours[i]
   formData.business_hours = hours
   showBusinessHoursModal.value = false
 }
 
 async function saveSettings() {
   if (!hasChanges.value) return
-
   saving.value = true
-
   try {
-    // Only send changed settings
     const changedSettings = {}
     for (const key in formData) {
       if (JSON.stringify(formData[key]) !== JSON.stringify(originalData.value[key])) {
         changedSettings[key] = formData[key]
       }
     }
-
     await settingsApi.update(changedSettings)
-
-    // Update original data
     originalData.value = JSON.parse(JSON.stringify(formData))
-
-    // Show success message
     showSuccess.value = true
-    setTimeout(() => {
-      showSuccess.value = false
-    }, 3000)
+    setTimeout(() => { showSuccess.value = false }, 3000)
   } catch (err) {
     error.value = err.response?.data?.message || 'Erreur lors de l\'enregistrement'
   } finally {
