@@ -166,14 +166,20 @@
         </div>
 
         <!-- GDPR Consent -->
-        <div class="pt-4 border-t border-gray-700">
-          <label class="flex items-start">
+        <div
+          id="gdpr-consent-section"
+          :class="[
+            'pt-4 border-t transition-all duration-300',
+            gdprError ? 'border-red-500 animate-shake' : 'border-gray-700'
+          ]"
+        >
+          <label class="flex items-start cursor-pointer">
             <input
               v-model="bookingStore.gdprConsent"
               type="checkbox"
-              class="mt-1 h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-600 bg-gray-700 rounded"
+              class="mt-1 h-4 w-4 text-indigo-600 focus:ring-indigo-500 rounded transition-all border-gray-600 bg-gray-700"
             />
-            <span class="ml-3 text-sm text-gray-400">
+            <span :class="['ml-3 text-sm', gdprError ? 'text-red-400' : 'text-gray-400']">
               J'accepte que mes données personnelles soient enregistrées pour la gestion de mon rendez-vous et le suivi des séances.
               <span class="text-red-400">*</span>
             </span>
@@ -247,11 +253,27 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, watch } from 'vue'
 import { useBookingStore } from '@/stores/booking'
 import PhoneInput from '@/components/ui/PhoneInput.vue'
 
+const props = defineProps({
+  gdprError: {
+    type: Boolean,
+    default: false
+  }
+})
+
+const emit = defineEmits(['update:gdprError'])
+
 const bookingStore = useBookingStore()
+
+// Reset error when consent is given
+watch(() => bookingStore.gdprConsent, (newValue) => {
+  if (newValue && props.gdprError) {
+    emit('update:gdprError', false)
+  }
+})
 
 function formatPrice(value) {
   return Number(value).toFixed(2).replace('.', ',')
@@ -284,3 +306,15 @@ const formattedDateTime = computed(() => {
   return `${dateStr} à ${bookingStore.selectedTime}`
 })
 </script>
+
+<style scoped>
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
+  20%, 40%, 60%, 80% { transform: translateX(4px); }
+}
+
+.animate-shake {
+  animation: shake 0.5s ease-in-out;
+}
+</style>

@@ -22,7 +22,7 @@
         <ClientTypeStep v-if="bookingStore.currentStep === 1" />
         <PersonSelectionStep v-else-if="bookingStore.currentStep === 2" />
         <DateTimeStep v-else-if="bookingStore.currentStep === 3" />
-        <ContactInfoStep v-else-if="bookingStore.currentStep === 4" />
+        <ContactInfoStep v-else-if="bookingStore.currentStep === 4" v-model:gdpr-error="gdprError" />
         <ConfirmationStep v-else-if="bookingStore.currentStep === 5" @new-booking="handleNewBooking" />
       </div>
 
@@ -40,28 +40,38 @@
         </button>
         <div v-else></div>
 
-        <button
+        <div
           v-if="bookingStore.currentStep < 5 && bookingStore.currentStep !== 3"
-          @click="handleNext"
-          :disabled="!bookingStore.canGoNext || bookingStore.loading"
-          :class="[
-            'px-6 py-2 rounded-lg font-medium flex items-center transition-all duration-200',
-            bookingStore.canGoNext && !bookingStore.loading
-              ? 'bg-indigo-600 text-white hover:bg-indigo-500'
-              : 'bg-gray-700 text-gray-500 cursor-not-allowed'
-          ]"
+          class="relative"
         >
-          <span v-if="bookingStore.loading">
-            <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          <button
+            @click="handleNext"
+            :disabled="!bookingStore.canGoNext || bookingStore.loading"
+            :class="[
+              'px-6 py-2 rounded-lg font-medium flex items-center transition-all duration-200',
+              bookingStore.canGoNext && !bookingStore.loading
+                ? 'bg-indigo-600 text-white hover:bg-indigo-500'
+                : 'bg-gray-700 text-gray-500 cursor-not-allowed'
+            ]"
+          >
+            <span v-if="bookingStore.loading">
+              <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+            </span>
+            {{ bookingStore.currentStep === 4 ? 'Confirmer' : 'Continuer' }}
+            <svg v-if="bookingStore.currentStep < 4" class="w-5 h-5 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
             </svg>
-          </span>
-          {{ bookingStore.currentStep === 4 ? 'Confirmer' : 'Continuer' }}
-          <svg v-if="bookingStore.currentStep < 4" class="w-5 h-5 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-          </svg>
-        </button>
+          </button>
+          <!-- Invisible overlay to capture clicks on disabled button -->
+          <div
+            v-if="!bookingStore.canGoNext && !bookingStore.loading"
+            @click="handleButtonAreaClick"
+            class="absolute inset-0 cursor-not-allowed"
+          ></div>
+        </div>
       </div>
     </template>
   </div>
@@ -85,6 +95,7 @@ const authStore = useAuthStore()
 const toastStore = useToastStore()
 
 const initializing = ref(true)
+const gdprError = ref(false)
 
 // Afficher le bouton retour sauf à l'étape 1, à l'étape 5, et à l'étape 2 pour les utilisateurs connectés
 const showBackButton = computed(() => {
@@ -198,6 +209,28 @@ async function handleNext() {
     }
   } else {
     bookingStore.nextStep()
+  }
+}
+
+function handleButtonAreaClick() {
+  // Check if button is disabled due to missing GDPR consent on step 4
+  if (bookingStore.currentStep === 4 && !bookingStore.gdprConsent) {
+    // Show error state on GDPR checkbox
+    gdprError.value = true
+
+    // Show toast error
+    toastStore.error('Veuillez accepter les conditions de traitement des données pour continuer')
+
+    // Scroll to GDPR section if out of viewport
+    const gdprSection = document.getElementById('gdpr-consent-section')
+    if (gdprSection) {
+      const rect = gdprSection.getBoundingClientRect()
+      const isInViewport = rect.top >= 0 && rect.bottom <= window.innerHeight
+
+      if (!isInViewport) {
+        gdprSection.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      }
+    }
   }
 }
 </script>
