@@ -1,5 +1,8 @@
 <template>
   <div class="min-h-screen bg-dark">
+    <!-- Impersonation Banner (above header) -->
+    <ImpersonationBanner />
+
     <!-- Header (can be hidden for embed mode) -->
     <header v-if="!isEmbed" class="header-dark">
       <div class="max-w-5xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
@@ -29,6 +32,7 @@
 <script setup>
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
+import ImpersonationBanner from '@/components/ui/ImpersonationBanner.vue'
 
 const route = useRoute()
 
