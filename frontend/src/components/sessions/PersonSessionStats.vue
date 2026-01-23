@@ -286,6 +286,7 @@ const sensoryBarOptions = {
           <h3 class="text-base font-semibold text-white mb-3">Calendrier des séances</h3>
           <SessionCalendar
             :data="stats.session_dates"
+            :bookings-data="stats.booking_dates"
             :year="calendarYear"
             :month="calendarMonth"
             @change-month="handleMonthChange"

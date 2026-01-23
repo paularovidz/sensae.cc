@@ -1174,6 +1174,7 @@ class Session
     {
         $db = Database::getInstance();
 
+        // Completed sessions (past)
         $stmt = $db->prepare("
             SELECT DATE(session_date) as date, COUNT(*) as count
             FROM sessions
@@ -1184,6 +1185,20 @@ class Session
         ");
         $stmt->execute(['person_id' => $personId]);
         $sessionDates = $stmt->fetchAll(\PDO::FETCH_KEY_PAIR);
+
+        // Upcoming bookings (future sessions pending or confirmed)
+        $stmt = $db->prepare("
+            SELECT DATE(session_date) as date, COUNT(*) as count
+            FROM sessions
+            WHERE person_id = :person_id
+            AND status IN ('pending', 'confirmed')
+            AND DATE(session_date) >= CURDATE()
+            GROUP BY DATE(session_date)
+            ORDER BY date ASC
+            LIMIT 365
+        ");
+        $stmt->execute(['person_id' => $personId]);
+        $bookingDates = $stmt->fetchAll(\PDO::FETCH_KEY_PAIR);
 
         $stmt = $db->prepare("
             SELECT session_end, COUNT(*) as count
@@ -1238,6 +1253,7 @@ class Session
 
         return [
             'session_dates' => $sessionDates,
+            'booking_dates' => $bookingDates,
             'session_end_distribution' => $sessionEndStats,
             'behavior_end_distribution' => $behaviorEndStats,
             'communication_distribution' => $commCounts,
