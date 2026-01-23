@@ -1,0 +1,143 @@
+# =============================================================================
+# Docker Compose Production - Sensea
+# Usage: docker compose -f infrastructure/docker-compose.prod.yml up -d
+# =============================================================================
+
+services:
+  # ===========================================================================
+  # Base de données MariaDB
+  # ===========================================================================
+  db:
+    image: mariadb:10.11
+    container_name: sensea_db
+    restart: always
+    command: >
+      --innodb-flush-log-at-trx-commit=1
+      --sync-binlog=1
+      --innodb-file-per-table=1
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASS}
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASS}
+    volumes:
+      # Bind mount explicite pour persistance garantie
+      - /opt/app/data/mysql:/var/lib/mysql
+    networks:
+      - sensea
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # ===========================================================================
+  # API PHP
+  # ===========================================================================
+  api:
+    build:
+      context: ../api
+      dockerfile: Dockerfile
+    container_name: sensea_api
+    restart: always
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DB_HOST: db
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASS: ${DB_PASS}
+      DB_CHARSET: utf8mb4
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+      MAIL_HOST: ${MAIL_HOST}
+      MAIL_PORT: ${MAIL_PORT}
+      MAIL_USER: ${MAIL_USER}
+      MAIL_PASS: ${MAIL_PASS}
+      MAIL_FROM: ${MAIL_FROM}
+      APP_URL: ${APP_URL}
+      FRONTEND_URL: ${FRONTEND_URL}
+      ENV: production
+      DEBUG: "false"
+      APP_TIMEZONE: Europe/Paris
+      GOOGLE_ICAL_URL: ${GOOGLE_ICAL_URL}
+      OVH_SMS_APP_KEY: ${OVH_SMS_APP_KEY:-}
+      OVH_SMS_APP_SECRET: ${OVH_SMS_APP_SECRET:-}
+      OVH_SMS_CONSUMER_KEY: ${OVH_SMS_CONSUMER_KEY:-}
+      OVH_SMS_SERVICE_NAME: ${OVH_SMS_SERVICE_NAME:-}
+    volumes:
+      - ../api:/var/www/html
+      # Uploads persistés sur le host
+      - /opt/app/data/uploads:/var/www/html/uploads
+    ports:
+      - "127.0.0.1:8080:80"
+    networks:
+      - sensea
+
+  # ===========================================================================
+  # Frontend (build statique servi par Nginx)
+  # ===========================================================================
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile.prod
+    container_name: sensea_frontend
+    restart: always
+    ports:
+      - "127.0.0.1:3000:80"
+    networks:
+      - sensea
+
+  # ===========================================================================
+  # Cron (tâches planifiées)
+  # ===========================================================================
+  cron:
+    build:
+      context: ../api
+      dockerfile: Dockerfile
+    container_name: sensea_cron
+    restart: always
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DB_HOST: db
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASS: ${DB_PASS}
+      DB_CHARSET: utf8mb4
+      JWT_SECRET: ${JWT_SECRET}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+      MAIL_HOST: ${MAIL_HOST}
+      MAIL_PORT: ${MAIL_PORT}
+      MAIL_USER: ${MAIL_USER}
+      MAIL_PASS: ${MAIL_PASS}
+      MAIL_FROM: ${MAIL_FROM}
+      APP_URL: ${APP_URL}
+      FRONTEND_URL: ${FRONTEND_URL}
+      ENV: production
+      APP_TIMEZONE: Europe/Paris
+      GOOGLE_ICAL_URL: ${GOOGLE_ICAL_URL}
+      OVH_SMS_APP_KEY: ${OVH_SMS_APP_KEY:-}
+      OVH_SMS_APP_SECRET: ${OVH_SMS_APP_SECRET:-}
+      OVH_SMS_CONSUMER_KEY: ${OVH_SMS_CONSUMER_KEY:-}
+      OVH_SMS_SERVICE_NAME: ${OVH_SMS_SERVICE_NAME:-}
+    volumes:
+      - ../api:/var/www/html
+      - /opt/app/data/uploads:/var/www/html/uploads
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        echo "*/15 * * * * php /var/www/html/cron/booking-tasks.php >> /var/log/cron.log 2>&1" > /etc/crontabs/root
+        crond -f -l 2
+    networks:
+      - sensea
+
+networks:
+  sensea:
+    driver: bridge

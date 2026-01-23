@@ -1,0 +1,117 @@
+# =============================================================================
+# CD - Déploiement sur Hetzner
+# Déclenché après merge sur main (si les tests passent)
+# =============================================================================
+
+name: CD - Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:  # Permet le déploiement manuel
+
+# Empêche les déploiements simultanés
+concurrency:
+  group: production
+  cancel-in-progress: false
+
+jobs:
+  # ===========================================================================
+  # Tests (doit passer avant déploiement)
+  # ===========================================================================
+  test:
+    name: Run Tests
+    uses: ./.github/workflows/ci.yml
+
+  # ===========================================================================
+  # Déploiement
+  # ===========================================================================
+  deploy:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: test
+    environment: production
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Deploy to server
+        env:
+          SERVER_HOST: ${{ secrets.SERVER_HOST }}
+          SERVER_USER: ${{ secrets.SERVER_USER }}
+          DEPLOY_PATH: /opt/app
+        run: |
+          ssh $SERVER_USER@$SERVER_HOST << 'ENDSSH'
+            set -e
+
+            echo "=== Déploiement Sensea ==="
+            cd /opt/app
+
+            # 1. Pull des dernières modifications
+            echo "📥 Pull du code..."
+            git fetch origin main
+            git reset --hard origin/main
+
+            # 2. Build et redémarrage des containers
+            echo "🐳 Rebuild des containers..."
+            docker compose -f infrastructure/docker-compose.prod.yml build --no-cache frontend api
+
+            # 3. Redémarrage avec zero-downtime
+            echo "🔄 Redémarrage des services..."
+            docker compose -f infrastructure/docker-compose.prod.yml up -d --remove-orphans
+
+            # 4. Migrations
+            echo "📊 Exécution des migrations..."
+            docker exec sensea_api php /var/www/html/migrations/migrate.php
+
+            # 5. Nettoyage
+            echo "🧹 Nettoyage..."
+            docker image prune -f
+
+            # 6. Vérification santé
+            echo "🏥 Vérification santé..."
+            sleep 5
+
+            if ! docker exec sensea_api php -r "echo 'API OK';"; then
+              echo "❌ API non fonctionnelle"
+              exit 1
+            fi
+
+            if ! curl -sf http://127.0.0.1:3000 > /dev/null; then
+              echo "❌ Frontend non fonctionnel"
+              exit 1
+            fi
+
+            echo "✅ Déploiement terminé avec succès!"
+          ENDSSH
+
+      - name: Notify on failure
+        if: failure()
+        run: |
+          echo "::error::Deployment failed! Check the logs above."
+
+  # ===========================================================================
+  # Notification (optionnel - Slack/Discord)
+  # ===========================================================================
+  notify:
+    name: Notify
+    runs-on: ubuntu-latest
+    needs: deploy
+    if: always()
+
+    steps:
+      - name: Send notification
+        run: |
+          if [ "${{ needs.deploy.result }}" == "success" ]; then
+            echo "✅ Déploiement réussi sur production"
+          else
+            echo "❌ Échec du déploiement"
+          fi
