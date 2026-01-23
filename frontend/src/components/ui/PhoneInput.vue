@@ -13,33 +13,59 @@ const props = defineProps({
   disabled: {
     type: Boolean,
     default: false
-  },
-  placeholder: {
-    type: String,
-    default: '6 12 34 56 78'
   }
 })
 
 const emit = defineEmits(['update:modelValue'])
 
-// Liste des pays avec indicatifs (les plus courants en premier)
+// Liste des pays avec indicatifs, placeholders et formats
+// format: tableau de tailles de groupes pour le formatage
 const countries = [
-  { code: 'FR', name: 'France', dial: '+33', flag: '\u{1F1EB}\u{1F1F7}' },
-  { code: 'BE', name: 'Belgique', dial: '+32', flag: '\u{1F1E7}\u{1F1EA}' },
-  { code: 'GB', name: 'Royaume-Uni', dial: '+44', flag: '\u{1F1EC}\u{1F1E7}' },
-  { code: 'CH', name: 'Suisse', dial: '+41', flag: '\u{1F1E8}\u{1F1ED}' },
-  { code: 'LU', name: 'Luxembourg', dial: '+352', flag: '\u{1F1F1}\u{1F1FA}' },
-  { code: 'DE', name: 'Allemagne', dial: '+49', flag: '\u{1F1E9}\u{1F1EA}' },
-  { code: 'ES', name: 'Espagne', dial: '+34', flag: '\u{1F1EA}\u{1F1F8}' },
-  { code: 'IT', name: 'Italie', dial: '+39', flag: '\u{1F1EE}\u{1F1F9}' },
-  { code: 'MC', name: 'Monaco', dial: '+377', flag: '\u{1F1F2}\u{1F1E8}' },
-  { code: 'NL', name: 'Pays-Bas', dial: '+31', flag: '\u{1F1F3}\u{1F1F1}' },
-  { code: 'PT', name: 'Portugal', dial: '+351', flag: '\u{1F1F5}\u{1F1F9}' }
+  { code: 'FR', name: 'France', dial: '+33', flag: '\u{1F1EB}\u{1F1F7}', placeholder: '06 12 34 56 78', format: [2, 2, 2, 2, 2] },
+  { code: 'BE', name: 'Belgique', dial: '+32', flag: '\u{1F1E7}\u{1F1EA}', placeholder: '0470 12 34 56', format: [4, 2, 2, 2] },
+  { code: 'GB', name: 'Royaume-Uni', dial: '+44', flag: '\u{1F1EC}\u{1F1E7}', placeholder: '07911 123 456', format: [5, 3, 3] },
+  { code: 'CH', name: 'Suisse', dial: '+41', flag: '\u{1F1E8}\u{1F1ED}', placeholder: '076 123 45 67', format: [3, 3, 2, 2] },
+  { code: 'LU', name: 'Luxembourg', dial: '+352', flag: '\u{1F1F1}\u{1F1FA}', placeholder: '621 123 456', format: [3, 3, 3] },
+  { code: 'DE', name: 'Allemagne', dial: '+49', flag: '\u{1F1E9}\u{1F1EA}', placeholder: '0151 1234 5678', format: [4, 4, 4] },
+  { code: 'ES', name: 'Espagne', dial: '+34', flag: '\u{1F1EA}\u{1F1F8}', placeholder: '612 34 56 78', format: [3, 2, 2, 2] },
+  { code: 'IT', name: 'Italie', dial: '+39', flag: '\u{1F1EE}\u{1F1F9}', placeholder: '312 345 6789', format: [3, 3, 4] },
+  { code: 'MC', name: 'Monaco', dial: '+377', flag: '\u{1F1F2}\u{1F1E8}', placeholder: '06 12 34 56 78', format: [2, 2, 2, 2, 2] },
+  { code: 'NL', name: 'Pays-Bas', dial: '+31', flag: '\u{1F1F3}\u{1F1F1}', placeholder: '06 1234 5678', format: [2, 4, 4] },
+  { code: 'PT', name: 'Portugal', dial: '+351', flag: '\u{1F1F5}\u{1F1F9}', placeholder: '912 345 678', format: [3, 3, 3] }
 ]
 
 const selectedCountry = ref(countries[0]) // France par défaut
 const phoneNumber = ref('')
 const dropdownOpen = ref(false)
+
+// Placeholder dynamique selon le pays
+const dynamicPlaceholder = computed(() => {
+  return selectedCountry.value.placeholder
+})
+
+// Reformater un numéro avec le format du pays actuel
+function reformatNumber(digits) {
+  if (!digits) {
+    phoneNumber.value = ''
+    return
+  }
+
+  const format = selectedCountry.value.format
+  const groups = []
+  let position = 0
+
+  for (const size of format) {
+    if (position >= digits.length) break
+    groups.push(digits.substring(position, position + size))
+    position += size
+  }
+
+  if (position < digits.length) {
+    groups.push(digits.substring(position))
+  }
+
+  phoneNumber.value = groups.join(' ')
+}
 
 // Parser le numéro initial si fourni
 function parseInitialValue() {
@@ -53,7 +79,8 @@ function parseInitialValue() {
   for (const country of countries) {
     if (value.startsWith(country.dial)) {
       selectedCountry.value = country
-      phoneNumber.value = value.substring(country.dial.length)
+      const digits = value.substring(country.dial.length)
+      reformatNumber(digits)
       return
     }
   }
@@ -63,7 +90,8 @@ function parseInitialValue() {
     phoneNumber.value = value
   } else {
     // Sinon, considérer comme numéro français
-    phoneNumber.value = value.startsWith('0') ? value.substring(1) : value
+    const digits = value.startsWith('0') ? value.substring(1) : value
+    reformatNumber(digits)
   }
 }
 
@@ -104,6 +132,11 @@ watch(() => props.modelValue, (newValue, oldValue) => {
 function selectCountry(country) {
   selectedCountry.value = country
   dropdownOpen.value = false
+  // Reformater le numéro avec le nouveau format
+  if (phoneNumber.value) {
+    const digits = phoneNumber.value.replace(/\s/g, '')
+    reformatNumber(digits)
+  }
 }
 
 function toggleDropdown() {
@@ -116,14 +149,12 @@ function closeDropdown() {
   dropdownOpen.value = false
 }
 
-// Formater l'affichage du numéro (grouper par 2)
+// Formater l'affichage du numéro selon le format du pays
 function formatInput(e) {
   let value = e.target.value.replace(/[^\d\s]/g, '')
   // Limiter à 15 chiffres
   const digits = value.replace(/\s/g, '').substring(0, 15)
-  // Grouper par 2 pour l'affichage
-  const groups = digits.match(/.{1,2}/g)
-  phoneNumber.value = groups ? groups.join(' ') : ''
+  reformatNumber(digits)
 }
 </script>
 
@@ -171,7 +202,7 @@ function formatInput(e) {
         type="tel"
         :value="phoneNumber"
         @input="formatInput"
-        :placeholder="placeholder"
+        :placeholder="dynamicPlaceholder"
         :required="required"
         :disabled="disabled"
         class="flex-1 px-4 py-2 text-sm bg-gray-700 border border-gray-600 rounded-r-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
