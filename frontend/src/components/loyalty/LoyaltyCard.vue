@@ -110,7 +110,7 @@ function formatDate(dateString) {
               :class="[
                 'aspect-square rounded-xl flex items-center justify-center text-lg font-bold transition-all duration-300',
                 filled
-                  ? 'bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-md'
+                  ? 'bg-gradient-to-br from-indigo-500 to-indigo-600 text-white shadow-md'
                   : 'bg-gray-700 text-gray-500 border-2 border-dashed border-gray-600'
               ]"
             >

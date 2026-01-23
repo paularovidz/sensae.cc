@@ -38,11 +38,11 @@ async function handleSubmit() {
       </div>
       <h2 class="text-2xl font-semibold text-white mb-3">Vérifiez votre boîte mail</h2>
       <p class="text-gray-400 mb-6">
-        Si un compte existe pour <span class="text-purple-400 font-medium">{{ email }}</span>, vous recevrez un lien de connexion dans quelques instants.
+        Si un compte existe pour <span class="text-indigo-400 font-medium">{{ email }}</span>, vous recevrez un lien de connexion dans quelques instants.
       </p>
       <button
         @click="submitted = false; email = ''"
-        class="text-purple-400 hover:text-purple-300 font-medium transition-colors inline-flex items-center gap-2"
+        class="text-indigo-400 hover:text-indigo-300 font-medium transition-colors inline-flex items-center gap-2"
       >
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -90,7 +90,7 @@ async function handleSubmit() {
             id="email"
             v-model="email"
             type="email"
-            class="w-full pl-12 pr-4 py-3.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 transition-all"
+            class="w-full pl-12 pr-4 py-3.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all"
             placeholder="votre@email.com"
             autocomplete="email"
             required
@@ -101,7 +101,7 @@ async function handleSubmit() {
       <!-- Submit button -->
       <button
         type="submit"
-        class="w-full py-3.5 px-4 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-medium rounded-xl shadow-lg shadow-purple-500/25 hover:shadow-purple-500/40 focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+        class="w-full py-3.5 px-4 bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 text-white font-medium rounded-xl shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
         :disabled="authStore.loading"
       >
         <LoadingSpinner v-if="authStore.loading" size="sm" />

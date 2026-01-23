@@ -74,7 +74,7 @@ async function handleLogout() {
     <header class="header-dark px-4 py-4">
       <div class="max-w-4xl mx-auto flex items-center justify-between">
         <div class="flex items-center space-x-3">
-          <div class="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center">
+          <div class="w-10 h-10 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-xl flex items-center justify-center">
             <span class="text-white text-lg font-bold">S</span>
           </div>
           <h1 class="text-xl font-semibold text-white">sensëa</h1>
@@ -105,7 +105,7 @@ async function handleLogout() {
           <a
             href="/booking"
             target="_blank"
-            class="block bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white rounded-xl p-4 transition-all duration-200 shadow-lg hover:shadow-xl"
+            class="block bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 text-white rounded-xl p-4 transition-all duration-200 shadow-lg hover:shadow-xl"
           >
             <div class="flex items-center justify-between">
               <div class="flex items-center space-x-3">

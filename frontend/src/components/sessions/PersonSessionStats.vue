@@ -154,7 +154,7 @@ const communicationChartData = computed(() => {
     datasets: [{
       label: 'Types de communication',
       data,
-      backgroundColor: ['#8B5CF6', '#3B82F6', '#EC4899']
+      backgroundColor: ['#818CF8', '#6366F1', '#4F46E5']
     }]
   }
 })
@@ -186,12 +186,16 @@ const sensoryBarData = computed(() => {
   }
 })
 
+// Dark mode chart options
 const chartOptions = {
   responsive: true,
   maintainAspectRatio: false,
   plugins: {
     legend: {
-      position: 'bottom'
+      position: 'bottom',
+      labels: {
+        color: '#9CA3AF'
+      }
     }
   }
 }
@@ -208,7 +212,19 @@ const barChartOptions = {
     y: {
       beginAtZero: true,
       ticks: {
-        stepSize: 1
+        stepSize: 1,
+        color: '#9CA3AF'
+      },
+      grid: {
+        color: '#374151'
+      }
+    },
+    x: {
+      ticks: {
+        color: '#9CA3AF'
+      },
+      grid: {
+        color: '#374151'
       }
     }
   }
@@ -222,19 +238,29 @@ const sensoryBarOptions = {
     x: {
       stacked: true,
       ticks: {
-        callback: (value) => Math.abs(value)
+        callback: (value) => Math.abs(value),
+        color: '#9CA3AF'
       },
       grid: {
-        color: (context) => context.tick.value === 0 ? '#9CA3AF' : '#E5E7EB'
+        color: (context) => context.tick.value === 0 ? '#6B7280' : '#374151'
       }
     },
     y: {
-      stacked: true
+      stacked: true,
+      ticks: {
+        color: '#9CA3AF'
+      },
+      grid: {
+        color: '#374151'
+      }
     }
   },
   plugins: {
     legend: {
-      position: 'bottom'
+      position: 'bottom',
+      labels: {
+        color: '#9CA3AF'
+      }
     },
     tooltip: {
       callbacks: {
@@ -256,8 +282,8 @@ const sensoryBarOptions = {
       <!-- 3 items per row: Calendar + charts -->
       <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
         <!-- Calendar -->
-        <div class="card p-4">
-          <h3 class="text-base font-semibold text-gray-900 mb-3">Calendrier des séances</h3>
+        <div class="bg-gray-800 rounded-xl border border-gray-700 p-4">
+          <h3 class="text-base font-semibold text-white mb-3">Calendrier des séances</h3>
           <SessionCalendar
             :data="stats.session_dates"
             :year="calendarYear"
@@ -267,24 +293,24 @@ const sensoryBarOptions = {
         </div>
 
         <!-- Session end distribution -->
-        <div v-if="sessionEndChartData" class="card p-4">
-          <h3 class="text-base font-semibold text-gray-900 mb-3">Fin de séance</h3>
+        <div v-if="sessionEndChartData" class="bg-gray-800 rounded-xl border border-gray-700 p-4">
+          <h3 class="text-base font-semibold text-white mb-3">Fin de séance</h3>
           <div class="h-48">
             <Doughnut :data="sessionEndChartData" :options="chartOptions" />
           </div>
         </div>
 
         <!-- Behavior end -->
-        <div v-if="behaviorEndChartData" class="card p-4">
-          <h3 class="text-base font-semibold text-gray-900 mb-3">Comportement fin de séance</h3>
+        <div v-if="behaviorEndChartData" class="bg-gray-800 rounded-xl border border-gray-700 p-4">
+          <h3 class="text-base font-semibold text-white mb-3">Comportement fin de séance</h3>
           <div class="h-48">
             <Bar :data="behaviorEndChartData" :options="barChartOptions" />
           </div>
         </div>
 
         <!-- Communication -->
-        <div v-if="communicationChartData" class="card p-4">
-          <h3 class="text-base font-semibold text-gray-900 mb-3">Types de communication</h3>
+        <div v-if="communicationChartData" class="bg-gray-800 rounded-xl border border-gray-700 p-4">
+          <h3 class="text-base font-semibold text-white mb-3">Types de communication</h3>
           <div class="h-48">
             <Bar :data="communicationChartData" :options="barChartOptions" />
           </div>
@@ -292,16 +318,16 @@ const sensoryBarOptions = {
       </div>
 
       <!-- Sensory preferences bar chart - full width -->
-      <div v-if="sensoryBarData" class="card p-4">
-        <h3 class="text-base font-semibold text-gray-900 mb-2">Préférences sensorielles</h3>
-        <p class="text-xs text-gray-500 mb-3">Positif (vert), Négatif (rouge)</p>
+      <div v-if="sensoryBarData" class="bg-gray-800 rounded-xl border border-gray-700 p-4">
+        <h3 class="text-base font-semibold text-white mb-2">Préférences sensorielles</h3>
+        <p class="text-xs text-gray-400 mb-3">Positif (vert), Négatif (rouge)</p>
         <div class="h-64">
           <Bar :data="sensoryBarData" :options="sensoryBarOptions" />
         </div>
       </div>
 
       <!-- No data message -->
-      <div v-if="!sessionEndChartData && !behaviorEndChartData && !communicationChartData && !sensoryBarData" class="card p-6 text-center text-gray-500">
+      <div v-if="!sessionEndChartData && !behaviorEndChartData && !communicationChartData && !sensoryBarData" class="bg-gray-800 rounded-xl border border-gray-700 p-6 text-center text-gray-400">
         Pas assez de données pour afficher les statistiques. Créez plus de séances pour voir les analyses.
       </div>
     </template>

@@ -851,7 +851,7 @@ function cancel() {
                       <div class="flex items-center gap-2">
                         <span class="font-medium">{{ promo.name }}</span>
                         <span v-if="promo.code" class="text-gray-400 text-sm">({{ promo.code }})</span>
-                        <span v-if="promo.application_mode === 'automatic'" class="text-xs bg-purple-600/50 text-purple-200 px-1.5 py-0.5 rounded">Auto</span>
+                        <span v-if="promo.application_mode === 'automatic'" class="text-xs bg-indigo-600/50 text-indigo-200 px-1.5 py-0.5 rounded">Auto</span>
                       </div>
                       <span class="text-green-400 font-semibold">{{ promo.discount_label }}</span>
                     </button>

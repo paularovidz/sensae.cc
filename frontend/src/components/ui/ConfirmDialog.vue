@@ -73,9 +73,9 @@ defineExpose({ open, close })
             leave-from-class="opacity-100 scale-100"
             leave-to-class="opacity-0 scale-95"
           >
-            <div v-if="isOpen" class="relative bg-white rounded-xl shadow-xl max-w-md w-full p-6">
-              <h3 class="text-lg font-semibold text-gray-900 mb-2">{{ title }}</h3>
-              <p class="text-gray-600 mb-6">{{ message }}</p>
+            <div v-if="isOpen" class="relative bg-gray-800 border border-gray-700 rounded-xl shadow-xl max-w-md w-full p-6">
+              <h3 class="text-lg font-semibold text-white mb-2">{{ title }}</h3>
+              <p class="text-gray-300 mb-6">{{ message }}</p>
 
               <div class="flex justify-end space-x-3">
                 <button @click="cancel" class="btn-secondary">

@@ -5,9 +5,9 @@
   <div class="min-h-screen flex items-center justify-center bg-gray-950 p-4 overflow-hidden relative">
     <!-- Animated background gradient orbs -->
     <div class="absolute inset-0 overflow-hidden">
-      <div class="absolute -top-40 -left-40 w-80 h-80 bg-purple-600/30 rounded-full blur-[100px] animate-pulse"></div>
-      <div class="absolute top-1/2 -right-40 w-96 h-96 bg-indigo-600/20 rounded-full blur-[120px] animate-pulse" style="animation-delay: 1s;"></div>
-      <div class="absolute -bottom-40 left-1/3 w-80 h-80 bg-violet-600/25 rounded-full blur-[100px] animate-pulse" style="animation-delay: 2s;"></div>
+      <div class="absolute -top-40 -left-40 w-80 h-80 bg-indigo-600/30 rounded-full blur-[100px] animate-pulse"></div>
+      <div class="absolute top-1/2 -right-40 w-96 h-96 bg-indigo-500/20 rounded-full blur-[120px] animate-pulse" style="animation-delay: 1s;"></div>
+      <div class="absolute -bottom-40 left-1/3 w-80 h-80 bg-indigo-700/25 rounded-full blur-[100px] animate-pulse" style="animation-delay: 2s;"></div>
     </div>
 
     <!-- Subtle grid pattern overlay -->
@@ -36,8 +36,8 @@
           <div class="flex lg:hidden justify-center gap-6 pt-2">
             <!-- Feature 1 -->
             <div class="flex flex-col items-center gap-2">
-              <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500/20 to-indigo-500/20 border border-purple-500/20 flex items-center justify-center">
-                <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500/20 to-indigo-600/20 border border-indigo-500/20 flex items-center justify-center">
+                <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
                 </svg>
               </div>
@@ -68,9 +68,9 @@
           <!-- Desktop: full cards -->
           <div class="hidden lg:flex flex-col gap-6">
             <!-- Feature 1: Historique -->
-            <div class="group flex items-start gap-4 p-4 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/[0.07] hover:border-purple-500/30 transition-all duration-300">
-              <div class="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500/20 to-indigo-500/20 border border-purple-500/20 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                <svg class="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="group flex items-start gap-4 p-4 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/[0.07] hover:border-indigo-500/30 transition-all duration-300">
+              <div class="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500/20 to-indigo-600/20 border border-indigo-500/20 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                <svg class="w-6 h-6 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
                 </svg>
               </div>

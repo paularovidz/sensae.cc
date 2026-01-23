@@ -519,7 +519,7 @@ function handleUserSearchBlur() {
                     v-if="user.client_type"
                     :class="[
                       'ml-2 px-2 py-0.5 text-xs rounded',
-                      user.client_type === 'association' ? 'bg-violet-500/20 text-violet-300' :
+                      user.client_type === 'association' ? 'bg-indigo-500/20 text-indigo-300' :
                       user.client_type === 'friends_family' ? 'bg-amber-500/20 text-amber-300' :
                       'bg-gray-600 text-gray-300'
                     ]"

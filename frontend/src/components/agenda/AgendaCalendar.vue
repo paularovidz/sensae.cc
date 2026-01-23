@@ -151,10 +151,10 @@ function getBookingClasses(booking) {
     no_show: 'bg-gray-100 border-gray-300 text-gray-800 hover:bg-gray-200'
   }
 
-  // Couleurs pour associations/pro (teintes violettes)
+  // Couleurs pour associations/pro (teintes indigo foncé)
   const associationColors = {
     pending: 'bg-amber-100 border-amber-400 text-amber-800 hover:bg-amber-200',
-    confirmed: 'bg-violet-100 border-violet-400 text-violet-800 hover:bg-violet-200',
+    confirmed: 'bg-indigo-200 border-indigo-500 text-indigo-900 hover:bg-indigo-300',
     completed: 'bg-indigo-100 border-indigo-400 text-indigo-800 hover:bg-indigo-200',
     cancelled: 'bg-red-100 border-red-300 text-red-800 hover:bg-red-200',
     no_show: 'bg-gray-100 border-gray-300 text-gray-800 hover:bg-gray-200'
@@ -351,7 +351,7 @@ emit('week-change', { start: currentWeekStart.value, end: getWeekEnd(currentWeek
         <svg class="w-3 h-3 text-gray-400 mr-1" fill="currentColor" viewBox="0 0 20 20">
           <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
         </svg>
-        <div class="w-3 h-3 rounded bg-violet-100 border border-violet-400 mr-1"></div>
+        <div class="w-3 h-3 rounded bg-indigo-200 border border-indigo-500 mr-1"></div>
         <span class="text-gray-400">Association</span>
       </div>
       <div class="border-l border-gray-600 pl-4 ml-2 flex items-center gap-4">

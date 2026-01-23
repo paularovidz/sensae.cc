@@ -107,7 +107,7 @@
   }
 
   .badge-primary {
-    @apply badge bg-purple-100 text-purple-800;
+    @apply badge bg-indigo-100 text-indigo-800;
   }
 
   .badge-success {

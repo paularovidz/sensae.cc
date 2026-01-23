@@ -168,17 +168,17 @@ async function savePrice() {
 
     <!-- Modal -->
     <div class="flex min-h-full items-center justify-center p-4">
-      <div class="relative bg-white rounded-xl shadow-xl max-w-lg w-full transform transition-all">
+      <div class="relative bg-gray-800 border border-gray-700 rounded-xl shadow-xl max-w-lg w-full transform transition-all">
         <!-- Header -->
-        <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+        <div class="flex items-center justify-between px-6 py-4 border-b border-gray-700">
           <div>
-            <h3 class="text-lg font-semibold text-gray-900">Détails du rendez-vous</h3>
+            <h3 class="text-lg font-semibold text-white">Détails du rendez-vous</h3>
             <span :class="['inline-block mt-1 px-2 py-0.5 text-xs font-medium rounded-full border', statusClasses[booking.status]]">
               {{ statusLabels[booking.status] }}
             </span>
           </div>
-          <button @click="close" class="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-            <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <button @click="close" class="p-2 hover:bg-gray-700 rounded-lg transition-colors">
+            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
@@ -188,20 +188,20 @@ async function savePrice() {
         <div class="px-6 py-4 space-y-4">
           <!-- Date/Time -->
           <div class="flex items-start">
-            <div class="p-2 bg-primary-100 rounded-lg mr-3">
-              <svg class="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="p-2 bg-primary-900/50 rounded-lg mr-3">
+              <svg class="w-5 h-5 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
             </div>
             <div class="flex-1">
-              <div class="font-medium text-gray-900">{{ formatDate(booking.session_date) }}</div>
-              <div class="text-gray-600">{{ durationLabel }}</div>
-              <div class="text-sm text-gray-500 mt-1">
+              <div class="font-medium text-white">{{ formatDate(booking.session_date) }}</div>
+              <div class="text-gray-300">{{ durationLabel }}</div>
+              <div class="text-sm text-gray-400 mt-1">
                 <span class="font-medium">{{ formatTime(booking.session_date) }}</span>
                 → <span class="font-medium">{{ formatTime(sessionEndTime) }}</span>
-                <span class="text-gray-400">(séance)</span>
+                <span class="text-gray-500">(séance)</span>
               </div>
-              <div class="text-sm text-gray-400">
+              <div class="text-sm text-gray-500">
                 Disponible à {{ formatTime(blockEndTime) }}
                 <span class="text-xs">(+{{ booking.duration_blocked_minutes - booking.duration_display_minutes }}min inter-prestation)</span>
               </div>
@@ -210,19 +210,19 @@ async function savePrice() {
 
           <!-- Price (editable) -->
           <div class="flex items-start">
-            <div class="p-2 bg-amber-100 rounded-lg mr-3">
-              <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="p-2 bg-amber-900/50 rounded-lg mr-3">
+              <svg class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.121 15.536c-1.171 1.952-3.07 1.952-4.242 0-1.172-1.953-1.172-5.119 0-7.072 1.171-1.952 3.07-1.952 4.242 0M8 10.5h4m-4 3h4m9-1.5a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
             <div class="flex-1">
-              <div class="text-sm text-gray-500">Tarif</div>
+              <div class="text-sm text-gray-400">Tarif</div>
               <div class="flex items-center gap-2">
                 <div v-if="!editingPrice" class="flex items-center gap-2">
-                  <span class="font-medium text-gray-900">{{ booking.price ?? '-' }} €</span>
+                  <span class="font-medium text-white">{{ booking.price ?? '-' }} €</span>
                   <button
                     @click="startEditPrice"
-                    class="p-1 text-gray-400 hover:text-gray-600 rounded"
+                    class="p-1 text-gray-400 hover:text-gray-200 rounded"
                     title="Modifier le tarif"
                   >
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -236,12 +236,12 @@ async function savePrice() {
                     type="number"
                     min="0"
                     step="1"
-                    class="w-20 px-2 py-1 text-sm text-gray-900 bg-white border border-gray-300 rounded focus:ring-primary-500 focus:border-primary-500"
+                    class="w-20 px-2 py-1 text-sm text-white bg-gray-700 border border-gray-600 rounded focus:ring-primary-500 focus:border-primary-500"
                     @keyup.enter="savePrice"
                     @keyup.escape="cancelEditPrice"
                     @wheel.prevent
                   />
-                  <span class="text-gray-500">€</span>
+                  <span class="text-gray-400">€</span>
                   <button
                     @click="savePrice"
                     :disabled="savingPrice"
@@ -254,7 +254,7 @@ async function savePrice() {
                   </button>
                   <button
                     @click="cancelEditPrice"
-                    class="p-1 text-gray-400 hover:text-gray-600 rounded"
+                    class="p-1 text-gray-400 hover:text-gray-200 rounded"
                     title="Annuler"
                   >
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -268,18 +268,18 @@ async function savePrice() {
 
           <!-- Beneficiary -->
           <div class="flex items-start">
-            <div class="p-2 bg-green-100 rounded-lg mr-3">
-              <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="p-2 bg-green-900/50 rounded-lg mr-3">
+              <svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
               </svg>
             </div>
             <div>
-              <div class="text-sm text-gray-500">Bénéficiaire</div>
-              <div class="font-medium text-gray-900">
+              <div class="text-sm text-gray-400">Bénéficiaire</div>
+              <div class="font-medium text-white">
                 <RouterLink
                   v-if="booking.person_id"
                   :to="`/app/persons/${booking.person_id}`"
-                  class="hover:text-primary-600"
+                  class="hover:text-primary-400"
                   @click="close"
                 >
                   {{ booking.person_first_name }} {{ booking.person_last_name }}
@@ -291,30 +291,30 @@ async function savePrice() {
 
           <!-- Client -->
           <div class="flex items-start">
-            <div class="p-2 rounded-lg mr-3" :class="booking.client_type === 'association' ? 'bg-violet-100' : 'bg-blue-100'">
-              <svg v-if="booking.client_type === 'association'" class="w-5 h-5 text-violet-600" fill="currentColor" viewBox="0 0 20 20">
+            <div class="p-2 rounded-lg mr-3" :class="booking.client_type === 'association' ? 'bg-indigo-900/50' : 'bg-blue-900/50'">
+              <svg v-if="booking.client_type === 'association'" class="w-5 h-5 text-indigo-400" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
               </svg>
-              <svg v-else class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg v-else class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
               </svg>
             </div>
             <div>
-              <div class="text-sm text-gray-500">Contact ({{ clientTypeLabel }})</div>
-              <div class="font-medium text-gray-900">{{ booking.client_first_name }} {{ booking.client_last_name }}</div>
-              <div class="text-sm text-gray-600">{{ booking.client_email }}</div>
-              <div v-if="booking.client_phone" class="text-sm text-gray-600">{{ formatPhoneForDisplay(booking.client_phone) }}</div>
-              <div v-if="booking.company_name" class="text-sm text-violet-600 font-medium">{{ booking.company_name }}</div>
+              <div class="text-sm text-gray-400">Contact ({{ clientTypeLabel }})</div>
+              <div class="font-medium text-white">{{ booking.client_first_name }} {{ booking.client_last_name }}</div>
+              <div class="text-sm text-gray-300">{{ booking.client_email }}</div>
+              <div v-if="booking.client_phone" class="text-sm text-gray-300">{{ formatPhoneForDisplay(booking.client_phone) }}</div>
+              <div v-if="booking.company_name" class="text-sm text-indigo-400 font-medium">{{ booking.company_name }}</div>
             </div>
           </div>
 
           <!-- Session link -->
-          <div v-if="booking.linked_session_id" class="bg-green-50 border border-green-200 rounded-lg p-3">
+          <div v-if="booking.linked_session_id" class="bg-green-900/30 border border-green-700 rounded-lg p-3">
             <div class="flex items-center justify-between">
-              <span class="text-sm text-green-700">Séance créée</span>
+              <span class="text-sm text-green-400">Séance créée</span>
               <RouterLink
                 :to="`/app/sessions/${booking.linked_session_id}`"
-                class="text-sm font-medium text-green-700 hover:text-green-800"
+                class="text-sm font-medium text-green-400 hover:text-green-300"
                 @click="close"
               >
                 Voir la séance →
@@ -324,16 +324,16 @@ async function savePrice() {
         </div>
 
         <!-- Actions -->
-        <div class="px-6 py-4 bg-gray-50 rounded-b-xl border-t border-gray-200">
+        <div class="px-6 py-4 bg-gray-900 rounded-b-xl border-t border-gray-700">
           <!-- Status change buttons -->
           <div v-if="!booking.linked_session_id && booking.status !== 'cancelled'" class="mb-4">
-            <div class="text-sm font-medium text-gray-700 mb-2">Changer le statut :</div>
+            <div class="text-sm font-medium text-gray-300 mb-2">Changer le statut :</div>
             <div class="flex flex-wrap gap-2">
               <button
                 v-if="booking.status !== 'confirmed'"
                 @click="changeStatus('confirmed')"
                 :disabled="changingStatus"
-                class="px-3 py-1.5 text-sm font-medium bg-green-100 text-green-700 rounded-lg hover:bg-green-200 disabled:opacity-50"
+                class="px-3 py-1.5 text-sm font-medium bg-green-900/50 text-green-400 rounded-lg hover:bg-green-900/70 disabled:opacity-50"
               >
                 Confirmer
               </button>
@@ -341,7 +341,7 @@ async function savePrice() {
                 v-if="booking.status !== 'cancelled'"
                 @click="changeStatus('cancelled')"
                 :disabled="changingStatus"
-                class="px-3 py-1.5 text-sm font-medium bg-red-100 text-red-700 rounded-lg hover:bg-red-200 disabled:opacity-50"
+                class="px-3 py-1.5 text-sm font-medium bg-red-900/50 text-red-400 rounded-lg hover:bg-red-900/70 disabled:opacity-50"
               >
                 Annuler
               </button>
@@ -349,7 +349,7 @@ async function savePrice() {
                 v-if="booking.status === 'confirmed'"
                 @click="changeStatus('no_show')"
                 :disabled="changingStatus"
-                class="px-3 py-1.5 text-sm font-medium bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-50"
+                class="px-3 py-1.5 text-sm font-medium bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 disabled:opacity-50"
               >
                 Absent
               </button>
@@ -369,7 +369,7 @@ async function savePrice() {
               </svg>
               Supprimer
             </button>
-            <span v-else class="text-sm text-gray-500">
+            <span v-else class="text-sm text-gray-400">
               Supprimez d'abord la séance liée
             </span>
 

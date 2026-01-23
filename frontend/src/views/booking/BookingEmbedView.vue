@@ -2,7 +2,7 @@
   <div
     :class="[
       'min-h-screen',
-      customBgClass || 'bg-gradient-to-br from-indigo-50 via-white to-purple-50'
+      customBgClass || 'bg-gradient-to-br from-indigo-50 via-white to-indigo-100'
     ]"
     :style="customStyles"
   >
