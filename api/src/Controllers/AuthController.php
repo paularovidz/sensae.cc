@@ -26,10 +26,14 @@ class AuthController
 
         $email = strtolower(trim($data['email']));
 
-        // Rate limit: max 3 requests per hour per email
-        $recentRequests = MagicLink::countRecentRequestsByEmail($email, 60);
-        if ($recentRequests >= 3) {
-            Response::error('Trop de demandes de connexion. Veuillez patienter avant de réessayer.', 429);
+        // Rate limit: max 2 requests per 5 minutes per email
+        $windowMinutes = 5;
+        $recentRequests = MagicLink::countRecentRequestsByEmail($email, $windowMinutes);
+        if ($recentRequests >= 2) {
+            $oldestRequest = MagicLink::getOldestRecentRequestByEmail($email, $windowMinutes);
+            $waitSeconds = $oldestRequest ? ($windowMinutes * 60) - (time() - strtotime($oldestRequest['created_at'])) : $windowMinutes * 60;
+            $waitMinutes = ceil($waitSeconds / 60);
+            Response::error("Trop de demandes de connexion. Veuillez patienter {$waitMinutes} minute(s) avant de réessayer.", 429);
         }
 
         $user = User::findByEmail($email);

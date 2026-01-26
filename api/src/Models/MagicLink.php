@@ -133,4 +133,25 @@ class MagicLink
 
         return (int)$stmt->fetchColumn();
     }
+
+    public static function getOldestRecentRequestByEmail(string $email, int $minutes = 60): ?array
+    {
+        $db = Database::getInstance();
+        $stmt = $db->prepare('
+            SELECT ml.*
+            FROM magic_links ml
+            INNER JOIN users u ON ml.user_id = u.id
+            WHERE u.email = :email
+              AND ml.created_at > DATE_SUB(NOW(), INTERVAL :minutes MINUTE)
+            ORDER BY ml.created_at ASC
+            LIMIT 1
+        ');
+        $stmt->execute([
+            'email' => strtolower(trim($email)),
+            'minutes' => $minutes
+        ]);
+
+        $result = $stmt->fetch();
+        return $result ?: null;
+    }
 }
