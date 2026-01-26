@@ -39,10 +39,16 @@ class RateLimitMiddleware
         }
 
         // Check if IP is blocked
-        if (isset($data['blocked_until']) && $now < $data['blocked_until']) {
-            $retryAfter = $data['blocked_until'] - $now;
-            header("Retry-After: {$retryAfter}");
-            Response::error('Too many requests. Please try again later.', 429);
+        if (isset($data['blocked_until']) && $data['blocked_until'] > 0) {
+            if ($now < $data['blocked_until']) {
+                $retryAfter = $data['blocked_until'] - $now;
+                header("Retry-After: {$retryAfter}");
+                Response::error('Too many requests. Please try again later.', 429);
+            }
+            // Block expired, reset
+            $data['blocked_until'] = null;
+            $data['requests'] = [];
+            file_put_contents($file, json_encode($data));
         }
 
         // Clean old requests
