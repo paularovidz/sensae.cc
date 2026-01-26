@@ -24,12 +24,21 @@ class MailService
         // Server settings
         $this->mailer->isSMTP();
         $this->mailer->Host = self::env('MAIL_HOST', 'mailhog');
-        $this->mailer->SMTPAuth = false; // MailHog doesn't require auth
-        $this->mailer->Username = self::env('MAIL_USER', '');
-        $this->mailer->Password = self::env('MAIL_PASS', '');
-        $this->mailer->SMTPSecure = false; // No encryption for MailHog
         $this->mailer->Port = (int)self::env('MAIL_PORT', '1025');
         $this->mailer->CharSet = 'UTF-8';
+
+        // Auth settings - enable if credentials provided (production)
+        $username = self::env('MAIL_USER', '');
+        $password = self::env('MAIL_PASS', '');
+        if (!empty($username) && !empty($password)) {
+            $this->mailer->SMTPAuth = true;
+            $this->mailer->Username = $username;
+            $this->mailer->Password = $password;
+            $this->mailer->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+        } else {
+            $this->mailer->SMTPAuth = false;
+            $this->mailer->SMTPSecure = false;
+        }
 
         // Default sender
         $this->mailer->setFrom(self::env('MAIL_FROM', 'noreply@sensea.cc'), self::env('MAIL_FROM_NAME', 'sensëa Snoezelen'));
