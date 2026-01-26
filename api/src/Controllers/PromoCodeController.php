@@ -233,8 +233,7 @@ class PromoCodeController
             $validator->inArray('application_mode', PromoCode::APPLICATION_MODES);
         }
 
-        $validationErrors = $validator->validate();
-        $errors = array_merge($errors, $validationErrors);
+        $errors = array_merge($errors, $validator->getErrors());
 
         // Vérifier l'unicité du code si modifié
         if (isset($data['code']) && !empty($data['code'])) {
