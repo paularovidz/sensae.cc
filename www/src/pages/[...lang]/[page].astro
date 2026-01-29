@@ -67,11 +67,11 @@ const pageSlug = page.data?.custom_slug || page.slug.split("/").pop();
 const itineraireConfig = itineraires[pageSlug as string];
 const showItineraire = !!itineraireConfig;
 
-// Vérifier si c'est la page Audruicq (afficher la carte)
-const isAudruicqPage = pageSlug === "salle-snoezelen-audruicq";
+// Vérifier si c'est une page qui affiche la carte de localisation (sans itinéraire)
+const showMapLocation = pageSlug === "salle-snoezelen-audruicq" || pageSlug === "salle-snoezelen-pas-de-calais";
 
 // Besoin de Leaflet sur les pages avec carte
-const needsLeaflet = showItineraire || isAudruicqPage;
+const needsLeaflet = showItineraire || showMapLocation;
 ---
 
 <Base {...page.data}>
@@ -114,7 +114,7 @@ const needsLeaflet = showItineraire || isAudruicqPage;
     />
   )}
 
-  {isAudruicqPage && <MapLocation />}
+  {showMapLocation && <MapLocation />}
 
   {big_title && <PricingSection />}
   {big_title && <TestimonialSection />}
