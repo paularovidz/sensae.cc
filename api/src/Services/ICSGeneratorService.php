@@ -386,9 +386,10 @@ VTIMEZONE;
             $lines[] = 'END:VEVENT';
         }
 
-        // Add off days
+        // Add off days/periods
         foreach ($offDays as $offDay) {
-            $date = new \DateTime($offDay['date'], new \DateTimeZone($timezone));
+            $startDate = new \DateTime($offDay['start_date'], new \DateTimeZone($timezone));
+            $endDate = new \DateTime($offDay['end_date'], new \DateTimeZone($timezone));
             $uid = 'off-' . $offDay['id'] . '@' . $host;
 
             $summary = 'FERME';
@@ -396,12 +397,15 @@ VTIMEZONE;
                 $summary .= ' - ' . $offDay['reason'];
             }
 
+            // ICS DTEND for all-day events is exclusive, so add 1 day
+            $icsEndDate = (clone $endDate)->modify('+1 day');
+
             $lines[] = '';
             $lines[] = 'BEGIN:VEVENT';
             $lines[] = 'UID:' . $uid;
             $lines[] = 'DTSTAMP:' . self::formatDateTime(new \DateTime('now', new \DateTimeZone('UTC')), true);
-            $lines[] = 'DTSTART;VALUE=DATE:' . $date->format('Ymd');
-            $lines[] = 'DTEND;VALUE=DATE:' . (clone $date)->modify('+1 day')->format('Ymd');
+            $lines[] = 'DTSTART;VALUE=DATE:' . $startDate->format('Ymd');
+            $lines[] = 'DTEND;VALUE=DATE:' . $icsEndDate->format('Ymd');
             $lines[] = 'SUMMARY:' . self::escapeValue($summary);
             $lines[] = 'DESCRIPTION:Jour de fermeture sensëa';
             $lines[] = 'TRANSP:TRANSPARENT';
@@ -435,7 +439,8 @@ VTIMEZONE;
         ];
 
         foreach ($offDays as $offDay) {
-            $date = new \DateTime($offDay['date'], new \DateTimeZone($timezone));
+            $startDate = new \DateTime($offDay['start_date'], new \DateTimeZone($timezone));
+            $endDate = new \DateTime($offDay['end_date'], new \DateTimeZone($timezone));
             $uid = 'off-' . $offDay['id'] . '@' . $host;
 
             // Summary avec raison si présente
@@ -444,13 +449,16 @@ VTIMEZONE;
                 $summary .= ' (' . $offDay['reason'] . ')';
             }
 
+            // ICS DTEND for all-day events is exclusive, so add 1 day
+            $icsEndDate = (clone $endDate)->modify('+1 day');
+
             $lines[] = '';
             $lines[] = 'BEGIN:VEVENT';
             $lines[] = 'UID:' . $uid;
             $lines[] = 'DTSTAMP:' . self::formatDateTime(new \DateTime('now', new \DateTimeZone('UTC')), true);
-            // Événement journée entière
-            $lines[] = 'DTSTART;VALUE=DATE:' . $date->format('Ymd');
-            $lines[] = 'DTEND;VALUE=DATE:' . $date->modify('+1 day')->format('Ymd');
+            // Événement journée entière (ou période)
+            $lines[] = 'DTSTART;VALUE=DATE:' . $startDate->format('Ymd');
+            $lines[] = 'DTEND;VALUE=DATE:' . $icsEndDate->format('Ymd');
             $lines[] = 'SUMMARY:' . self::escapeValue($summary);
             $lines[] = 'DESCRIPTION:' . self::escapeValue('Jour de fermeture sensëa Snoezelen');
             $lines[] = 'TRANSP:TRANSPARENT';

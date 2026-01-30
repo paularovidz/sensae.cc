@@ -540,36 +540,49 @@
           </div>
 
           <template v-else>
-            <!-- Add new off day -->
+            <!-- Add new off day/period -->
             <div>
-              <h3 class="text-sm font-semibold text-gray-300 uppercase tracking-wide mb-4">Ajouter un jour de fermeture</h3>
+              <h3 class="text-sm font-semibold text-gray-300 uppercase tracking-wide mb-4">Ajouter une période de fermeture</h3>
               <div class="bg-gray-900/50 rounded-lg p-4">
-                <div class="flex flex-col sm:flex-row gap-3">
-                  <div class="flex-1">
-                    <label class="text-xs text-gray-500 block mb-1">Date</label>
-                    <input
-                      type="date"
-                      v-model="newOffDay.date"
-                      class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-sm text-white"
-                    />
+                <div class="flex flex-col gap-3">
+                  <div class="flex flex-col sm:flex-row gap-3">
+                    <div class="flex-1">
+                      <label class="text-xs text-gray-500 block mb-1">Date de début</label>
+                      <input
+                        type="date"
+                        v-model="newOffDay.start_date"
+                        class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-sm text-white"
+                      />
+                    </div>
+                    <div class="flex-1">
+                      <label class="text-xs text-gray-500 block mb-1">Date de fin (optionnel)</label>
+                      <input
+                        type="date"
+                        v-model="newOffDay.end_date"
+                        :min="newOffDay.start_date"
+                        class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-sm text-white"
+                      />
+                    </div>
                   </div>
-                  <div class="flex-1">
-                    <label class="text-xs text-gray-500 block mb-1">Raison (optionnel)</label>
-                    <input
-                      type="text"
-                      v-model="newOffDay.reason"
-                      placeholder="Ex: Vacances, Jour férié..."
-                      class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-sm text-white placeholder-gray-500"
-                    />
-                  </div>
-                  <div class="flex items-end">
-                    <button
-                      @click="addOffDay"
-                      :disabled="!newOffDay.date"
-                      class="px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                    >
-                      Ajouter
-                    </button>
+                  <div class="flex flex-col sm:flex-row gap-3">
+                    <div class="flex-1">
+                      <label class="text-xs text-gray-500 block mb-1">Raison (optionnel)</label>
+                      <input
+                        type="text"
+                        v-model="newOffDay.reason"
+                        placeholder="Ex: Vacances, Jour férié..."
+                        class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-sm text-white placeholder-gray-500"
+                      />
+                    </div>
+                    <div class="flex items-end">
+                      <button
+                        @click="addOffDay"
+                        :disabled="!newOffDay.start_date"
+                        class="px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      >
+                        Ajouter
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -578,11 +591,11 @@
             <!-- Off days list -->
             <div>
               <h3 class="text-sm font-semibold text-gray-300 uppercase tracking-wide mb-4">
-                Jours de fermeture programmés
+                Périodes de fermeture à venir
                 <span class="text-gray-500 font-normal">({{ offDays.length }})</span>
               </h3>
               <div v-if="offDays.length === 0" class="bg-gray-900/50 rounded-lg p-6 text-center text-gray-500">
-                Aucun jour de fermeture programmé
+                Aucune période de fermeture programmée
               </div>
               <div v-else class="bg-gray-900/50 rounded-lg divide-y divide-gray-700">
                 <div
@@ -591,7 +604,7 @@
                   class="flex items-center justify-between p-4"
                 >
                   <div>
-                    <div class="text-white font-medium">{{ formatOffDayDate(offDay.date) }}</div>
+                    <div class="text-white font-medium">{{ formatOffDayPeriod(offDay) }}</div>
                     <div v-if="offDay.reason" class="text-sm text-gray-400 mt-0.5">{{ offDay.reason }}</div>
                   </div>
                   <button
@@ -815,7 +828,7 @@ const smsCredits = reactive({
 const offDays = ref([])
 const offDaysLoading = ref(false)
 const offDaysError = ref(null)
-const newOffDay = reactive({ date: '', reason: '' })
+const newOffDay = reactive({ start_date: '', end_date: '', reason: '' })
 const icsLinkCopied = ref(false)
 
 // Calendar feed URL (computed based on token)
@@ -928,13 +941,15 @@ async function loadOffDays() {
 }
 
 async function addOffDay() {
-  if (!newOffDay.date) return
+  if (!newOffDay.start_date) return
   try {
     await offDaysApi.create({
-      date: newOffDay.date,
+      start_date: newOffDay.start_date,
+      end_date: newOffDay.end_date || newOffDay.start_date,
       reason: newOffDay.reason || null
     })
-    newOffDay.date = ''
+    newOffDay.start_date = ''
+    newOffDay.end_date = ''
     newOffDay.reason = ''
     await loadOffDays()
   } catch (err) {
@@ -962,8 +977,24 @@ async function copyIcsLink() {
   }
 }
 
-function formatOffDayDate(dateStr) {
-  const date = new Date(dateStr)
-  return date.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+function formatOffDayPeriod(offDay) {
+  const startDate = new Date(offDay.start_date)
+  const endDate = new Date(offDay.end_date)
+
+  const formatDate = (date) => date.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+  const formatShort = (date) => date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })
+
+  // Same day - single date
+  if (offDay.start_date === offDay.end_date) {
+    return formatDate(startDate)
+  }
+
+  // Same year - show compact format
+  if (startDate.getFullYear() === endDate.getFullYear()) {
+    return `Du ${formatShort(startDate)} au ${formatShort(endDate)} ${endDate.getFullYear()}`
+  }
+
+  // Different years
+  return `Du ${formatDate(startDate)} au ${formatDate(endDate)}`
 }
 </script>

@@ -12,13 +12,14 @@ use App\Utils\UUID;
 class OffDaysController
 {
     /**
-     * GET /off-days - List all off days (admin only)
+     * GET /off-days - List upcoming off days (admin only)
      */
     public function index(): void
     {
         AuthMiddleware::requireAdmin();
 
-        $offDays = OffDay::getAll();
+        // Only get upcoming off days (end_date >= today)
+        $offDays = OffDay::getUpcoming();
 
         Response::success([
             'off_days' => $offDays,
@@ -27,7 +28,7 @@ class OffDaysController
     }
 
     /**
-     * POST /off-days - Create a new off day (admin only)
+     * POST /off-days - Create a new off day/period (admin only)
      */
     public function store(): void
     {
@@ -37,41 +38,51 @@ class OffDaysController
         $userId = AuthMiddleware::getCurrentUserId();
 
         // Validate required fields
-        if (empty($data['date'])) {
-            Response::validationError(['date' => 'La date est requise']);
+        if (empty($data['start_date'])) {
+            Response::validationError(['start_date' => 'La date de début est requise']);
             return;
         }
 
-        // Validate date format
-        $date = \DateTime::createFromFormat('Y-m-d', $data['date']);
-        if (!$date) {
-            Response::validationError(['date' => 'Format de date invalide (attendu: YYYY-MM-DD)']);
+        // Validate start_date format
+        $startDate = \DateTime::createFromFormat('Y-m-d', $data['start_date']);
+        if (!$startDate) {
+            Response::validationError(['start_date' => 'Format de date invalide (attendu: YYYY-MM-DD)']);
             return;
         }
 
-        // Check if date already exists
-        if (OffDay::dateExists($data['date'])) {
-            Response::validationError(['date' => 'Cette date est déjà marquée comme jour off']);
-            return;
+        // Validate end_date if provided
+        $endDate = $startDate;
+        if (!empty($data['end_date'])) {
+            $endDate = \DateTime::createFromFormat('Y-m-d', $data['end_date']);
+            if (!$endDate) {
+                Response::validationError(['end_date' => 'Format de date invalide (attendu: YYYY-MM-DD)']);
+                return;
+            }
+
+            // Ensure end_date is not before start_date
+            if ($endDate < $startDate) {
+                Response::validationError(['end_date' => 'La date de fin doit être postérieure ou égale à la date de début']);
+                return;
+            }
         }
 
         $id = OffDay::create([
-            'date' => $data['date'],
+            'start_date' => $data['start_date'],
+            'end_date' => $data['end_date'] ?? $data['start_date'],
             'reason' => $data['reason'] ?? null,
             'created_by' => $userId
         ]);
 
         if (!$id) {
-            Response::error('Impossible de créer le jour off', 500);
+            Response::error('Impossible de créer la période off', 500);
             return;
         }
 
         $offDay = OffDay::getById($id);
 
         Response::success([
-            'message' => 'Jour off créé',
             'off_day' => $offDay
-        ], 201);
+        ], 'Période off créée', 201);
     }
 
     /**
@@ -89,14 +100,14 @@ class OffDaysController
         $offDay = OffDay::getById($id);
 
         if (!$offDay) {
-            Response::notFound('Jour off non trouvé');
+            Response::notFound('Période off non trouvée');
             return;
         }
 
         OffDay::delete($id);
 
         Response::success([
-            'message' => 'Jour off supprimé'
+            'message' => 'Période off supprimée'
         ]);
     }
 }
