@@ -33,6 +33,8 @@ use App\Controllers\BookingController;
 use App\Controllers\SettingsController;
 use App\Controllers\DocumentController;
 use App\Controllers\PromoCodeController;
+use App\Controllers\OffDaysController;
+use App\Controllers\PublicOffDaysController;
 use App\Utils\Response;
 
 // Error handling
@@ -148,6 +150,16 @@ $routes = [
     'PUT /settings' => ['controller' => SettingsController::class, 'method' => 'update'],
     'GET /settings/sms-credits' => ['controller' => SettingsController::class, 'method' => 'getSmsCredits'],
     'POST /settings/sms-credits/refresh' => ['controller' => SettingsController::class, 'method' => 'refreshSmsCredits'],
+
+    // Off Days routes (admin only)
+    'GET /off-days' => ['controller' => OffDaysController::class, 'method' => 'index'],
+    'POST /off-days' => ['controller' => OffDaysController::class, 'method' => 'store'],
+    'DELETE /off-days/([a-f0-9-]+)' => ['controller' => OffDaysController::class, 'method' => 'destroy'],
+
+    // ============================================
+    // PUBLIC CALENDAR ROUTES (No authentication)
+    // ============================================
+    'GET /public/calendar/off-days.ics' => ['controller' => PublicOffDaysController::class, 'method' => 'calendar'],
 
     // ============================================
     // PUBLIC BOOKING ROUTES (No authentication)

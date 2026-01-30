@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
+use App\Middleware\AuthMiddleware;
 use App\Models\Setting;
 use App\Services\SMSService;
 use App\Utils\Response;
@@ -11,10 +12,12 @@ use App\Utils\Response;
 class SettingsController
 {
     /**
-     * GET /settings - Get all settings grouped by category
+     * GET /settings - Get all settings grouped by category (admin only)
      */
     public function index(): void
     {
+        AuthMiddleware::requireAdmin();
+
         $settings = Setting::getAllGrouped();
 
         // Add category labels
@@ -58,10 +61,12 @@ class SettingsController
     }
 
     /**
-     * GET /settings/category/{category} - Get settings for a specific category
+     * GET /settings/category/{category} - Get settings for a specific category (admin only)
      */
     public function getByCategory(string $category): void
     {
+        AuthMiddleware::requireAdmin();
+
         $settings = Setting::getAll($category);
 
         if (empty($settings)) {
@@ -84,12 +89,14 @@ class SettingsController
     }
 
     /**
-     * PUT /settings - Update multiple settings
+     * PUT /settings - Update multiple settings (admin only)
      */
     public function update(): void
     {
+        AuthMiddleware::requireAdmin();
+
         $data = json_decode(file_get_contents('php://input'), true) ?? [];
-        $userId = $_SERVER['AUTH_USER_ID'] ?? null;
+        $userId = AuthMiddleware::getCurrentUserId();
 
         if (!isset($data['settings']) || !is_array($data['settings'])) {
             Response::validationError(['settings' => 'Format invalide, attendu: { settings: { key: value, ... } }']);
@@ -118,10 +125,12 @@ class SettingsController
     }
 
     /**
-     * GET /settings/sms-credits - Get OVH SMS remaining credits
+     * GET /settings/sms-credits - Get OVH SMS remaining credits (admin only)
      */
     public function getSmsCredits(): void
     {
+        AuthMiddleware::requireAdmin();
+
         if (!SMSService::isConfigured()) {
             Response::success([
                 'configured' => false,
@@ -146,10 +155,12 @@ class SettingsController
     }
 
     /**
-     * POST /settings/sms-credits/refresh - Force refresh SMS credits cache
+     * POST /settings/sms-credits/refresh - Force refresh SMS credits cache (admin only)
      */
     public function refreshSmsCredits(): void
     {
+        AuthMiddleware::requireAdmin();
+
         if (!SMSService::isConfigured()) {
             Response::success([
                 'configured' => false,

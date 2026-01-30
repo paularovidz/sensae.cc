@@ -347,4 +347,53 @@ VTIMEZONE;
             'Expires' => '0'
         ];
     }
+
+    /**
+     * Génère un calendrier ICS pour les jours off (fermeture)
+     */
+    public static function generateOffDaysCalendar(array $offDays): string
+    {
+        $timezone = self::env('APP_TIMEZONE', 'Europe/Paris');
+        $host = parse_url(self::env('APP_URL', 'sensea.cc'), PHP_URL_HOST);
+
+        $lines = [
+            'BEGIN:VCALENDAR',
+            'VERSION:2.0',
+            'PRODID:-//sensëa Snoezelen//Off Days//FR',
+            'CALSCALE:GREGORIAN',
+            'METHOD:PUBLISH',
+            'X-WR-CALNAME:sensëa - Jours de fermeture',
+            'X-WR-TIMEZONE:' . $timezone,
+            '',
+            self::generateVTimezone($timezone),
+        ];
+
+        foreach ($offDays as $offDay) {
+            $date = new \DateTime($offDay['date'], new \DateTimeZone($timezone));
+            $uid = 'off-' . $offDay['id'] . '@' . $host;
+
+            // Summary avec raison si présente
+            $summary = 'sensëa - Fermé';
+            if (!empty($offDay['reason'])) {
+                $summary .= ' (' . $offDay['reason'] . ')';
+            }
+
+            $lines[] = '';
+            $lines[] = 'BEGIN:VEVENT';
+            $lines[] = 'UID:' . $uid;
+            $lines[] = 'DTSTAMP:' . self::formatDateTime(new \DateTime('now', new \DateTimeZone('UTC')), true);
+            // Événement journée entière
+            $lines[] = 'DTSTART;VALUE=DATE:' . $date->format('Ymd');
+            $lines[] = 'DTEND;VALUE=DATE:' . $date->modify('+1 day')->format('Ymd');
+            $lines[] = 'SUMMARY:' . self::escapeValue($summary);
+            $lines[] = 'DESCRIPTION:' . self::escapeValue('Jour de fermeture sensëa Snoezelen');
+            $lines[] = 'TRANSP:TRANSPARENT';
+            $lines[] = 'STATUS:CONFIRMED';
+            $lines[] = 'END:VEVENT';
+        }
+
+        $lines[] = 'END:VCALENDAR';
+
+        return implode("\r\n", $lines);
+    }
 }

@@ -3,7 +3,7 @@
 -- Note: Change the email and details for your admin user
 
 -- Insert default admin user (you'll receive a magic link to login)
-INSERT INTO `users` (`id`, `email`, `first_name`, `last_name`, `role`, `is_active`)
+INSERT IGNORE INTO `users` (`id`, `email`, `first_name`, `last_name`, `role`, `is_active`)
 VALUES (
     UUID(),
     'bonjour@sensea.cc',
@@ -13,8 +13,8 @@ VALUES (
     1
 );
 
--- Insert some default sensory proposals
-INSERT INTO `sensory_proposals` (`id`, `title`, `type`, `description`, `created_by`, `is_global`) VALUES
+-- Insert some default sensory proposals (ignore if already exist)
+INSERT IGNORE INTO `sensory_proposals` (`id`, `title`, `type`, `description`, `created_by`, `is_global`) VALUES
 (UUID(), 'Stimulation corps entier avec un foulard', 'tactile', 'Passage doux d''un foulard soyeux sur l''ensemble du corps', (SELECT id FROM users WHERE email = 'bonjour@sensea.cc'), 1),
 (UUID(), 'Massage des mains', 'tactile', 'Massage doux des mains avec huile ou crème', (SELECT id FROM users WHERE email = 'bonjour@sensea.cc'), 1),
 (UUID(), 'Balle à picots', 'tactile', 'Stimulation avec une balle à picots sur différentes parties du corps', (SELECT id FROM users WHERE email = 'bonjour@sensea.cc'), 1),

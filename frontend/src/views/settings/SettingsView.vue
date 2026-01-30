@@ -526,6 +526,125 @@
             </div>
           </div>
         </div>
+
+        <!-- Jours Off Tab -->
+        <div v-show="activeTab === 'offdays'" class="p-6 space-y-6">
+          <!-- Loading -->
+          <div v-if="offDaysLoading" class="flex justify-center py-8">
+            <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-primary-500"></div>
+          </div>
+
+          <!-- Error -->
+          <div v-else-if="offDaysError" class="bg-red-900/50 border border-red-700 rounded-lg p-4 text-red-300 text-sm">
+            {{ offDaysError }}
+          </div>
+
+          <template v-else>
+            <!-- Add new off day -->
+            <div>
+              <h3 class="text-sm font-semibold text-gray-300 uppercase tracking-wide mb-4">Ajouter un jour de fermeture</h3>
+              <div class="bg-gray-900/50 rounded-lg p-4">
+                <div class="flex flex-col sm:flex-row gap-3">
+                  <div class="flex-1">
+                    <label class="text-xs text-gray-500 block mb-1">Date</label>
+                    <input
+                      type="date"
+                      v-model="newOffDay.date"
+                      class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-sm text-white"
+                    />
+                  </div>
+                  <div class="flex-1">
+                    <label class="text-xs text-gray-500 block mb-1">Raison (optionnel)</label>
+                    <input
+                      type="text"
+                      v-model="newOffDay.reason"
+                      placeholder="Ex: Vacances, Jour férié..."
+                      class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-sm text-white placeholder-gray-500"
+                    />
+                  </div>
+                  <div class="flex items-end">
+                    <button
+                      @click="addOffDay"
+                      :disabled="!newOffDay.date"
+                      class="px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      Ajouter
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Off days list -->
+            <div>
+              <h3 class="text-sm font-semibold text-gray-300 uppercase tracking-wide mb-4">
+                Jours de fermeture programmés
+                <span class="text-gray-500 font-normal">({{ offDays.length }})</span>
+              </h3>
+              <div v-if="offDays.length === 0" class="bg-gray-900/50 rounded-lg p-6 text-center text-gray-500">
+                Aucun jour de fermeture programmé
+              </div>
+              <div v-else class="bg-gray-900/50 rounded-lg divide-y divide-gray-700">
+                <div
+                  v-for="offDay in offDays"
+                  :key="offDay.id"
+                  class="flex items-center justify-between p-4"
+                >
+                  <div>
+                    <div class="text-white font-medium">{{ formatOffDayDate(offDay.date) }}</div>
+                    <div v-if="offDay.reason" class="text-sm text-gray-400 mt-0.5">{{ offDay.reason }}</div>
+                  </div>
+                  <button
+                    @click="deleteOffDay(offDay.id)"
+                    class="p-2 text-gray-400 hover:text-red-400 hover:bg-red-900/20 rounded-lg transition-colors"
+                    title="Supprimer"
+                  >
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- ICS Link -->
+            <div>
+              <h3 class="text-sm font-semibold text-gray-300 uppercase tracking-wide mb-4">Lien calendrier ICS</h3>
+              <div class="bg-gray-900/50 rounded-lg p-4">
+                <p class="text-sm text-gray-400 mb-3">
+                  Abonnez-vous à ce calendrier dans Google Calendar ou Outlook pour voir les jours de fermeture.
+                </p>
+                <div class="flex items-center gap-2">
+                  <input
+                    type="text"
+                    :value="offDaysIcsUrl"
+                    readonly
+                    @click="copyIcsLink"
+                    class="flex-1 px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-sm text-gray-300 font-mono cursor-pointer hover:bg-gray-600 transition-colors"
+                    title="Cliquer pour copier"
+                  />
+                  <button
+                    @click="copyIcsLink"
+                    :class="[
+                      'px-3 py-2 rounded-lg transition-colors flex items-center gap-2 text-sm font-medium',
+                      icsLinkCopied
+                        ? 'bg-green-600 text-white'
+                        : 'bg-gray-600 hover:bg-gray-500 text-gray-200'
+                    ]"
+                  >
+                    <svg v-if="!icsLinkCopied" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    </svg>
+                    <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                    {{ icsLinkCopied ? 'Copié !' : 'Copier' }}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </template>
+        </div>
       </div>
 
       <!-- Save Button (sticky) -->
@@ -621,7 +740,7 @@
 
 <script setup>
 import { ref, reactive, computed, onMounted, h } from 'vue'
-import { settingsApi } from '@/services/api'
+import { settingsApi, offDaysApi } from '@/services/api'
 
 // Icons as render functions
 const IconPricing = () => h('svg', { class: 'w-4 h-4', fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' }, [
@@ -640,13 +759,17 @@ const IconTechnical = () => h('svg', { class: 'w-4 h-4', fill: 'none', stroke: '
   h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z' }),
   h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M15 12a3 3 0 11-6 0 3 3 0 016 0z' })
 ])
+const IconOffDays = () => h('svg', { class: 'w-4 h-4', fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' }, [
+  h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M6 18L18 6M6 6l12 12' })
+])
 
 const tabs = [
   { id: 'pricing', label: 'Tarifs', icon: IconPricing },
   { id: 'scheduling', label: 'Horaires', icon: IconScheduling },
   { id: 'booking', label: 'Réservations', icon: IconBooking },
   { id: 'notifications', label: 'Notifications', icon: IconNotifications },
-  { id: 'technical', label: 'Technique', icon: IconTechnical }
+  { id: 'technical', label: 'Technique', icon: IconTechnical },
+  { id: 'offdays', label: 'Jours Off', icon: IconOffDays }
 ]
 
 const activeTab = ref('pricing')
@@ -671,10 +794,18 @@ const smsCredits = reactive({
   credits_left: 0, service_name: null, cached_at: null, error: null
 })
 
+// Off Days state
+const offDays = ref([])
+const offDaysLoading = ref(false)
+const offDaysError = ref(null)
+const newOffDay = reactive({ date: '', reason: '' })
+const icsLinkCopied = ref(false)
+const offDaysIcsUrl = offDaysApi.getIcsUrl()
+
 const hasChanges = computed(() => JSON.stringify(formData) !== JSON.stringify(originalData.value))
 
 onMounted(async () => {
-  await Promise.all([loadSettings(), loadSmsCredits()])
+  await Promise.all([loadSettings(), loadSmsCredits(), loadOffDays()])
 })
 
 async function loadSettings() {
@@ -758,5 +889,59 @@ async function saveSettings() {
   } finally {
     saving.value = false
   }
+}
+
+// Off Days functions
+async function loadOffDays() {
+  offDaysLoading.value = true
+  offDaysError.value = null
+  try {
+    const response = await offDaysApi.getAll()
+    offDays.value = response.data.data?.off_days || response.data.off_days || []
+  } catch (err) {
+    offDaysError.value = err.response?.data?.message || 'Erreur lors du chargement des jours off'
+  } finally {
+    offDaysLoading.value = false
+  }
+}
+
+async function addOffDay() {
+  if (!newOffDay.date) return
+  try {
+    await offDaysApi.create({
+      date: newOffDay.date,
+      reason: newOffDay.reason || null
+    })
+    newOffDay.date = ''
+    newOffDay.reason = ''
+    await loadOffDays()
+  } catch (err) {
+    offDaysError.value = err.response?.data?.message || 'Erreur lors de l\'ajout'
+  }
+}
+
+async function deleteOffDay(id) {
+  if (!confirm('Supprimer ce jour off ?')) return
+  try {
+    await offDaysApi.delete(id)
+    await loadOffDays()
+  } catch (err) {
+    offDaysError.value = err.response?.data?.message || 'Erreur lors de la suppression'
+  }
+}
+
+async function copyIcsLink() {
+  try {
+    await navigator.clipboard.writeText(offDaysIcsUrl)
+    icsLinkCopied.value = true
+    setTimeout(() => { icsLinkCopied.value = false }, 2000)
+  } catch (err) {
+    console.error('Erreur copie:', err)
+  }
+}
+
+function formatOffDayDate(dateStr) {
+  const date = new Date(dateStr)
+  return date.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
 }
 </script>

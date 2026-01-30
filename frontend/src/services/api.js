@@ -236,6 +236,14 @@ export const settingsApi = {
   refreshSmsCredits: () => api.post('/settings/sms-credits/refresh')
 }
 
+// Off Days API (Admin - auth required)
+export const offDaysApi = {
+  getAll: () => api.get('/off-days'),
+  create: (data) => api.post('/off-days', data),
+  delete: (id) => api.delete(`/off-days/${id}`),
+  getIcsUrl: () => `${API_URL}/public/calendar/off-days.ics`
+}
+
 // Documents API (Admin - auth required)
 export const documentsApi = {
   list: (type, entityId) => api.get(`/documents/${type}/${entityId}`),

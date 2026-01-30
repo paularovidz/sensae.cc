@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Config\Database;
+use App\Models\OffDay;
 use App\Models\Session;
 use App\Models\Setting;
 
@@ -106,6 +107,11 @@ class AvailabilityService
      */
     public static function isDayOpen(\DateTime $date): bool
     {
+        // Check if it's an off day first
+        if (OffDay::isOffDay($date)) {
+            return false;
+        }
+
         $dayOfWeek = (int) $date->format('w');
         $businessHours = self::getBusinessHoursConfig();
         return isset($businessHours[$dayOfWeek]) && $businessHours[$dayOfWeek] !== null;
