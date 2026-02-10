@@ -191,6 +191,13 @@ jobs:
     needs: [build-api, build-ops-api, build-frontend, build-ops-frontend, build-www]
 
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            docker-compose.prod.yml
+          sparse-checkout-cone-mode: false
+
       - name: Download frontend artifact
         uses: actions/download-artifact@v4
         with:
@@ -208,9 +215,6 @@ jobs:
         with:
           name: ops-frontend-dist
           path: ops-frontend-dist
-
-      - name: Checkout
-        uses: actions/checkout@v4
 
       - name: Setup SSH
         run: |
