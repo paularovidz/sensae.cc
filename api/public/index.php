@@ -35,6 +35,7 @@ use App\Controllers\DocumentController;
 use App\Controllers\PromoCodeController;
 use App\Controllers\OffDaysController;
 use App\Controllers\PublicCalendarController;
+use App\Controllers\OpsRevenueController;
 use App\Utils\Response;
 
 // Error handling
@@ -222,6 +223,14 @@ $routes = [
     'PUT /promo-codes/([a-f0-9-]+)' => ['controller' => PromoCodeController::class, 'method' => 'update'],
     'PATCH /promo-codes/([a-f0-9-]+)' => ['controller' => PromoCodeController::class, 'method' => 'update'],
     'DELETE /promo-codes/([a-f0-9-]+)' => ['controller' => PromoCodeController::class, 'method' => 'destroy'],
+
+    // ============================================
+    // OPS REVENUE ROUTES (API Key authentication)
+    // ============================================
+    'GET /ops/revenue' => ['controller' => OpsRevenueController::class, 'method' => 'getMonthlyRevenue'],
+    'GET /ops/revenue/year/(\d+)' => ['controller' => OpsRevenueController::class, 'method' => 'getYearlyRevenue'],
+    'GET /ops/revenue/daily' => ['controller' => OpsRevenueController::class, 'method' => 'getDailyRevenue'],
+    'GET /ops/sessions/count' => ['controller' => OpsRevenueController::class, 'method' => 'getSessionCount'],
 
     // Health check
     'GET /' => ['handler' => fn() => Response::success(['status' => 'ok', 'version' => '1.0.0'], 'API Snoezelen')],
