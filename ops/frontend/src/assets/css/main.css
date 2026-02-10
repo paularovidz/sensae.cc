@@ -1,0 +1,147 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Base styles */
+body {
+  @apply bg-gray-900 text-gray-100;
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  @apply w-2;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-gray-800;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-gray-600 rounded;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-gray-500;
+}
+
+/* Form inputs */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="date"],
+input[type="datetime-local"],
+select,
+textarea {
+  @apply bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-gray-100 placeholder-gray-500;
+  @apply focus:outline-none focus:ring-2 focus:ring-ops-500 focus:border-transparent;
+}
+
+input[type="text"]:disabled,
+input[type="email"]:disabled,
+input[type="password"]:disabled,
+input[type="number"]:disabled,
+select:disabled,
+textarea:disabled {
+  @apply bg-gray-700 text-gray-400 cursor-not-allowed;
+}
+
+/* Buttons */
+.btn {
+  @apply px-4 py-2 rounded-lg font-medium transition-colors duration-200;
+  @apply focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900;
+}
+
+.btn-primary {
+  @apply bg-ops-600 text-white hover:bg-ops-500 focus:ring-ops-500;
+}
+
+.btn-secondary {
+  @apply bg-gray-700 text-gray-100 hover:bg-gray-600 focus:ring-gray-500;
+}
+
+.btn-danger {
+  @apply bg-red-600 text-white hover:bg-red-500 focus:ring-red-500;
+}
+
+.btn-ghost {
+  @apply text-gray-400 hover:text-gray-100 hover:bg-gray-800 focus:ring-gray-500;
+}
+
+.btn-sm {
+  @apply px-3 py-1.5 text-sm;
+}
+
+/* Cards */
+.card {
+  @apply bg-gray-800 rounded-xl p-6 border border-gray-700;
+}
+
+/* Tables */
+table {
+  @apply w-full;
+}
+
+th {
+  @apply text-left text-xs font-medium text-gray-400 uppercase tracking-wider px-4 py-3 bg-gray-800;
+}
+
+td {
+  @apply px-4 py-3 text-sm text-gray-300 border-t border-gray-700;
+}
+
+tr:hover td {
+  @apply bg-gray-800/50;
+}
+
+/* Labels */
+label {
+  @apply block text-sm font-medium text-gray-300 mb-1;
+}
+
+/* Badges */
+.badge {
+  @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+}
+
+.badge-success {
+  @apply bg-green-900/50 text-green-400;
+}
+
+.badge-warning {
+  @apply bg-yellow-900/50 text-yellow-400;
+}
+
+.badge-danger {
+  @apply bg-red-900/50 text-red-400;
+}
+
+.badge-info {
+  @apply bg-blue-900/50 text-blue-400;
+}
+
+/* KPI Cards specific */
+.kpi-card {
+  @apply bg-gray-800 rounded-xl p-6 border border-gray-700;
+}
+
+.kpi-value {
+  @apply text-3xl font-bold text-white;
+}
+
+.kpi-label {
+  @apply text-sm text-gray-400 mt-1;
+}
+
+.kpi-change {
+  @apply text-sm mt-2 flex items-center gap-1;
+}
+
+.kpi-change.positive {
+  @apply text-green-400;
+}
+
+.kpi-change.negative {
+  @apply text-red-400;
+}

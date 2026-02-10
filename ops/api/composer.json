@@ -1,0 +1,20 @@
+{
+    "name": "sensea/ops-api",
+    "description": "API for Sensea Operations Management",
+    "type": "project",
+    "require": {
+        "php": ">=8.2",
+        "firebase/php-jwt": "^6.10",
+        "vlucas/phpdotenv": "^5.6",
+        "guzzlehttp/guzzle": "^7.8",
+        "phpmailer/phpmailer": "^6.9"
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "src/"
+        }
+    },
+    "scripts": {
+        "migrate": "php migrations/migrate.php"
+    }
+}

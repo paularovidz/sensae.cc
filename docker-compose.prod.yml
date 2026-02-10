@@ -47,6 +47,7 @@ services:
       OVH_SMS_APP_SECRET: ${OVH_SMS_APP_SECRET:-}
       OVH_SMS_CONSUMER_KEY: ${OVH_SMS_CONSUMER_KEY:-}
       OVH_SMS_SERVICE_NAME: ${OVH_SMS_SERVICE_NAME:-}
+      OPS_API_KEY: ${OPS_API_KEY}
     volumes:
       - ./api/uploads:/var/www/html/uploads
     ports:
@@ -69,6 +70,42 @@ services:
       - "127.0.0.1:8081:80"
     depends_on:
       - db
+    networks:
+      - snoezelen_network
+
+  # ============================================
+  # OPS - Cockpit Financier
+  # ============================================
+  ops-api:
+    image: ghcr.io/${GITHUB_REPO}-ops-api:latest
+    container_name: ops_api
+    restart: unless-stopped
+    environment:
+      DB_HOST: db
+      DB_NAME: ops_db
+      DB_USER: ${DB_USER}
+      DB_PASS: ${DB_PASS}
+      DB_CHARSET: utf8mb4
+      JWT_SECRET: ${OPS_JWT_SECRET}
+      JWT_REFRESH_SECRET: ${OPS_JWT_REFRESH_SECRET}
+      MAIL_HOST: ${MAIL_HOST}
+      MAIL_PORT: ${MAIL_PORT:-587}
+      MAIL_USER: ${MAIL_USER}
+      MAIL_PASS: ${MAIL_PASS}
+      MAIL_FROM: ${OPS_MAIL_FROM:-noreply-ops@sensea.cc}
+      MAIL_FROM_NAME: ${OPS_MAIL_FROM_NAME:-sensëa OPS}
+      APP_URL: ${OPS_APP_URL:-https://ops.sensea.cc/api}
+      FRONTEND_URL: ${OPS_FRONTEND_URL:-https://ops.sensea.cc}
+      SENSEA_API_URL: http://api
+      SENSEA_API_KEY: ${OPS_API_KEY}
+      ENV: production
+      DEBUG: "false"
+      APP_TIMEZONE: Europe/Paris
+    ports:
+      - "127.0.0.1:8090:80"
+    depends_on:
+      db:
+        condition: service_healthy
     networks:
       - snoezelen_network
 

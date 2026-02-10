@@ -13,6 +13,7 @@ services:
       - db_data:/var/lib/mysql
       - ./api/migrations/001_initial_schema.sql:/docker-entrypoint-initdb.d/001_schema.sql:ro
       - ./api/migrations/002_seed_admin.sql:/docker-entrypoint-initdb.d/002_seed.sql:ro
+      - ./ops/api/migrations/000_create_database.sql:/docker-entrypoint-initdb.d/010_ops_create_db.sql:ro
     ports:
       - "3306:3306"
     healthcheck:
@@ -58,6 +59,8 @@ services:
       OVH_SMS_APP_SECRET: ${OVH_SMS_APP_SECRET:-}
       OVH_SMS_CONSUMER_KEY: ${OVH_SMS_CONSUMER_KEY:-}
       OVH_SMS_SERVICE_NAME: ${OVH_SMS_SERVICE_NAME:-}
+      # OPS API Key (for OPS application to fetch revenue data)
+      OPS_API_KEY: ${OPS_API_KEY:-ops-dev-api-key-change-in-production}
     volumes:
       - ./api:/var/www/html
       - /var/www/html/vendor
@@ -131,6 +134,68 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    networks:
+      - snoezelen_network
+
+  # ============================================
+  # OPS - Cockpit Financier
+  # ============================================
+
+  # API PHP OPS
+  ops-api:
+    build:
+      context: ./ops/api
+      dockerfile: Dockerfile
+    container_name: ops_api
+    restart: unless-stopped
+    environment:
+      DB_HOST: db
+      DB_NAME: ops_db
+      DB_USER: ${DB_USER:-snoezelen}
+      DB_PASS: ${DB_PASS:-snoezelen_secret}
+      DB_CHARSET: utf8mb4
+      JWT_SECRET: ${OPS_JWT_SECRET:-ops-jwt-secret-change-in-production-min-32-chars}
+      JWT_REFRESH_SECRET: ${OPS_JWT_REFRESH_SECRET:-ops-refresh-secret-change-in-production}
+      MAIL_HOST: mailhog
+      MAIL_PORT: 1025
+      MAIL_USER: ""
+      MAIL_PASS: ""
+      MAIL_FROM: noreply-ops@sensea.cc
+      MAIL_FROM_NAME: sensëa OPS
+      APP_URL: http://localhost:8090
+      FRONTEND_URL: http://localhost:5180
+      SENSEA_API_URL: http://api
+      SENSEA_API_KEY: ${OPS_API_KEY:-ops-dev-api-key-change-in-production}
+      ENV: development
+      DEBUG: "true"
+      APP_TIMEZONE: Europe/Paris
+    volumes:
+      - ./ops/api:/var/www/html
+      - /var/www/html/vendor
+    ports:
+      - "8090:80"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - snoezelen_network
+
+  # Frontend Vue.js OPS (dev server)
+  ops-frontend:
+    build:
+      context: ./ops/frontend
+      dockerfile: Dockerfile
+    container_name: ops_frontend
+    restart: unless-stopped
+    environment:
+      VITE_API_URL: http://localhost:8090
+    volumes:
+      - ./ops/frontend:/app
+      - /app/node_modules
+    ports:
+      - "5180:5173"
+    depends_on:
+      - ops-api
     networks:
       - snoezelen_network
 
