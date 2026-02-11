@@ -227,6 +227,6 @@ INSERT INTO expense_categories (id, name, slug, color, icon, sort_order) VALUES
 -- SEED: Admin user (first account - magic link auth)
 -- ============================================
 INSERT INTO users (id, email, first_name, last_name) VALUES
-    (UUID(), 'admin@sensea.cc', 'Admin', 'OPS');
+    (UUID(), 'bonjour@sensea.cc', 'Admin', 'OPS');
 
 SET FOREIGN_KEY_CHECKS = 1;

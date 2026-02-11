@@ -13,7 +13,7 @@ services:
       - db_data:/var/lib/mysql
       - ./api/migrations/001_initial_schema.sql:/docker-entrypoint-initdb.d/001_schema.sql:ro
       - ./api/migrations/002_seed_admin.sql:/docker-entrypoint-initdb.d/002_seed.sql:ro
-      - ./ops/api/migrations/000_create_database.sql:/docker-entrypoint-initdb.d/010_ops_create_db.sql:ro
+      - ./ops/api/database/000_create_database.sql:/docker-entrypoint-initdb.d/010_ops_create_db.sql:ro
     ports:
       - "3306:3306"
     healthcheck:
