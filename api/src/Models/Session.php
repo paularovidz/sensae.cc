@@ -503,8 +503,8 @@ class Session
     public static function countByPerson(string $personId): int
     {
         $db = Database::getInstance();
-        $stmt = $db->prepare('SELECT COUNT(*) FROM sessions WHERE person_id = :person_id AND status = :status');
-        $stmt->execute(['person_id' => $personId, 'status' => self::STATUS_COMPLETED]);
+        $stmt = $db->prepare('SELECT COUNT(*) FROM sessions WHERE person_id = :person_id');
+        $stmt->execute(['person_id' => $personId]);
         return (int)$stmt->fetchColumn();
     }
 
