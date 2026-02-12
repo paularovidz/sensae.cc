@@ -12,10 +12,43 @@ env:
 
 jobs:
   # ============================================
-  # Build et push l'image Docker de l'API
+  # Detect changes
+  # ============================================
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      api: ${{ steps.filter.outputs.api }}
+      ops-api: ${{ steps.filter.outputs.ops-api }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+      ops-frontend: ${{ steps.filter.outputs.ops-frontend }}
+      www: ${{ steps.filter.outputs.www }}
+      docker-compose: ${{ steps.filter.outputs.docker-compose }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            api:
+              - 'api/**'
+            ops-api:
+              - 'ops/api/**'
+            frontend:
+              - 'frontend/**'
+            ops-frontend:
+              - 'ops/frontend/**'
+            www:
+              - 'www/**'
+            docker-compose:
+              - 'docker-compose.prod.yml'
+
+  # ============================================
+  # Build API (only if api/ changed)
   # ============================================
   build-api:
     runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.api == 'true' || github.event_name == 'workflow_dispatch'
     permissions:
       contents: read
       packages: write
@@ -54,10 +87,12 @@ jobs:
           cache-to: type=gha,mode=max
 
   # ============================================
-  # Build et push l'image Docker de l'API OPS
+  # Build OPS API (only if ops/api/ changed)
   # ============================================
   build-ops-api:
     runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.ops-api == 'true' || github.event_name == 'workflow_dispatch'
     permissions:
       contents: read
       packages: write
@@ -96,10 +131,12 @@ jobs:
           cache-to: type=gha,mode=max
 
   # ============================================
-  # Build le frontend Vue.js
+  # Build frontend (only if frontend/ changed)
   # ============================================
   build-frontend:
     runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.frontend == 'true' || github.event_name == 'workflow_dispatch'
 
     steps:
       - name: Checkout
@@ -130,10 +167,12 @@ jobs:
           retention-days: 1
 
   # ============================================
-  # Build le site vitrine Astro
+  # Build www (only if www/ changed)
   # ============================================
   build-www:
     runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.www == 'true' || github.event_name == 'workflow_dispatch'
 
     steps:
       - name: Checkout
@@ -162,10 +201,12 @@ jobs:
           retention-days: 1
 
   # ============================================
-  # Build le frontend OPS (Vue.js)
+  # Build OPS frontend (only if ops/frontend/ changed)
   # ============================================
   build-ops-frontend:
     runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.ops-frontend == 'true' || github.event_name == 'workflow_dispatch'
 
     steps:
       - name: Checkout
@@ -196,11 +237,12 @@ jobs:
           retention-days: 1
 
   # ============================================
-  # Déployer sur le VPS
+  # Deploy
   # ============================================
   deploy:
     runs-on: ubuntu-latest
-    needs: [build-api, build-ops-api, build-frontend, build-ops-frontend, build-www]
+    needs: [changes, build-api, build-ops-api, build-frontend, build-ops-frontend, build-www]
+    if: always() && !failure() && !cancelled()
 
     steps:
       - name: Checkout
@@ -211,18 +253,21 @@ jobs:
           sparse-checkout-cone-mode: false
 
       - name: Download frontend artifact
+        if: needs.changes.outputs.frontend == 'true' || github.event_name == 'workflow_dispatch'
         uses: actions/download-artifact@v4
         with:
           name: frontend-dist
           path: frontend-dist
 
       - name: Download www artifact
+        if: needs.changes.outputs.www == 'true' || github.event_name == 'workflow_dispatch'
         uses: actions/download-artifact@v4
         with:
           name: www-dist
           path: www-dist
 
       - name: Download OPS frontend artifact
+        if: needs.changes.outputs.ops-frontend == 'true' || github.event_name == 'workflow_dispatch'
         uses: actions/download-artifact@v4
         with:
           name: ops-frontend-dist
@@ -236,12 +281,14 @@ jobs:
           ssh-keyscan -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts
 
       - name: Deploy docker-compose.prod.yml
+        if: needs.changes.outputs.docker-compose == 'true' || github.event_name == 'workflow_dispatch'
         run: |
           scp -i ~/.ssh/deploy_key \
             docker-compose.prod.yml \
             ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/home/deploy/apps/snoezelen/
 
       - name: Deploy frontend
+        if: needs.changes.outputs.frontend == 'true' || github.event_name == 'workflow_dispatch'
         run: |
           rsync -avz --delete \
             -e "ssh -i ~/.ssh/deploy_key" \
@@ -249,13 +296,15 @@ jobs:
             ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/home/deploy/apps/snoezelen/frontend/dist/
 
       - name: Deploy www
+        if: needs.changes.outputs.www == 'true' || github.event_name == 'workflow_dispatch'
         run: |
           rsync -avz --delete \
             -e "ssh -i ~/.ssh/deploy_key" \
             www-dist/ \
             ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/home/deploy/apps/snoezelen/www/dist/
 
-      - name: Deploy API (pull & restart)
+      - name: Deploy API
+        if: needs.changes.outputs.api == 'true' || github.event_name == 'workflow_dispatch'
         run: |
           ssh -i ~/.ssh/deploy_key ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << 'EOF'
             cd /home/deploy/apps/snoezelen
@@ -265,13 +314,15 @@ jobs:
           EOF
 
       - name: Deploy OPS frontend
+        if: needs.changes.outputs.ops-frontend == 'true' || github.event_name == 'workflow_dispatch'
         run: |
           rsync -avz --delete \
             -e "ssh -i ~/.ssh/deploy_key" \
             ops-frontend-dist/ \
             ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/home/deploy/apps/snoezelen/ops/frontend/dist/
 
-      - name: Deploy OPS API (pull & restart)
+      - name: Deploy OPS API
+        if: needs.changes.outputs.ops-api == 'true' || github.event_name == 'workflow_dispatch'
         run: |
           ssh -i ~/.ssh/deploy_key ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << 'EOF'
             cd /home/deploy/apps/snoezelen
