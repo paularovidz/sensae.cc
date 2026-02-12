@@ -95,7 +95,6 @@
   html {
     @apply text-gray-100;
     font-family: var(--font-body);
-    scrollbar-gutter: stable;
   }
 
   body {

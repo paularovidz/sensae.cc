@@ -3,10 +3,6 @@
 @tailwind utilities;
 
 /* Base styles */
-html {
-  overflow-y: scroll;
-}
-
 body {
   @apply bg-gray-900 text-gray-100;
   font-family: 'Inter', system-ui, sans-serif;
@@ -148,15 +144,4 @@ label {
 
 .kpi-change.negative {
   @apply text-red-400;
-}
-
-/* Page transitions */
-.page-enter-active,
-.page-leave-active {
-  transition: opacity 0.15s ease;
-}
-
-.page-enter-from,
-.page-leave-to {
-  opacity: 0;
 }
