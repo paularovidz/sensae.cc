@@ -132,7 +132,11 @@ async function handleLogout() {
 
       <!-- Page content -->
       <main class="p-6">
-        <RouterView />
+        <RouterView v-slot="{ Component }">
+          <Transition name="page" mode="out-in">
+            <component :is="Component" />
+          </Transition>
+        </RouterView>
       </main>
     </div>
   </div>

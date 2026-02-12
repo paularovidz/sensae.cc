@@ -149,3 +149,14 @@ label {
 .kpi-change.negative {
   @apply text-red-400;
 }
+
+/* Page transitions */
+.page-enter-active,
+.page-leave-active {
+  transition: opacity 0.15s ease;
+}
+
+.page-enter-from,
+.page-leave-to {
+  opacity: 0;
+}
