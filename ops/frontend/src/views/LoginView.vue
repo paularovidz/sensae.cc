@@ -4,7 +4,7 @@ import { useAuthStore } from '@/stores/auth'
 
 const authStore = useAuthStore()
 
-const email = ref('bonjour@sensea.cc')
+const email = ref('votre@email.com')
 const loading = ref(false)
 const error = ref(null)
 
@@ -27,7 +27,7 @@ async function handleSubmit() {
 
 function resetForm() {
   authStore.resetMagicLinkState()
-  email.value = 'bonjour@sensea.cc'
+  email.value = 'votre@email.com'
 }
 </script>
 
@@ -83,7 +83,7 @@ function resetForm() {
               type="email"
               required
               class="w-full"
-              placeholder="bonjour@sensea.cc"
+              placeholder="votre@email.com"
               :disabled="loading"
             />
           </div>
@@ -105,11 +105,6 @@ function resetForm() {
           </button>
         </form>
       </div>
-
-      <!-- Info -->
-      <p class="mt-6 text-center text-sm text-gray-500">
-        Connexion securisee par lien magique
-      </p>
     </div>
   </div>
 </template>
