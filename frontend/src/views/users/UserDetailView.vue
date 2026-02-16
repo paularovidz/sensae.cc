@@ -7,6 +7,8 @@ import LoadingSpinner from '@/components/ui/LoadingSpinner.vue'
 import ConfirmDialog from '@/components/ui/ConfirmDialog.vue'
 import DocumentsSection from '@/components/documents/DocumentsSection.vue'
 import LoyaltyCard from '@/components/loyalty/LoyaltyCard.vue'
+import PrepaidPacksSection from '@/components/users/PrepaidPacksSection.vue'
+import RecentSessionsSection from '@/components/users/RecentSessionsSection.vue'
 import { formatPhoneForDisplay } from '@/utils/phone'
 
 const route = useRoute()
@@ -225,6 +227,12 @@ const isPersonalClient = computed(() => {
         v-if="isPersonalClient"
         :user-id="user.id"
       />
+
+      <!-- Prepaid Packs -->
+      <PrepaidPacksSection :user-id="user.id" />
+
+      <!-- Recent Sessions -->
+      <RecentSessionsSection :user-id="user.id" />
 
       <!-- Documents -->
       <DocumentsSection

@@ -8,7 +8,7 @@ Application de dashboard pour le suivi de séances Snoezelen (thérapie sensorie
 
 ```
 /
-├── api/                    # Backend PHP (API REST)
+├── api/                    # Backend PHP (API REST) - App principale Snoezelen
 │   ├── config/            # Configuration (DB, mail, sécurité)
 │   ├── src/
 │   │   ├── Controllers/   # Contrôleurs API REST
@@ -29,15 +29,31 @@ Application de dashboard pour le suivi de séances Snoezelen (thérapie sensorie
 │   │   └── composables/   # Logique réutilisable
 │   └── public/
 │
-└── www/                   # Site vitrine public (Astro)
-    ├── src/
-    │   ├── content/       # Contenu Markdown/MDX (pages, blog, conseils)
-    │   ├── layouts/       # Layouts et composants Astro
-    │   ├── styles/        # CSS (Tailwind)
-    │   ├── config/        # Configuration site (menu, theme, i18n)
-    │   └── lib/           # Utilitaires
-    ├── public/            # Assets statiques
-    └── dist/              # Build de production
+├── www/                   # Site vitrine public (Astro)
+│   ├── src/
+│   │   ├── content/       # Contenu Markdown/MDX (pages, blog, conseils)
+│   │   ├── layouts/       # Layouts et composants Astro
+│   │   ├── styles/        # CSS (Tailwind)
+│   │   ├── config/        # Configuration site (menu, theme, i18n)
+│   │   └── lib/           # Utilitaires
+│   ├── public/            # Assets statiques
+│   └── dist/              # Build de production
+│
+└── ops/                   # OPS - Cockpit Financier (app séparée)
+    ├── api/               # Backend PHP (API REST)
+    │   ├── src/
+    │   │   ├── Controllers/
+    │   │   ├── Models/
+    │   │   ├── Middleware/
+    │   │   └── Services/
+    │   ├── migrations/    # Scripts SQL (BDD ops_db)
+    │   └── database/      # Scripts init Docker
+    └── frontend/          # Dashboard Vue.js
+        └── src/
+            ├── components/
+            ├── views/
+            ├── stores/
+            └── services/
 ```
 
 ## Modèle de données
@@ -468,6 +484,9 @@ OVH_SMS_SERVICE_NAME=
 
 # Note: BOOKING_ADMIN_EMAILS est obsolète
 # Les notifications admin sont envoyées à tous les users avec role='admin' en BDD
+
+# OPS API Key (pour communication OPS → API principale)
+OPS_API_KEY=xxx
 ```
 
 ### Frontend (.env)
@@ -492,6 +511,15 @@ cd www && yarn install
 yarn dev         # Développement (port 4321)
 yarn build       # Production (génère dist/)
 yarn preview     # Prévisualiser le build
+
+# OPS API (ops/api/)
+cd ops/api && composer install
+php migrations/migrate.php
+
+# OPS Frontend (ops/frontend/)
+cd ops/frontend && npm install
+npm run dev      # Développement (port 5180)
+npm run build    # Production
 ```
 
 ## Docker
@@ -500,10 +528,12 @@ yarn preview     # Prévisualiser le build
 
 | Service | Container | Port | Description |
 |---------|-----------|------|-------------|
-| db | snoezelen_db | 3306 | MariaDB 10.11 |
+| db | snoezelen_db | 3306 | MariaDB 10.11 (snoezelen_db + ops_db) |
 | api | snoezelen_api | 8080 | API PHP (Apache) |
 | frontend | snoezelen_frontend | 5173 | Dashboard Vue.js (Vite dev) |
 | www | snoezelen_www | 4321 | Site vitrine Astro (dev) |
+| ops-api | ops_api | 8090 | API PHP OPS |
+| ops-frontend | ops_frontend | 5180 | Dashboard OPS Vue.js (Vite dev) |
 | mailhog | snoezelen_mailhog | 8025 | Interface emails de test |
 | phpmyadmin | snoezelen_phpmyadmin | 8081 | Gestion BDD |
 
@@ -515,7 +545,11 @@ docker compose up -d
 ### Exécuter les migrations
 **IMPORTANT** : Après chaque `docker compose up`, exécuter les migrations pour appliquer les nouveaux scripts SQL :
 ```bash
+# API principale (snoezelen_db)
 docker exec snoezelen_api php /var/www/html/migrations/migrate.php
+
+# OPS (ops_db)
+docker exec ops_api php /var/www/html/migrations/migrate.php
 ```
 
 ### Factory de données de test
@@ -544,17 +578,25 @@ docker exec snoezelen_api php /var/www/html/database/seed.php --clean
 docker compose logs -f api
 docker compose logs -f www
 docker compose logs -f frontend
+docker compose logs -f ops-api
+docker compose logs -f ops-frontend
 
 # Accès shell containers
 docker exec -it snoezelen_api bash
 docker exec -it snoezelen_www sh
 docker exec -it snoezelen_frontend sh
+docker exec -it ops_api bash
+docker exec -it ops_frontend sh
 
 # Rebuild après modification Dockerfile
 docker compose up -d --build
 
 # Rebuild un service spécifique
 docker compose up -d --build www
+docker compose up -d --build ops-api
+
+# Recréer containers après modif .env
+docker compose -f docker-compose.prod.yml up -d --force-recreate
 ```
 
 ## Système de Réservation (Booking)
@@ -673,6 +715,7 @@ Exemple pour séances classiques (45min + 20min pause) : 9h00, 10h05, 11h10, 13h
 10. **Système de fidélité** - Carte de fidélité pour particuliers uniquement. Après 9 séances (configurable), séance gratuite offerte. Visible dans l'espace membre et dans la page admin utilisateur
 11. **Documents** - Upload images/PDF pour utilisateurs et personnes (admin only). Stockés dans `api/uploads/documents/`
 12. **Modèle Session unifié** - Une seule table `sessions` gère tout le cycle : réservation (pending/confirmed) → séance effectuée (completed) → annulation (cancelled/no_show). Plus de table `bookings` séparée.
+13. **OPS (Cockpit Financier)** - Application séparée avec sa propre BDD (`ops_db`), auth, et frontend. Communique avec l'API principale via clé API pour récupérer les revenus des séances. Login par défaut : `bonjour@sensea.cc`
 
 ## Services Backend
 
@@ -695,6 +738,151 @@ Intégration OVH SMS avec signature API. Envoi rappels, confirmations, annulatio
 ### CaptchaService
 Vérification hCaptcha ou reCAPTCHA invisible.
 
+## OPS - Cockpit Financier
+
+Application séparée pour le suivi financier (dépenses, revenus, prévisions). Base de données distincte (`ops_db`), authentification magic link indépendante.
+
+### Concept OPS
+
+- **Dashboard** : Vue annuelle par défaut, drill-down mensuel avec jour par jour
+- **Dépenses** : Saisie manuelle ou import CSV bancaire
+- **Dépenses récurrentes** : Génération automatique mensuelle ou annuelle
+- **Catégories** : Catégorisation des dépenses avec couleurs
+- **Fournisseurs (Vendor Mappings)** : Auto-catégorisation basée sur patterns
+- **Revenus** : Récupérés depuis l'API principale Sensea (séances completed/confirmed)
+
+### Communication OPS ↔ Sensea
+
+OPS récupère les données de revenus depuis l'API principale via une clé API partagée :
+- **Endpoint** : `GET /ops/revenue` et `GET /ops/revenue/daily` sur l'API principale
+- **Authentification** : Header `X-API-Key` avec `OPS_API_KEY`
+- **Middleware** : `ApiKeyMiddleware` vérifie la clé
+
+### Base de données OPS (ops_db)
+
+Tables principales :
+- `users` - Utilisateurs OPS (auth magic link séparée)
+- `magic_links`, `refresh_tokens` - Auth
+- `expense_categories` - Catégories de dépenses
+- `expenses` - Dépenses avec date, montant, fournisseur, catégorie
+- `recurring_expenses` - Dépenses récurrentes (mensuelles, trimestrielles, annuelles)
+- `vendor_mappings` - Patterns pour auto-catégorisation fournisseurs
+- `bank_imports` - Historique imports CSV
+- `monthly_forecasts`, `month_states` - Prévisions (non utilisé actuellement)
+
+### API OPS Endpoints
+
+**Auth**
+- `POST /auth/request-magic-link`
+- `GET /auth/verify/{token}`
+- `POST /auth/refresh`
+- `POST /auth/logout`
+
+**Dashboard**
+- `GET /dashboard?year=&month=` - KPIs du mois
+- `GET /dashboard/year?year=` - Vue annuelle avec totaux par mois
+- `GET /dashboard/daily?year=&month=` - Données jour par jour
+
+**Dépenses**
+- `GET /expenses` - Liste avec filtres (year, month, category_id)
+- `POST /expenses` - Créer (avec option save_vendor_mapping)
+- `PUT /expenses/{id}` - Modifier
+- `DELETE /expenses/{id}` - Supprimer
+
+**Dépenses récurrentes**
+- `GET /recurring-expenses` - Liste
+- `POST /recurring-expenses` - Créer
+- `POST /recurring-expenses/generate` - Générer pour un mois
+- `POST /recurring-expenses/generate-year` - Générer pour toute l'année
+
+**Catégories**
+- `GET /categories` - Liste avec stats optionnelles
+- `POST /categories` - Créer
+- `PUT /categories/{id}` - Modifier
+
+**Vendor Mappings**
+- `GET /vendor-mappings` - Liste
+- `GET /vendor-mappings/suggest?vendor=` - Suggérer catégorie pour un fournisseur
+- `GET /vendor-mappings/search?q=` - Recherche autocomplete
+- `POST /vendor-mappings` - Créer
+
+**Import**
+- `POST /imports/preview` - Prévisualiser CSV
+- `POST /imports` - Importer CSV
+
+### Variables d'environnement OPS
+
+```
+# OPS API (.env ou docker-compose)
+DB_HOST=db
+DB_NAME=ops_db
+DB_USER=snoezelen
+DB_PASS=xxx
+
+OPS_JWT_SECRET=xxx
+OPS_JWT_REFRESH_SECRET=xxx
+
+# Communication avec API principale
+SENSEA_API_URL=http://api  # ou https://suivi.sensea.cc/api en prod
+SENSEA_API_KEY=xxx         # Doit matcher OPS_API_KEY de l'API principale
+```
+
+Sur l'API principale, ajouter :
+```
+OPS_API_KEY=xxx  # Clé partagée pour autoriser OPS
+```
+
+### Docker OPS
+
+| Service | Container | Port | Description |
+|---------|-----------|------|-------------|
+| ops-api | ops_api | 8090 | API PHP OPS |
+| ops-frontend | ops_frontend | 5180 | Dashboard Vue.js OPS |
+
+```bash
+# Migrations OPS
+docker exec ops_api php /var/www/html/migrations/migrate.php
+
+# Générer dépenses récurrentes
+docker exec ops_api php -r "require 'vendor/autoload.php'; App\Models\RecurringExpense::generateForMonth(2025, 2, 'user-id');"
+```
+
+### Déploiement OPS
+
+**URL Production** : https://ops.sensea.cc
+
+**Nginx** (avec certificat Cloudflare) :
+```nginx
+server {
+    listen 80;
+    server_name ops.sensea.cc;
+    return 301 https://$host$request_uri;
+}
+
+server {
+    listen 443 ssl;
+    server_name ops.sensea.cc;
+
+    ssl_certificate /etc/ssl/cloudflare/sensea.cc.pem;
+    ssl_certificate_key /etc/ssl/cloudflare/sensea.cc.key;
+
+    root /home/deploy/apps/snoezelen/ops/frontend/dist;
+    index index.html;
+
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    location /api/ {
+        proxy_pass http://127.0.0.1:8090/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+```
+
 ## Déploiement
 
 ### URLs de production
@@ -703,6 +891,8 @@ Vérification hCaptcha ou reCAPTCHA invisible.
 | Site vitrine | https://sensea.cc |
 | Dashboard admin | https://suivi.sensea.cc |
 | API | https://suivi.sensea.cc/api |
+| OPS (Cockpit Financier) | https://ops.sensea.cc |
+| OPS API | https://ops.sensea.cc/api |
 
 ### Site vitrine (www/)
 
@@ -747,6 +937,30 @@ Voir section "Variables d'environnement" plus haut. Points critiques :
 - `DEBUG=false`
 - Secrets JWT et ENCRYPTION_KEY uniques et sécurisés
 - CORS configuré pour le domaine frontend uniquement
+
+### CI/CD - GitHub Actions
+
+Le workflow `.github/workflows/deploy.yml` utilise des **builds conditionnels** basés sur les fichiers modifiés :
+
+| Changement | Jobs exécutés |
+|------------|---------------|
+| `api/**` | build-api + deploy API |
+| `ops/api/**` | build-ops-api + deploy OPS API |
+| `frontend/**` | build-frontend + deploy frontend |
+| `ops/frontend/**` | build-ops-frontend + deploy OPS frontend |
+| `www/**` | build-www + deploy www |
+| `docker-compose.prod.yml` | sync docker-compose |
+| Manual dispatch | Tout rebuild |
+
+**Optimisations** :
+- Cache Docker layers (GitHub Actions cache)
+- Cache npm pour les frontends
+- `npm ci` avec package-lock.json
+
+**Temps de déploiement** :
+- Changement CSS frontend : ~30-40s
+- Changement API (Docker rebuild) : ~2min
+- Tout rebuilder : ~3min
 
 ### Documentation complète
 

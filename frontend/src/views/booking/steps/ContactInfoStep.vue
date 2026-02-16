@@ -110,6 +110,7 @@
         </div>
       </div>
 
+
       <!-- CGR Consent (existing clients) -->
       <div
         id="cgr-consent-section"
@@ -283,8 +284,34 @@
             {{ formattedDateTime }}
           </dd>
         </div>
+        <!-- Prepaid credit display -->
+        <template v-if="bookingStore.willUsePrepaid">
+          <div class="flex justify-between pt-2 border-t border-gray-600/50">
+            <dt class="text-gray-500">Prix initial :</dt>
+            <dd class="text-gray-400 line-through">
+              {{ formatPrice(bookingStore.originalPrice) }} &euro;
+            </dd>
+          </div>
+          <div class="flex justify-between">
+            <dt class="text-teal-400 flex items-center">
+              <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              Séance prépayée :
+            </dt>
+            <dd class="text-teal-400">
+              -1 séance
+            </dd>
+          </div>
+          <div class="flex justify-between">
+            <dt class="text-gray-400 font-medium">Total :</dt>
+            <dd class="font-bold text-teal-400 text-lg">
+              0,00 &euro;
+            </dd>
+          </div>
+        </template>
         <!-- Promo code display -->
-        <template v-if="bookingStore.hasPromoApplied">
+        <template v-else-if="bookingStore.hasPromoApplied">
           <div class="flex justify-between pt-2 border-t border-gray-600/50">
             <dt class="text-gray-500">Prix initial :</dt>
             <dd class="text-gray-400 line-through">
@@ -343,6 +370,7 @@ const emit = defineEmits(['update:gdprError', 'update:cgrError'])
 
 const bookingStore = useBookingStore()
 const authStore = useAuthStore()
+
 
 // Check if client account is deactivated
 const isClientDeactivated = computed(() => {

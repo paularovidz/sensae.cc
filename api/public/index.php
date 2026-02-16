@@ -36,6 +36,8 @@ use App\Controllers\PromoCodeController;
 use App\Controllers\OffDaysController;
 use App\Controllers\PublicCalendarController;
 use App\Controllers\OpsRevenueController;
+use App\Controllers\PrepaidPackController;
+use App\Controllers\PublicPrepaidController;
 use App\Utils\Response;
 
 // Error handling
@@ -108,6 +110,7 @@ $routes = [
     'PATCH /users/([a-f0-9-]+)' => ['controller' => UserController::class, 'method' => 'update'],
     'DELETE /users/([a-f0-9-]+)' => ['controller' => UserController::class, 'method' => 'destroy'],
     'GET /users/([a-f0-9-]+)/loyalty' => ['controller' => UserController::class, 'method' => 'getLoyaltyCard'],
+    'GET /users/([a-f0-9-]+)/recent-sessions' => ['controller' => UserController::class, 'method' => 'getRecentSessions'],
     'POST /users/([a-f0-9-]+)/persons/([a-f0-9-]+)' => ['controller' => UserController::class, 'method' => 'assignPerson'],
     'DELETE /users/([a-f0-9-]+)/persons/([a-f0-9-]+)' => ['controller' => UserController::class, 'method' => 'unassignPerson'],
 
@@ -186,6 +189,12 @@ $routes = [
     'GET /public/promo-codes/automatic' => ['controller' => PublicPromoCodeController::class, 'method' => 'getAutomatic'],
 
     // ============================================
+    // PUBLIC PREPAID ROUTES (No authentication)
+    // ============================================
+    'GET /public/prepaid/balance' => ['controller' => PublicPrepaidController::class, 'method' => 'balance'],
+    'POST /public/prepaid/check' => ['controller' => PublicPrepaidController::class, 'method' => 'check', 'rateLimit' => 'strict'],
+
+    // ============================================
     // ADMIN BOOKING ROUTES (Authentication required)
     // ============================================
     'GET /bookings' => ['controller' => BookingController::class, 'method' => 'index'],
@@ -225,12 +234,27 @@ $routes = [
     'DELETE /promo-codes/([a-f0-9-]+)' => ['controller' => PromoCodeController::class, 'method' => 'destroy'],
 
     // ============================================
+    // PREPAID PACKS ROUTES (Admin only)
+    // ============================================
+    'GET /prepaid-packs' => ['controller' => PrepaidPackController::class, 'method' => 'index'],
+    'GET /prepaid-packs/types' => ['controller' => PrepaidPackController::class, 'method' => 'types'],
+    'GET /prepaid-packs/([a-f0-9-]+)' => ['controller' => PrepaidPackController::class, 'method' => 'show'],
+    'GET /prepaid-packs/([a-f0-9-]+)/usages' => ['controller' => PrepaidPackController::class, 'method' => 'usages'],
+    'POST /prepaid-packs' => ['controller' => PrepaidPackController::class, 'method' => 'store'],
+    'PUT /prepaid-packs/([a-f0-9-]+)' => ['controller' => PrepaidPackController::class, 'method' => 'update'],
+    'DELETE /prepaid-packs/([a-f0-9-]+)' => ['controller' => PrepaidPackController::class, 'method' => 'destroy'],
+    'GET /users/([a-f0-9-]+)/prepaid-packs' => ['controller' => PrepaidPackController::class, 'method' => 'byUser'],
+
+    // ============================================
     // OPS REVENUE ROUTES (API Key authentication)
     // ============================================
     'GET /ops/revenue' => ['controller' => OpsRevenueController::class, 'method' => 'getMonthlyRevenue'],
     'GET /ops/revenue/year/(\d+)' => ['controller' => OpsRevenueController::class, 'method' => 'getYearlyRevenue'],
     'GET /ops/revenue/daily' => ['controller' => OpsRevenueController::class, 'method' => 'getDailyRevenue'],
     'GET /ops/sessions/count' => ['controller' => OpsRevenueController::class, 'method' => 'getSessionCount'],
+    'GET /ops/prepaid-revenue' => ['controller' => OpsRevenueController::class, 'method' => 'getPrepaidRevenue'],
+    'GET /ops/prepaid-revenue/year/(\d+)' => ['controller' => OpsRevenueController::class, 'method' => 'getPrepaidYearlyRevenue'],
+    'GET /ops/prepaid-revenue/daily' => ['controller' => OpsRevenueController::class, 'method' => 'getPrepaidDailyRevenue'],
 
     // Health check
     'GET /' => ['handler' => fn() => Response::success(['status' => 'ok', 'version' => '1.0.0'], 'API Snoezelen')],

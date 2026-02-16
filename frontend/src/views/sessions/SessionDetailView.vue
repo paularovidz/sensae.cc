@@ -104,6 +104,11 @@ function getAppreciationBadgeClass(appreciation) {
   }
   return classes[appreciation] || 'badge-gray'
 }
+
+function formatPrice(value) {
+  if (value === null || value === undefined) return '-'
+  return Number(value).toFixed(2).replace('.', ',')
+}
 </script>
 
 <template>
@@ -233,6 +238,35 @@ function getAppreciationBadgeClass(appreciation) {
             <div>
               <div class="text-sm text-gray-400">Créé par</div>
               <div class="font-medium text-gray-200">{{ session.creator_first_name }} {{ session.creator_last_name }}</div>
+            </div>
+            <!-- Prix et paiement -->
+            <div v-if="session.price !== undefined">
+              <div class="text-sm text-gray-400">Tarif</div>
+              <div class="font-medium">
+                <!-- Séance prépayée utilisé -->
+                <template v-if="session.prepaid_pack">
+                  <span class="text-teal-400">0 € (séance prépayée)</span>
+                  <RouterLink
+                    :to="`/app/prepaid-packs/${session.prepaid_pack.id}`"
+                    class="ml-2 text-xs text-teal-400/70 hover:text-teal-300"
+                  >
+                    {{ session.prepaid_pack.label }}
+                  </RouterLink>
+                </template>
+                <!-- Code promo utilisé -->
+                <template v-else-if="session.promo_code">
+                  <span class="text-green-400">{{ formatPrice(session.price) }} €</span>
+                  <span class="ml-2 text-xs text-gray-500 line-through">{{ formatPrice(session.original_price) }} €</span>
+                  <span class="ml-2 text-xs text-green-400/70">
+                    {{ session.promo_code.code || session.promo_code.name }}
+                    ({{ session.promo_code.discount_label }})
+                  </span>
+                </template>
+                <!-- Prix normal -->
+                <template v-else>
+                  <span class="text-gray-200">{{ formatPrice(session.price) }} €</span>
+                </template>
+              </div>
             </div>
           </div>
         </div>

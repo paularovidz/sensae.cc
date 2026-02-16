@@ -126,6 +126,84 @@
             </div>
             <p class="text-xs text-gray-500 mt-2">Après ce nombre de séances, le client reçoit une séance gratuite.</p>
           </div>
+
+          <!-- Packs prépayés -->
+          <div class="pt-4 border-t border-gray-700">
+            <h3 class="text-sm font-semibold text-gray-300 uppercase tracking-wide mb-4">Packs prépayés</h3>
+            <div class="grid md:grid-cols-2 gap-6">
+              <!-- Pack 2 séances -->
+              <div class="bg-gray-900/50 rounded-lg p-4 space-y-3">
+                <div class="flex items-center justify-between">
+                  <span class="text-sm font-medium text-teal-400">Pack 2 séances</span>
+                  <span v-if="formData.prepaid_pack_2_sessions && formData.prepaid_pack_2_price" class="text-xs text-gray-500">
+                    {{ (formData.prepaid_pack_2_price / formData.prepaid_pack_2_sessions).toFixed(0) }}€/séance
+                  </span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <label class="text-sm text-gray-300">Nombre de séances</label>
+                  <input
+                    type="number"
+                    v-model.number="formData.prepaid_pack_2_sessions"
+                    class="w-20 px-3 py-1.5 bg-gray-700 border border-gray-600 rounded-lg text-sm text-white text-right"
+                    @wheel.prevent
+                  />
+                </div>
+                <div class="flex items-center justify-between">
+                  <label class="text-sm text-gray-300">Prix total</label>
+                  <div class="flex items-center">
+                    <input
+                      type="number"
+                      v-model.number="formData.prepaid_pack_2_price"
+                      class="w-20 px-3 py-1.5 bg-gray-700 border border-gray-600 rounded-lg text-sm text-white text-right"
+                      @wheel.prevent
+                    />
+                    <span class="ml-2 text-gray-400 w-6">€</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Pack 4 séances -->
+              <div class="bg-gray-900/50 rounded-lg p-4 space-y-3">
+                <div class="flex items-center justify-between">
+                  <span class="text-sm font-medium text-teal-400">Pack 4 séances</span>
+                  <span v-if="formData.prepaid_pack_4_sessions && formData.prepaid_pack_4_price" class="text-xs text-gray-500">
+                    {{ (formData.prepaid_pack_4_price / formData.prepaid_pack_4_sessions).toFixed(0) }}€/séance
+                  </span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <label class="text-sm text-gray-300">Nombre de séances</label>
+                  <input
+                    type="number"
+                    v-model.number="formData.prepaid_pack_4_sessions"
+                    class="w-20 px-3 py-1.5 bg-gray-700 border border-gray-600 rounded-lg text-sm text-white text-right"
+                    @wheel.prevent
+                  />
+                </div>
+                <div class="flex items-center justify-between">
+                  <label class="text-sm text-gray-300">Prix total</label>
+                  <div class="flex items-center">
+                    <input
+                      type="number"
+                      v-model.number="formData.prepaid_pack_4_price"
+                      class="w-20 px-3 py-1.5 bg-gray-700 border border-gray-600 rounded-lg text-sm text-white text-right"
+                      @wheel.prevent
+                    />
+                    <span class="ml-2 text-gray-400 w-6">€</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="flex items-center justify-between max-w-md mt-4">
+              <label class="text-sm text-gray-300">Expiration des packs (mois)</label>
+              <input
+                type="number"
+                v-model.number="formData.prepaid_default_expiry_months"
+                class="w-20 px-3 py-1.5 bg-gray-700 border border-gray-600 rounded-lg text-sm text-white text-right"
+                @wheel.prevent
+              />
+            </div>
+            <p class="text-xs text-gray-500 mt-2">0 = pas d'expiration. Les packs expirent après ce délai.</p>
+          </div>
         </div>
 
         <!-- Horaires Tab -->

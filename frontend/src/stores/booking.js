@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { publicBookingApi, publicPromoCodesApi } from '@/services/api'
+import { publicBookingApi, publicPromoCodesApi, publicPrepaidApi } from '@/services/api'
 
 export const useBookingStore = defineStore('booking', () => {
   // ========================================
@@ -61,6 +61,11 @@ export const useBookingStore = defineStore('booking', () => {
   })
   const bookingDelays = ref({ personal: 60, association: 90 })
   const emailConfirmationRequired = ref(false)
+
+  // Prepaid credits
+  const prepaidBalance = ref(null) // { total_credits: number, packs: array }
+  const usePrepaid = ref(false) // Whether to use prepaid credit for this booking
+  const prepaidLoading = ref(false)
 
   // Promo codes
   const hasManualPromoCodes = ref(false)
@@ -150,8 +155,12 @@ export const useBookingStore = defineStore('booking', () => {
       data.captcha_token = captchaToken.value
     }
 
-    // Add promo code if applied
-    if (appliedPromo.value) {
+    // Add prepaid flag if using prepaid credit (takes priority over promo)
+    if (willUsePrepaid.value) {
+      data.use_prepaid = true
+    }
+    // Add promo code if applied (only if not using prepaid)
+    else if (appliedPromo.value) {
       if (appliedPromo.value.code) {
         data.promo_code = appliedPromo.value.code
       } else {
@@ -199,6 +208,18 @@ export const useBookingStore = defineStore('booking', () => {
     return existingClientInfo.value?.client_type || clientInfo.value.clientType || 'personal'
   })
 
+  // Check if user is admin (admins have no booking limits)
+  const isAdminUser = computed(() => {
+    return existingClientInfo.value?.is_admin === true
+  })
+
+  // Get max advance days for booking
+  const maxAdvanceDays = computed(() => {
+    if (isAdminUser.value) return 365
+    const clientType = currentClientType.value
+    return bookingDelays.value[clientType] || 60
+  })
+
   // Get prices for the current client type
   const pricesForCurrentClient = computed(() => {
     const clientType = currentClientType.value
@@ -206,7 +227,16 @@ export const useBookingStore = defineStore('booking', () => {
   })
 
   const currentPrice = computed(() => {
-    // If promo is applied, return the final price
+    // Priority: 1. Free session promo, 2. Prepaid credit, 3. Other promos
+    // If free session promo is applied, it has priority
+    if (hasFreeSessionPromo.value) {
+      return promoPricing.value.final_price // Should be 0
+    }
+    // If using prepaid credit, price is 0
+    if (willUsePrepaid.value) {
+      return 0
+    }
+    // If other promo is applied, return the final price
     if (promoPricing.value) {
       return promoPricing.value.final_price
     }
@@ -221,6 +251,24 @@ export const useBookingStore = defineStore('booking', () => {
 
   const hasPromoApplied = computed(() => {
     return appliedPromo.value !== null && promoPricing.value !== null
+  })
+
+  // Check if applied promo is a "free session" type (has priority over prepaid)
+  const hasFreeSessionPromo = computed(() => {
+    return hasPromoApplied.value && appliedPromo.value?.discount_type === 'free_session'
+  })
+
+  const hasPrepaidCredits = computed(() => {
+    return prepaidBalance.value && prepaidBalance.value.total_credits > 0
+  })
+
+  // Can use prepaid only if no free session promo is applied
+  const canUsePrepaid = computed(() => {
+    return hasPrepaidCredits.value && !hasFreeSessionPromo.value
+  })
+
+  const willUsePrepaid = computed(() => {
+    return canUsePrepaid.value && usePrepaid.value
   })
 
   // ========================================
@@ -323,6 +371,50 @@ export const useBookingStore = defineStore('booking', () => {
     promoError.value = null
   }
 
+  // ========================================
+  // PREPAID CREDITS ACTIONS
+  // ========================================
+
+  async function checkPrepaidBalance(email) {
+    if (!email || !email.trim()) {
+      prepaidBalance.value = null
+      usePrepaid.value = false
+      return null
+    }
+
+    prepaidLoading.value = true
+
+    try {
+      const response = await publicPrepaidApi.check(email.trim(), durationType.value)
+      prepaidBalance.value = response.data.data
+      // Auto-enable if credits available
+      if (prepaidBalance.value?.total_credits > 0) {
+        usePrepaid.value = true
+      }
+      return prepaidBalance.value
+    } catch (err) {
+      console.error('Failed to check prepaid balance:', err)
+      prepaidBalance.value = null
+      usePrepaid.value = false
+      return null
+    } finally {
+      prepaidLoading.value = false
+    }
+  }
+
+  function setUsePrepaid(value) {
+    usePrepaid.value = value
+    // If enabling prepaid, clear promo code (mutually exclusive)
+    if (value && appliedPromo.value) {
+      clearPromoCode()
+    }
+  }
+
+  function clearPrepaidState() {
+    prepaidBalance.value = null
+    usePrepaid.value = false
+  }
+
   async function checkEmail(email) {
     loading.value = true
     error.value = null
@@ -382,7 +474,8 @@ export const useBookingStore = defineStore('booking', () => {
 
     try {
       const clientType = currentClientType.value
-      const response = await publicBookingApi.getAvailableDates(year, month, durationType.value, clientType)
+      const email = clientInfo.value.email?.trim() || null
+      const response = await publicBookingApi.getAvailableDates(year, month, durationType.value, clientType, email)
       availableDates.value = response.data.data.available_dates || []
       currentYear.value = year
       currentMonth.value = month
@@ -508,7 +601,8 @@ export const useBookingStore = defineStore('booking', () => {
       durationType: durationType.value,
       clientInfo: clientInfo.value,
       gdprConsent: gdprConsent.value,
-      existingPersons: existingPersons.value
+      existingPersons: existingPersons.value,
+      existingClientInfo: existingClientInfo.value
     }
     try {
       localStorage.setItem('booking_wizard_state', JSON.stringify(state))
@@ -532,6 +626,7 @@ export const useBookingStore = defineStore('booking', () => {
         clientInfo.value = state.clientInfo || { email: '', phone: '', firstName: '', lastName: '', clientType: 'personal', companyName: '', siret: '' }
         gdprConsent.value = state.gdprConsent || false
         existingPersons.value = state.existingPersons || []
+        existingClientInfo.value = state.existingClientInfo || null
         return true
       }
     } catch (e) {
@@ -568,6 +663,9 @@ export const useBookingStore = defineStore('booking', () => {
     appliedPromo.value = null
     promoPricing.value = null
     promoError.value = null
+    // Reset prepaid state
+    prepaidBalance.value = null
+    usePrepaid.value = false
     clearStorage()
   }
 
@@ -650,10 +748,20 @@ export const useBookingStore = defineStore('booking', () => {
     currentPrice,
     originalPrice,
     currentClientType,
+    isAdminUser,
+    maxAdvanceDays,
     pricesForCurrentClient,
     emailConfirmationRequired,
     loading,
     error,
+
+    // Prepaid state
+    prepaidBalance,
+    usePrepaid,
+    prepaidLoading,
+    hasPrepaidCredits,
+    canUsePrepaid,
+    willUsePrepaid,
 
     // Promo state
     hasManualPromoCodes,
@@ -663,6 +771,7 @@ export const useBookingStore = defineStore('booking', () => {
     promoError,
     promoLoading,
     hasPromoApplied,
+    hasFreeSessionPromo,
 
     // Getters
     canGoNext,
@@ -692,6 +801,11 @@ export const useBookingStore = defineStore('booking', () => {
     resetDateTimeSelection,
     resetContactInfo,
     resetFollowingSteps,
+
+    // Prepaid actions
+    checkPrepaidBalance,
+    setUsePrepaid,
+    clearPrepaidState,
 
     // Promo actions
     checkHasManualPromoCodes,

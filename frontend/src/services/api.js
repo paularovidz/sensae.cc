@@ -123,7 +123,8 @@ export const usersApi = {
   delete: (id) => api.delete(`/users/${id}`),
   assignPerson: (userId, personId) => api.post(`/users/${userId}/persons/${personId}`),
   unassignPerson: (userId, personId) => api.delete(`/users/${userId}/persons/${personId}`),
-  getLoyaltyCard: (id) => api.get(`/users/${id}/loyalty`)
+  getLoyaltyCard: (id) => api.get(`/users/${id}/loyalty`),
+  getRecentSessions: (id, limit = 10) => api.get(`/users/${id}/recent-sessions`, { params: { limit } })
 }
 
 // Persons API
@@ -172,8 +173,11 @@ export const statsApi = {
 export const publicBookingApi = {
   // Availability
   getSchedule: () => api.get('/public/availability/schedule'),
-  getAvailableDates: (year, month, type, clientType = 'personal') =>
-    api.get('/public/availability/dates', { params: { year, month, type, client_type: clientType } }),
+  getAvailableDates: (year, month, type, clientType = 'personal', email = null) => {
+    const params = { year, month, type, client_type: clientType }
+    if (email) params.email = email
+    return api.get('/public/availability/dates', { params })
+  },
   getAvailableSlots: (date, type) =>
     api.get('/public/availability/slots', { params: { date, type } }),
 
@@ -277,4 +281,29 @@ export const promoCodesApi = {
   delete: (id) => api.delete(`/promo-codes/${id}`),
   generateCode: (length = 8) => api.get('/promo-codes/generate-code', { params: { length } }),
   getAvailable: (params) => api.get('/promo-codes/available', { params })
+}
+
+// Prepaid Packs API (Admin - auth required)
+export const prepaidPacksApi = {
+  getAll: (params) => api.get('/prepaid-packs', { params }),
+  getTypes: () => api.get('/prepaid-packs/types'),
+  getById: (id) => api.get(`/prepaid-packs/${id}`),
+  getUsages: (id, params) => api.get(`/prepaid-packs/${id}/usages`, { params }),
+  create: (data) => api.post('/prepaid-packs', data),
+  update: (id, data) => api.put(`/prepaid-packs/${id}`, data),
+  delete: (id) => api.delete(`/prepaid-packs/${id}`),
+  getByUser: (userId) => api.get(`/users/${userId}/prepaid-packs`)
+}
+
+// Public Prepaid API (No auth required)
+export const publicPrepaidApi = {
+  getBalance: (email, durationType = null) =>
+    api.get('/public/prepaid/balance', {
+      params: { email, duration_type: durationType }
+    }),
+  check: (email, durationType) =>
+    api.post('/public/prepaid/check', {
+      email,
+      duration_type: durationType
+    })
 }

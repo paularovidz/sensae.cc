@@ -5,8 +5,31 @@
       Sélectionnez une date puis un horaire disponible pour votre {{ durationLabel }}.
     </p>
 
-    <!-- Session type and price info -->
-    <div class="mb-6 p-4 bg-gray-700/30 border border-gray-600/50 rounded-lg">
+    <!-- Prepaid credits banner (if available) -->
+    <div v-if="bookingStore.hasPrepaidCredits" class="mb-6 p-4 bg-teal-900/40 border border-teal-500/50 rounded-lg">
+      <div class="flex items-center gap-3">
+        <div class="flex-shrink-0 p-2 bg-teal-500/20 rounded-full">
+          <svg class="w-6 h-6 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+        </div>
+        <div class="flex-1">
+          <p class="text-teal-300 font-semibold">
+            Vous avez {{ bookingStore.prepaidBalance.total_credits }} séance{{ bookingStore.prepaidBalance.total_credits > 1 ? 's' : '' }} prépayée{{ bookingStore.prepaidBalance.total_credits > 1 ? 's' : '' }}
+          </p>
+          <p class="text-sm text-teal-400/80">
+            Un crédit sera automatiquement utilisé pour cette réservation.
+          </p>
+        </div>
+        <div class="text-right">
+          <p class="text-2xl font-bold text-teal-400">0 €</p>
+          <p class="text-xs text-teal-400/60">crédit utilisé</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Session type and price info (hidden if using prepaid) -->
+    <div v-if="!bookingStore.hasPrepaidCredits" class="mb-6 p-4 bg-gray-700/30 border border-gray-600/50 rounded-lg">
       <div class="flex items-center justify-between gap-3">
         <div class="flex items-center">
           <svg class="w-5 h-5 text-indigo-400 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -91,6 +114,16 @@
             {{ bookingStore.promoError }}
           </p>
         </div>
+      </div>
+    </div>
+
+    <!-- Session type info (compact, when using prepaid) -->
+    <div v-if="bookingStore.hasPrepaidCredits" class="mb-6 p-3 bg-gray-700/20 border border-gray-600/30 rounded-lg">
+      <div class="flex items-center">
+        <svg class="w-4 h-4 text-gray-400 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <p class="text-sm text-gray-300">{{ sessionTypeLabel }} · {{ sessionTypeDescription }}</p>
       </div>
     </div>
 
@@ -210,8 +243,7 @@ const sessionTypeDescription = computed(() => {
 })
 
 const maxAdvanceDays = computed(() => {
-  const clientType = bookingStore.currentClientType
-  return bookingStore.bookingDelays[clientType] || 60
+  return bookingStore.maxAdvanceDays
 })
 
 const formattedSelection = computed(() => {
@@ -230,11 +262,12 @@ const formattedSelection = computed(() => {
 })
 
 onMounted(async () => {
-  // Déterminer automatiquement le type de séance :
-  // - Nouvelle personne (pas d'ID) = découverte
-  // - Personne existante (avec ID) = classique
-  const isNewPerson = !bookingStore.selectedPersonId
-  const newType = isNewPerson ? 'discovery' : 'regular'
+  // Déterminer le type de séance basé sur le type de CLIENT (pas la personne) :
+  // - Nouveau client (isNewClient=true) = découverte
+  // - Client existant (isNewClient=false) = classique
+  // Note: Un client existant qui ajoute une nouvelle personne reste en "regular"
+  // car il connaît déjà l'approche Snoezelen
+  const newType = bookingStore.isNewClient ? 'discovery' : 'regular'
 
   if (bookingStore.durationType !== newType) {
     // Utiliser setDurationType pour reset correctement toutes les données
@@ -242,6 +275,15 @@ onMounted(async () => {
   }
 
   initialLoading.value = true
+
+  // Check prepaid balance for existing clients
+  if (bookingStore.clientInfo.email) {
+    await bookingStore.checkPrepaidBalance(bookingStore.clientInfo.email)
+    // Auto-enable prepaid if credits available
+    if (bookingStore.hasPrepaidCredits) {
+      bookingStore.setUsePrepaid(true)
+    }
+  }
 
   await fetchAvailableDates()
 

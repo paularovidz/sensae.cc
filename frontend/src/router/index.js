@@ -48,6 +48,11 @@ const PromoCodesListView = () => import('@/views/promo-codes/PromoCodesListView.
 const PromoCodeFormView = () => import('@/views/promo-codes/PromoCodeFormView.vue')
 const PromoCodeDetailView = () => import('@/views/promo-codes/PromoCodeDetailView.vue')
 
+// Prepaid Packs Views (dashboard bundle)
+const PrepaidPacksListView = () => import('@/views/prepaid-packs/PrepaidPacksListView.vue')
+const PrepaidPackCreateView = () => import('@/views/prepaid-packs/PrepaidPackCreateView.vue')
+const PrepaidPackDetailView = () => import('@/views/prepaid-packs/PrepaidPackDetailView.vue')
+
 // Agenda View (dashboard bundle)
 const AgendaView = () => import('@/views/agenda/AgendaView.vue')
 
@@ -230,6 +235,23 @@ const routes = [
         path: 'promo-codes/:id/edit',
         name: 'promo-code-edit',
         component: PromoCodeFormView
+      },
+
+      // Prepaid Packs
+      {
+        path: 'prepaid-packs',
+        name: 'prepaid-packs',
+        component: PrepaidPacksListView
+      },
+      {
+        path: 'prepaid-packs/new',
+        name: 'prepaid-pack-create',
+        component: PrepaidPackCreateView
+      },
+      {
+        path: 'prepaid-packs/:id',
+        name: 'prepaid-pack-detail',
+        component: PrepaidPackDetailView
       }
     ]
   },

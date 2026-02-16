@@ -29,19 +29,30 @@ class DashboardController
         // Get revenue from Sensea API (includes future confirmed sessions)
         $revenue = SenseaRevenueService::getMonthlyRevenue($year, $month);
 
+        // Get prepaid packs revenue (pack sales)
+        $prepaidRevenue = SenseaRevenueService::getPrepaidMonthlyRevenue($year, $month);
+
         // Get recurring expense total
         $recurringMonthly = RecurringExpense::getMonthlyTotal();
 
+        // Calculate total revenue (sessions + prepaid packs)
+        $sessionRevenue = $revenue['total'] ?? 0;
+        $packRevenue = $prepaidRevenue['total'] ?? 0;
+        $totalRevenue = $sessionRevenue + $packRevenue;
+
         // Calculate balance
-        $balance = ($revenue['total'] ?? 0) - $expenseTotal;
+        $balance = $totalRevenue - $expenseTotal;
 
         Response::success([
             'year' => $year,
             'month' => $month,
             'kpis' => [
                 'revenue' => [
-                    'total' => $revenue['total'] ?? 0,
-                    'session_count' => $revenue['count'] ?? 0
+                    'total' => $totalRevenue,
+                    'session_count' => $revenue['count'] ?? 0,
+                    'sessions' => $sessionRevenue,
+                    'prepaid_packs' => $packRevenue,
+                    'prepaid_count' => $prepaidRevenue['count'] ?? 0
                 ],
                 'expenses' => [
                     'total' => $expenseTotal,
@@ -64,23 +75,35 @@ class DashboardController
         $yearlyRevenue = SenseaRevenueService::getYearlyRevenue($year);
         $revenueByMonth = $yearlyRevenue['months'] ?? [];
 
+        // Get prepaid packs revenue for all months
+        $yearlyPrepaid = SenseaRevenueService::getPrepaidYearlyRevenue($year);
+        $prepaidByMonth = $yearlyPrepaid['months'] ?? [];
+
         // Build monthly data
         $months = [];
         $totalRevenue = 0;
         $totalExpenses = 0;
+        $totalSessionRevenue = 0;
+        $totalPrepaidRevenue = 0;
 
         for ($m = 1; $m <= 12; $m++) {
-            $revenue = $revenueByMonth[$m]['total'] ?? 0;
+            $sessionRevenue = $revenueByMonth[$m]['total'] ?? 0;
+            $prepaidRevenue = $prepaidByMonth[$m]['total'] ?? 0;
+            $revenue = $sessionRevenue + $prepaidRevenue;
             $expenses = $expenseTotals[$m] ?? 0;
 
             $months[$m] = [
                 'month' => $m,
                 'revenue' => $revenue,
+                'sessions' => $sessionRevenue,
+                'prepaid_packs' => $prepaidRevenue,
                 'expenses' => $expenses,
                 'balance' => $revenue - $expenses
             ];
 
             $totalRevenue += $revenue;
+            $totalSessionRevenue += $sessionRevenue;
+            $totalPrepaidRevenue += $prepaidRevenue;
             $totalExpenses += $expenses;
         }
 
@@ -89,6 +112,8 @@ class DashboardController
             'months' => $months,
             'totals' => [
                 'revenue' => $totalRevenue,
+                'sessions' => $totalSessionRevenue,
+                'prepaid_packs' => $totalPrepaidRevenue,
                 'expenses' => $totalExpenses,
                 'balance' => $totalRevenue - $totalExpenses
             ]
@@ -119,24 +144,38 @@ class DashboardController
         // Get daily revenue from Sensea
         $dailyRevenue = SenseaRevenueService::getDailyRevenue($year, $month);
 
+        // Get daily prepaid revenue from Sensea
+        $dailyPrepaid = SenseaRevenueService::getPrepaidDailyRevenue($year, $month);
+
         // Get number of days in month
         $daysInMonth = cal_days_in_month(CAL_GREGORIAN, $month, $year);
 
         // Build daily data
         $days = [];
+        $totalSessionRevenue = 0;
+        $totalPrepaidRevenue = 0;
+
         for ($day = 1; $day <= $daysInMonth; $day++) {
-            $revenue = $dailyRevenue[$day] ?? 0;
+            $sessionRevenue = $dailyRevenue[$day] ?? 0;
+            $prepaidRevenue = $dailyPrepaid[$day] ?? 0;
+            $revenue = $sessionRevenue + $prepaidRevenue;
             $expenses = $dailyExpenses[$day] ?? 0;
+
             $days[$day] = [
                 'day' => $day,
                 'revenue' => $revenue,
+                'sessions' => $sessionRevenue,
+                'prepaid_packs' => $prepaidRevenue,
                 'expenses' => $expenses,
                 'balance' => $revenue - $expenses
             ];
+
+            $totalSessionRevenue += $sessionRevenue;
+            $totalPrepaidRevenue += $prepaidRevenue;
         }
 
         // Calculate totals
-        $totalRevenue = array_sum(array_column($days, 'revenue'));
+        $totalRevenue = $totalSessionRevenue + $totalPrepaidRevenue;
         $totalExpenses = array_sum(array_column($days, 'expenses'));
 
         Response::success([
@@ -145,6 +184,8 @@ class DashboardController
             'days' => $days,
             'totals' => [
                 'revenue' => $totalRevenue,
+                'sessions' => $totalSessionRevenue,
+                'prepaid_packs' => $totalPrepaidRevenue,
                 'expenses' => $totalExpenses,
                 'balance' => $totalRevenue - $totalExpenses
             ]

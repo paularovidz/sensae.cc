@@ -58,8 +58,37 @@
           </dd>
         </div>
 
+        <!-- Price with prepaid credit -->
+        <div v-if="bookingStore.willUsePrepaid" class="pt-3 border-t border-gray-600/50 space-y-1">
+          <div class="flex justify-between items-center">
+            <dt class="text-xs text-gray-500">Prix initial</dt>
+            <dd class="text-sm text-gray-400 line-through">
+              {{ formatPrice(bookingStore.originalPrice) }} &euro;
+            </dd>
+          </div>
+          <div class="flex justify-between items-center">
+            <dt class="text-xs text-teal-400 flex items-center">
+              <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              Séance prépayée
+            </dt>
+            <dd class="text-sm text-teal-400">
+              -{{ formatPrice(bookingStore.originalPrice) }} &euro;
+            </dd>
+          </div>
+          <div class="flex justify-between items-center">
+            <dt class="text-xs text-gray-400 font-medium">Total</dt>
+            <dd class="text-lg font-bold text-teal-400">
+              0,00 &euro;
+            </dd>
+          </div>
+          <p class="text-xs text-teal-400/70 mt-1">
+            -1 séance, encore {{ bookingStore.prepaidBalance.total_credits - 1 }} restante{{ bookingStore.prepaidBalance.total_credits > 2 ? 's' : '' }}
+          </p>
+        </div>
         <!-- Price with promo -->
-        <div v-if="bookingStore.hasPromoApplied" class="pt-3 border-t border-gray-600/50 space-y-1">
+        <div v-else-if="bookingStore.hasPromoApplied" class="pt-3 border-t border-gray-600/50 space-y-1">
           <div class="flex justify-between items-center">
             <dt class="text-xs text-gray-500">Prix initial</dt>
             <dd class="text-sm text-gray-400 line-through">

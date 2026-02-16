@@ -6,6 +6,7 @@ namespace App\Controllers;
 
 use App\Config\Database;
 use App\Middleware\ApiKeyMiddleware;
+use App\Models\PrepaidPack;
 use App\Utils\Response;
 
 /**
@@ -22,6 +23,9 @@ class OpsRevenueController
     /**
      * Get revenue for a specific month
      * GET /ops/revenue?year=2024&month=1
+     *
+     * Note: Excludes prepaid sessions (prepaid_pack_id IS NOT NULL) as their revenue
+     * is already counted when the pack was purchased
      */
     public function getMonthlyRevenue(): void
     {
@@ -30,13 +34,14 @@ class OpsRevenueController
 
         $db = Database::getInstance();
 
-        // Get total revenue from completed sessions
+        // Get total revenue from completed sessions (excluding prepaid sessions)
         $stmt = $db->prepare("
             SELECT
-                COALESCE(SUM(CASE WHEN is_free_session = 0 AND price IS NOT NULL THEN price ELSE 0 END), 0) as total,
+                COALESCE(SUM(CASE WHEN is_free_session = 0 AND price IS NOT NULL AND prepaid_pack_id IS NULL THEN price ELSE 0 END), 0) as total,
                 COUNT(*) as count,
                 SUM(CASE WHEN is_paid = 1 THEN 1 ELSE 0 END) as paid_count,
-                COALESCE(SUM(CASE WHEN is_paid = 1 AND is_free_session = 0 AND price IS NOT NULL THEN price ELSE 0 END), 0) as paid_total
+                COALESCE(SUM(CASE WHEN is_paid = 1 AND is_free_session = 0 AND price IS NOT NULL AND prepaid_pack_id IS NULL THEN price ELSE 0 END), 0) as paid_total,
+                SUM(CASE WHEN prepaid_pack_id IS NOT NULL THEN 1 ELSE 0 END) as prepaid_count
             FROM sessions
             WHERE YEAR(session_date) = :year
             AND MONTH(session_date) = :month
@@ -51,13 +56,16 @@ class OpsRevenueController
             'total' => (float) $result['total'],
             'count' => (int) $result['count'],
             'paid_count' => (int) $result['paid_count'],
-            'paid_total' => (float) $result['paid_total']
+            'paid_total' => (float) $result['paid_total'],
+            'prepaid_count' => (int) $result['prepaid_count']
         ]);
     }
 
     /**
      * Get revenue for entire year by month
      * GET /ops/revenue/year/2024
+     *
+     * Note: Excludes prepaid sessions
      */
     public function getYearlyRevenue(string $year): void
     {
@@ -67,10 +75,11 @@ class OpsRevenueController
         $stmt = $db->prepare("
             SELECT
                 MONTH(session_date) as month,
-                COALESCE(SUM(CASE WHEN is_free_session = 0 AND price IS NOT NULL THEN price ELSE 0 END), 0) as total,
+                COALESCE(SUM(CASE WHEN is_free_session = 0 AND price IS NOT NULL AND prepaid_pack_id IS NULL THEN price ELSE 0 END), 0) as total,
                 COUNT(*) as count,
                 SUM(CASE WHEN is_paid = 1 THEN 1 ELSE 0 END) as paid_count,
-                COALESCE(SUM(CASE WHEN is_paid = 1 AND is_free_session = 0 AND price IS NOT NULL THEN price ELSE 0 END), 0) as paid_total
+                COALESCE(SUM(CASE WHEN is_paid = 1 AND is_free_session = 0 AND price IS NOT NULL AND prepaid_pack_id IS NULL THEN price ELSE 0 END), 0) as paid_total,
+                SUM(CASE WHEN prepaid_pack_id IS NOT NULL THEN 1 ELSE 0 END) as prepaid_count
             FROM sessions
             WHERE YEAR(session_date) = :year
             AND status IN ('completed', 'confirmed')
@@ -85,7 +94,8 @@ class OpsRevenueController
                 'total' => (float) $row['total'],
                 'count' => (int) $row['count'],
                 'paid_count' => (int) $row['paid_count'],
-                'paid_total' => (float) $row['paid_total']
+                'paid_total' => (float) $row['paid_total'],
+                'prepaid_count' => (int) $row['prepaid_count']
             ];
         }
 
@@ -96,7 +106,8 @@ class OpsRevenueController
                     'total' => 0,
                     'count' => 0,
                     'paid_count' => 0,
-                    'paid_total' => 0
+                    'paid_total' => 0,
+                    'prepaid_count' => 0
                 ];
             }
         }
@@ -112,6 +123,8 @@ class OpsRevenueController
     /**
      * Get daily revenue for a month
      * GET /ops/revenue/daily?year=2024&month=1
+     *
+     * Note: Excludes prepaid sessions
      */
     public function getDailyRevenue(): void
     {
@@ -123,7 +136,7 @@ class OpsRevenueController
         $stmt = $db->prepare("
             SELECT
                 DAY(session_date) as day,
-                COALESCE(SUM(CASE WHEN is_free_session = 0 AND price IS NOT NULL THEN price ELSE 0 END), 0) as total,
+                COALESCE(SUM(CASE WHEN is_free_session = 0 AND price IS NOT NULL AND prepaid_pack_id IS NULL THEN price ELSE 0 END), 0) as total,
                 COUNT(*) as count
             FROM sessions
             WHERE YEAR(session_date) = :year
@@ -180,5 +193,58 @@ class OpsRevenueController
                 'no_show' => (int) $result['no_show']
             ]
         ]);
+    }
+
+    // =========================================================================
+    // PREPAID PACKS REVENUE
+    // =========================================================================
+
+    /**
+     * Get prepaid pack revenue for a month
+     * GET /ops/prepaid-revenue?year=2024&month=1
+     */
+    public function getPrepaidRevenue(): void
+    {
+        $year = (int) ($_GET['year'] ?? date('Y'));
+        $month = (int) ($_GET['month'] ?? date('n'));
+
+        $revenue = PrepaidPack::getRevenue($year, $month);
+
+        Response::success([
+            'year' => $year,
+            'month' => $month,
+            'total' => $revenue['total'],
+            'count' => $revenue['count']
+        ]);
+    }
+
+    /**
+     * Get prepaid pack revenue by month for a year
+     * GET /ops/prepaid-revenue/year/2024
+     */
+    public function getPrepaidYearlyRevenue(string $year): void
+    {
+        $year = (int) $year;
+
+        $months = PrepaidPack::getRevenueByMonth($year);
+
+        Response::success([
+            'year' => $year,
+            'months' => $months
+        ]);
+    }
+
+    /**
+     * Get daily prepaid revenue for a month
+     * GET /ops/prepaid-revenue/daily?year=2024&month=1
+     */
+    public function getPrepaidDailyRevenue(): void
+    {
+        $year = (int) ($_GET['year'] ?? date('Y'));
+        $month = (int) ($_GET['month'] ?? date('n'));
+
+        $days = PrepaidPack::getDailyRevenue($year, $month);
+
+        Response::success($days);
     }
 }

@@ -6,6 +6,7 @@ namespace App\Controllers;
 
 use App\Models\User;
 use App\Models\Person;
+use App\Models\Session;
 use App\Models\LoyaltyCard;
 use App\Models\Setting;
 use App\Middleware\AuthMiddleware;
@@ -290,5 +291,23 @@ class UserController
         $loyaltyInfo = LoyaltyCard::getWithProgress($id, $sessionsRequired);
 
         Response::success($loyaltyInfo);
+    }
+
+    /**
+     * Récupère les sessions récentes d'un utilisateur (triées par date de réservation)
+     */
+    public function getRecentSessions(string $id): void
+    {
+        AuthMiddleware::requireAdmin();
+
+        $user = User::findById($id);
+        if (!$user) {
+            Response::notFound('Utilisateur non trouvé');
+        }
+
+        $limit = min(20, max(1, (int)($_GET['limit'] ?? 10)));
+        $sessions = Session::findRecentByUserId($id, $limit);
+
+        Response::success($sessions);
     }
 }

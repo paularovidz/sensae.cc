@@ -11,6 +11,7 @@ use App\Models\User;
 use App\Models\LoyaltyCard;
 use App\Models\Setting;
 use App\Models\PromoCode;
+use App\Models\PrepaidPack;
 use App\Services\AuditService;
 use App\Services\AvailabilityService;
 use App\Services\BookingMailService;
@@ -238,6 +239,10 @@ class BookingController
                 break;
 
             case Session::STATUS_CANCELLED:
+                // Rembourser la séance prépayée si utilisé
+                if (!empty($booking['prepaid_pack_id'])) {
+                    PrepaidPack::refundCredit($id);
+                }
                 Session::cancel($id);
                 $booking = Session::findById($id);
                 $mailService = new BookingMailService();
@@ -293,6 +298,11 @@ class BookingController
         // Ne pas permettre la suppression si une session est liée
         if (!empty($booking['session_id'])) {
             Response::error('Impossible de supprimer une réservation liée à une séance', 400);
+        }
+
+        // Rembourser la séance prépayée si utilisé
+        if (!empty($booking['prepaid_pack_id'])) {
+            PrepaidPack::refundCredit($id);
         }
 
         // Envoyer un email d'annulation si la réservation n'était pas déjà annulée
@@ -439,6 +449,17 @@ class BookingController
         // Marquer la session comme complétée
         Session::complete($id);
 
+        // Vérifier si la séance prépayée a déjà été débité (normalement fait à la création)
+        // Si ce n'est pas le cas (anciennes sessions), le débiter maintenant
+        $prepaidUsed = false;
+        if (!empty($session['prepaid_pack_id'])) {
+            if (!PrepaidPack::hasUsedCredit($id)) {
+                $prepaidUsed = PrepaidPack::useCredit($session['prepaid_pack_id'], $id);
+            } else {
+                $prepaidUsed = true; // Déjà débité à la création
+            }
+        }
+
         // Gérer la carte de fidélité
         $loyaltyPromoGenerated = null;
 
@@ -448,8 +469,11 @@ class BookingController
             $isFreeSession = PromoCode::isFreeSession($session['promo_code_id']);
         }
 
-        // Incrémenter la fidélité seulement si ce n'est PAS une séance gratuite
-        if (!$isFreeSession && !empty($session['user_id'])) {
+        // Séance prépayée = pas de fidélité (déjà comptabilisée lors du paiement du pack)
+        $isPrepaid = !empty($session['prepaid_pack_id']);
+
+        // Incrémenter la fidélité seulement si ce n'est PAS une séance gratuite et PAS une séance prépayée
+        if (!$isFreeSession && !$isPrepaid && !empty($session['user_id'])) {
             $user = User::findById($session['user_id']);
 
             if ($user && User::isPersonalClient($session['user_id'])) {
@@ -495,6 +519,10 @@ class BookingController
 
         if ($loyaltyPromoGenerated) {
             $response['loyalty_promo_generated'] = $loyaltyPromoGenerated;
+        }
+
+        if ($prepaidUsed) {
+            $response['prepaid_credit_used'] = true;
         }
 
         Response::success($response, 'Séance marquée comme effectuée');

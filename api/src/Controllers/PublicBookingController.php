@@ -9,6 +9,7 @@ use App\Models\Setting;
 use App\Models\User;
 use App\Models\Person;
 use App\Models\PromoCode;
+use App\Models\PrepaidPack;
 use App\Services\AvailabilityService;
 use App\Services\BookingMailService;
 use App\Services\CaptchaService;
@@ -105,7 +106,7 @@ class PublicBookingController
     }
 
     /**
-     * GET /public/availability/dates?year=2024&month=1&type=regular&client_type=personal
+     * GET /public/availability/dates?year=2024&month=1&type=regular&client_type=personal&email=xxx
      * Récupère les dates disponibles pour un mois
      */
     public function getAvailableDates(): void
@@ -114,6 +115,7 @@ class PublicBookingController
         $month = (int) ($_GET['month'] ?? date('n'));
         $type = $_GET['type'] ?? AvailabilityService::TYPE_REGULAR;
         $clientType = $_GET['client_type'] ?? User::CLIENT_TYPE_PERSONAL;
+        $email = isset($_GET['email']) ? strtolower(trim($_GET['email'])) : null;
 
         // Validation
         if ($month < 1 || $month > 12) {
@@ -144,10 +146,23 @@ class PublicBookingController
             return;
         }
 
-        // Limiter selon le type de client
-        $maxAdvanceDays = $clientType === User::CLIENT_TYPE_ASSOCIATION
-            ? Setting::getInteger('booking_max_advance_days_association', 90)
-            : Setting::getInteger('booking_max_advance_days', 60);
+        // Check if email belongs to an admin - admins get unlimited booking
+        $isAdmin = false;
+        if ($email && filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $user = User::findByEmail($email);
+            if ($user && $user['role'] === 'admin') {
+                $isAdmin = true;
+            }
+        }
+
+        // Limiter selon le type de client (admins: 365 jours)
+        if ($isAdmin) {
+            $maxAdvanceDays = 365;
+        } elseif ($clientType === User::CLIENT_TYPE_ASSOCIATION) {
+            $maxAdvanceDays = Setting::getInteger('booking_max_advance_days_association', 90);
+        } else {
+            $maxAdvanceDays = Setting::getInteger('booking_max_advance_days', 60);
+        }
 
         $maxDate = (clone $now)->modify("+{$maxAdvanceDays} days");
         $requestedDate = new \DateTime("$year-$month-01");
@@ -305,7 +320,8 @@ class PublicBookingController
                 'client_type_label' => User::CLIENT_TYPE_LABELS[$user['client_type'] ?? User::CLIENT_TYPE_PERSONAL] ?? 'Particulier',
                 'company_name' => $user['company_name'] ?? null,
                 'has_company' => !empty($user['company_name']),
-                'is_active' => (bool) ($user['is_active'] ?? true)
+                'is_active' => (bool) ($user['is_active'] ?? true),
+                'is_admin' => ($user['role'] ?? 'member') === 'admin'
             ]
         ]);
     }
@@ -406,19 +422,23 @@ class PublicBookingController
         $clientEmail = strtolower(trim($data['client_email']));
         $clientIp = $_SERVER['REMOTE_ADDR'] ?? null;
 
-        // Vérifier si l'utilisateur est une association (limites différentes)
+        // Vérifier si l'utilisateur est une association (limites différentes) ou un admin (pas de limite)
         $existingUser = User::findByEmail($clientEmail);
         $isAssociation = $existingUser && ($existingUser['client_type'] ?? User::CLIENT_TYPE_PERSONAL) === User::CLIENT_TYPE_ASSOCIATION;
+        $isAdmin = $existingUser && ($existingUser['role'] ?? 'member') === 'admin';
 
-        // Limite IP différente selon le type de client
-        $maxPerIp = $isAssociation
-            ? Setting::getInteger('booking_max_per_ip_association', 20)
-            : Setting::getInteger('booking_max_per_ip', 4);
+        // Les admins n'ont pas de limite de réservation
+        if (!$isAdmin) {
+            // Limite IP différente selon le type de client
+            $maxPerIp = $isAssociation
+                ? Setting::getInteger('booking_max_per_ip_association', 20)
+                : Setting::getInteger('booking_max_per_ip', 4);
 
-        if ($clientIp) {
-            $bookingsByIp = Session::countUpcomingByIp($clientIp);
-            if ($bookingsByIp >= $maxPerIp) {
-                Response::error("Vous avez atteint le nombre maximum de réservations à venir ({$maxPerIp}). Veuillez annuler une réservation existante ou patienter.", 429);
+            if ($clientIp) {
+                $bookingsByIp = Session::countUpcomingByIp($clientIp);
+                if ($bookingsByIp >= $maxPerIp) {
+                    Response::error("Vous avez atteint le nombre maximum de réservations à venir ({$maxPerIp}). Veuillez annuler une réservation existante ou patienter.", 429);
+                }
             }
         }
 
@@ -430,10 +450,10 @@ class PublicBookingController
             return;
         }
 
-        // Vérifier le délai max de réservation selon le type de client
-        $maxAdvanceDays = $isAssociation
+        // Vérifier le délai max de réservation selon le type de client (admins: 365 jours)
+        $maxAdvanceDays = $isAdmin ? 365 : ($isAssociation
             ? Setting::getInteger('booking_max_advance_days_association', 90)
-            : Setting::getInteger('booking_max_advance_days', 60);
+            : Setting::getInteger('booking_max_advance_days', 60));
 
         $maxDate = (new \DateTime())->modify("+{$maxAdvanceDays} days");
         if ($sessionDate > $maxDate) {
@@ -519,11 +539,13 @@ class PublicBookingController
             Person::assignToUser($personId, $userId);
         }
 
-        // Vérifier la limite de séances par personne (4 max en parallèle)
-        $maxPerPerson = Setting::getInteger('booking_max_per_person', 4);
-        $bookingsByPerson = Session::countUpcomingByPerson($personId);
-        if ($bookingsByPerson >= $maxPerPerson) {
-            Response::error("Cette personne a déjà {$maxPerPerson} séance(s) à venir. Veuillez annuler une réservation existante ou attendre qu'une séance soit passée.", 429);
+        // Vérifier la limite de séances par personne (4 max en parallèle) - pas de limite pour admins
+        if (!$isAdmin) {
+            $maxPerPerson = Setting::getInteger('booking_max_per_person', 4);
+            $bookingsByPerson = Session::countUpcomingByPerson($personId);
+            if ($bookingsByPerson >= $maxPerPerson) {
+                Response::error("Cette personne a déjà {$maxPerPerson} séance(s) à venir. Veuillez annuler une réservation existante ou attendre qu'une séance soit passée.", 429);
+            }
         }
 
         // Récupérer le prix de la séance selon le type de client
@@ -532,53 +554,113 @@ class PublicBookingController
         $promoCodeId = null;
         $discountAmount = null;
         $appliedPromo = null;
+        $prepaidPackId = null;
+        $usePrepaidCredit = false;
 
-        // Gestion du code promo
-        if (!empty($data['promo_code']) || !empty($data['promo_code_id'])) {
-            // Valider le code promo
-            if (!empty($data['promo_code'])) {
-                $validation = PromoCode::validate(
-                    $data['promo_code'],
+        // Priorité des réductions :
+        // 1. Code promo "séance gratuite" (free_session) - priorité absolue
+        // 2. Crédits prépayés (si le client veut les utiliser)
+        // 3. Autres codes promo (pourcentage, montant fixe)
+
+        // Étape 1: Vérifier si un code promo "séance gratuite" est applicable
+        $freeSessionPromo = null;
+        if (!empty($data['promo_code'])) {
+            $validation = PromoCode::validate(
+                $data['promo_code'],
+                $data['duration_type'],
+                $userId,
+                $clientType
+            );
+            if ($validation['valid'] && $validation['promo']['discount_type'] === PromoCode::DISCOUNT_TYPE_FREE_SESSION) {
+                $freeSessionPromo = $validation['promo'];
+            }
+        } elseif (!empty($data['promo_code_id'])) {
+            $promo = PromoCode::findById($data['promo_code_id']);
+            if ($promo && $promo['discount_type'] === PromoCode::DISCOUNT_TYPE_FREE_SESSION) {
+                $validation = PromoCode::validatePromo(
+                    $promo,
                     $data['duration_type'],
                     $userId,
                     $clientType
                 );
-            } else {
-                // Promo automatique passée par ID
-                $promo = PromoCode::findById($data['promo_code_id']);
-                if ($promo) {
-                    $validation = PromoCode::validatePromo(
-                        $promo,
+                if ($validation['valid']) {
+                    $freeSessionPromo = $promo;
+                }
+            }
+        } else {
+            // Vérifier s'il y a une promo automatique "séance gratuite"
+            $autoPromo = PromoCode::findApplicableAutomatic($data['duration_type'], $userId, $clientType);
+            if ($autoPromo && $autoPromo['discount_type'] === PromoCode::DISCOUNT_TYPE_FREE_SESSION) {
+                $freeSessionPromo = $autoPromo;
+            }
+        }
+
+        // Si code promo "séance gratuite" trouvé, l'appliquer en priorité
+        if ($freeSessionPromo) {
+            $appliedPromo = $freeSessionPromo;
+            $promoCodeId = $freeSessionPromo['id'];
+            $discount = PromoCode::calculateDiscount($freeSessionPromo, $originalPrice);
+            $price = $discount['final_price'];
+            $discountAmount = $discount['discount_amount'];
+        }
+        // Étape 2: Sinon, vérifier les crédits prépayés
+        elseif (!empty($data['use_prepaid']) && $data['use_prepaid'] === true) {
+            $prepaidPack = PrepaidPack::getBestPackForSession($userId, $data['duration_type']);
+            if ($prepaidPack) {
+                // Client veut utiliser une séance prépayée
+                $usePrepaidCredit = true;
+                $prepaidPackId = $prepaidPack['id'];
+                $price = 0; // Séance prépayée = gratuite (déjà payée via le pack)
+            }
+        }
+        // Étape 3: Sinon, vérifier les autres codes promo
+        elseif (!$usePrepaidCredit) {
+            if (!empty($data['promo_code']) || !empty($data['promo_code_id'])) {
+                // Valider le code promo
+                if (!empty($data['promo_code'])) {
+                    $validation = PromoCode::validate(
+                        $data['promo_code'],
                         $data['duration_type'],
                         $userId,
                         $clientType
                     );
                 } else {
-                    $validation = ['valid' => false, 'error' => 'Code promo invalide'];
+                    // Promo automatique passée par ID
+                    $promo = PromoCode::findById($data['promo_code_id']);
+                    if ($promo) {
+                        $validation = PromoCode::validatePromo(
+                            $promo,
+                            $data['duration_type'],
+                            $userId,
+                            $clientType
+                        );
+                    } else {
+                        $validation = ['valid' => false, 'error' => 'Code promo invalide'];
+                    }
                 }
-            }
 
-            if ($validation['valid']) {
-                $appliedPromo = $validation['promo'];
-                $promoCodeId = $appliedPromo['id'];
+                if ($validation['valid']) {
+                    $appliedPromo = $validation['promo'];
+                    $promoCodeId = $appliedPromo['id'];
 
-                // Calculer la remise
-                $discount = PromoCode::calculateDiscount($appliedPromo, $originalPrice);
-                $price = $discount['final_price'];
-                $discountAmount = $discount['discount_amount'];
-            }
-            // Si le code n'est pas valide, on continue sans remise (pas d'erreur)
-        } else {
-            // Vérifier s'il y a une promo automatique applicable
-            $autoPromo = PromoCode::findApplicableAutomatic($data['duration_type'], $userId, $clientType);
-            if ($autoPromo) {
-                $appliedPromo = $autoPromo;
-                $promoCodeId = $autoPromo['id'];
+                    // Calculer la remise
+                    $discount = PromoCode::calculateDiscount($appliedPromo, $originalPrice);
+                    $price = $discount['final_price'];
+                    $discountAmount = $discount['discount_amount'];
+                }
+                // Si le code n'est pas valide, on continue sans remise (pas d'erreur)
+            } else {
+                // Vérifier s'il y a une promo automatique applicable (hors free_session déjà traitée)
+                $autoPromo = PromoCode::findApplicableAutomatic($data['duration_type'], $userId, $clientType);
+                if ($autoPromo && $autoPromo['discount_type'] !== PromoCode::DISCOUNT_TYPE_FREE_SESSION) {
+                    $appliedPromo = $autoPromo;
+                    $promoCodeId = $autoPromo['id'];
 
-                // Calculer la remise
-                $discount = PromoCode::calculateDiscount($autoPromo, $originalPrice);
-                $price = $discount['final_price'];
-                $discountAmount = $discount['discount_amount'];
+                    // Calculer la remise
+                    $discount = PromoCode::calculateDiscount($autoPromo, $originalPrice);
+                    $price = $discount['final_price'];
+                    $discountAmount = $discount['discount_amount'];
+                }
             }
         }
 
@@ -595,7 +677,8 @@ class PublicBookingController
             'user_agent' => substr($_SERVER['HTTP_USER_AGENT'] ?? '', 0, 500),
             'promo_code_id' => $promoCodeId,
             'original_price' => $promoCodeId ? $originalPrice : null,
-            'discount_amount' => $discountAmount
+            'discount_amount' => $discountAmount,
+            'prepaid_pack_id' => $prepaidPackId
         ];
 
         // Vérifier si la validation email est requise
@@ -615,6 +698,12 @@ class PublicBookingController
                 $userId,
                 $clientIp
             );
+        }
+
+        // Enregistrer l'utilisation du séance prépayée immédiatement
+        // Le crédit est réservé dès la création pour éviter les sur-utilisations
+        if ($prepaidPackId) {
+            PrepaidPack::useCredit($prepaidPackId, $sessionId);
         }
 
         $booking = Session::findById($sessionId);
@@ -648,9 +737,10 @@ class PublicBookingController
             'requires_confirmation' => $emailConfirmationRequired,
             'message' => $message,
             'promo_applied' => $promoCodeId !== null,
-            'pricing' => $promoCodeId ? [
+            'prepaid_used' => $usePrepaidCredit,
+            'pricing' => ($promoCodeId || $usePrepaidCredit) ? [
                 'original_price' => $originalPrice,
-                'discount_amount' => $discountAmount,
+                'discount_amount' => $usePrepaidCredit ? $originalPrice : $discountAmount,
                 'final_price' => $price
             ] : null
         ], 'Réservation enregistrée', 201);
@@ -736,6 +826,11 @@ class PublicBookingController
 
         if ($booking['status'] === Session::STATUS_COMPLETED) {
             Response::error('Cette séance a déjà eu lieu', 400);
+        }
+
+        // Rembourser la séance prépayée si utilisé
+        if (!empty($booking['prepaid_pack_id'])) {
+            PrepaidPack::refundCredit($booking['id']);
         }
 
         // Annuler

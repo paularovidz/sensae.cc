@@ -136,12 +136,17 @@ class Session
                    pc.code as promo_code,
                    pc.name as promo_code_name,
                    pc.discount_type as promo_discount_type,
-                   pc.discount_value as promo_discount_value
+                   pc.discount_value as promo_discount_value,
+                   pp.pack_type as prepaid_pack_type,
+                   pp.duration_type as prepaid_duration_type,
+                   pp.sessions_total as prepaid_sessions_total,
+                   pp.sessions_used as prepaid_sessions_used
             FROM sessions s
             INNER JOIN persons p ON s.person_id = p.id
             LEFT JOIN users u ON s.created_by = u.id
             LEFT JOIN users client ON s.user_id = client.id
             LEFT JOIN promo_codes pc ON s.promo_code_id = pc.id
+            LEFT JOIN prepaid_packs pp ON s.prepaid_pack_id = pp.id
             WHERE s.id = :id
         ');
         $stmt->execute(['id' => $id]);
@@ -163,6 +168,21 @@ class Session
                         'discount_type' => $session['promo_discount_type'],
                         'discount_value' => $session['promo_discount_value']
                     ])
+                ];
+            }
+
+            // Format prepaid pack info
+            if (!empty($session['prepaid_pack_id'])) {
+                $sessionsTotal = (int)($session['prepaid_sessions_total'] ?? 0);
+                $sessionsUsed = (int)($session['prepaid_sessions_used'] ?? 0);
+                $session['prepaid_pack'] = [
+                    'id' => $session['prepaid_pack_id'],
+                    'pack_type' => $session['prepaid_pack_type'],
+                    'duration_type' => $session['prepaid_duration_type'],
+                    'label' => PrepaidPack::LABELS['pack_type'][$session['prepaid_pack_type']] ?? $session['prepaid_pack_type'],
+                    'sessions_total' => $sessionsTotal,
+                    'sessions_used' => $sessionsUsed,
+                    'sessions_remaining' => $sessionsTotal - $sessionsUsed
                 ];
             }
         }
@@ -618,14 +638,16 @@ class Session
                 price, status, confirmation_token,
                 gdpr_consent, gdpr_consent_at,
                 ip_address, user_agent,
-                promo_code_id, original_price, discount_amount
+                promo_code_id, original_price, discount_amount,
+                prepaid_pack_id
             ) VALUES (
                 :id, :user_id, :person_id, :created_by, :session_date,
                 :duration_minutes, :duration_type, :duration_blocked_minutes,
                 :price, :status, :confirmation_token,
                 :gdpr_consent, :gdpr_consent_at,
                 :ip_address, :user_agent,
-                :promo_code_id, :original_price, :discount_amount
+                :promo_code_id, :original_price, :discount_amount,
+                :prepaid_pack_id
             )
         ');
 
@@ -647,7 +669,8 @@ class Session
             'user_agent' => $data['user_agent'] ?? null,
             'promo_code_id' => $data['promo_code_id'] ?? null,
             'original_price' => $data['original_price'] ?? null,
-            'discount_amount' => $data['discount_amount'] ?? null
+            'discount_amount' => $data['discount_amount'] ?? null,
+            'prepaid_pack_id' => $data['prepaid_pack_id'] ?? null
         ]);
 
         return $id;
@@ -677,7 +700,7 @@ class Session
                 sessions_per_month, behavior_start, proposal_origin, attitude_start,
                 position, communication, session_end, behavior_end, wants_to_return,
                 professional_notes, person_expression, next_session_proposals,
-                is_invoiced, is_paid, is_free_session
+                is_invoiced, is_paid, is_free_session, prepaid_pack_id
             ) VALUES (
                 :id, :user_id, :person_id, :created_by, :session_date,
                 :duration_minutes, :duration_type, :duration_blocked_minutes, :price,
@@ -685,7 +708,7 @@ class Session
                 :sessions_per_month, :behavior_start, :proposal_origin, :attitude_start,
                 :position, :communication, :session_end, :behavior_end, :wants_to_return,
                 :professional_notes, :person_expression, :next_session_proposals,
-                :is_invoiced, :is_paid, :is_free_session
+                :is_invoiced, :is_paid, :is_free_session, :prepaid_pack_id
             )
         ');
 
@@ -727,7 +750,8 @@ class Session
             'next_session_proposals' => Encryption::encrypt($data['next_session_proposals'] ?? null),
             'is_invoiced' => ($data['is_invoiced'] ?? false) ? 1 : 0,
             'is_paid' => ($data['is_paid'] ?? false) ? 1 : 0,
-            'is_free_session' => ($data['is_free_session'] ?? false) ? 1 : 0
+            'is_free_session' => ($data['is_free_session'] ?? false) ? 1 : 0,
+            'prepaid_pack_id' => $data['prepaid_pack_id'] ?? null
         ]);
 
         if (!empty($data['proposals'])) {
@@ -756,7 +780,8 @@ class Session
             'professional_notes', 'person_expression', 'next_session_proposals',
             'is_invoiced', 'is_paid', 'is_free_session',
             'reminder_sms_sent_at', 'reminder_email_sent_at',
-            'promo_code_id', 'original_price', 'discount_amount'
+            'promo_code_id', 'original_price', 'discount_amount',
+            'prepaid_pack_id'
         ];
 
         foreach ($allowedFields as $field) {
@@ -1279,6 +1304,37 @@ class Session
             'communication_distribution' => $commCounts,
             'sensory_appreciation' => $sensoryStats
         ];
+    }
+
+    /**
+     * Récupère les sessions récentes d'un utilisateur, triées par date de création (réservation)
+     */
+    public static function findRecentByUserId(string $userId, int $limit = 10): array
+    {
+        $db = Database::getInstance();
+
+        $stmt = $db->prepare("
+            SELECT s.*,
+                   s.duration_minutes as duration_display_minutes,
+                   p.first_name as person_first_name,
+                   p.last_name as person_last_name,
+                   p.birth_date as person_birth_date
+            FROM sessions s
+            INNER JOIN persons p ON s.person_id = p.id
+            WHERE s.user_id = :user_id
+            ORDER BY s.created_at DESC
+            LIMIT :limit
+        ");
+        $stmt->bindValue(':user_id', $userId);
+        $stmt->bindValue(':limit', $limit, \PDO::PARAM_INT);
+        $stmt->execute();
+
+        $sessions = $stmt->fetchAll();
+        foreach ($sessions as &$session) {
+            $session = self::decryptFields($session);
+        }
+
+        return $sessions;
     }
 
     /**

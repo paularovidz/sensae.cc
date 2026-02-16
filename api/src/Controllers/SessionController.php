@@ -11,6 +11,7 @@ use App\Models\User;
 use App\Models\LoyaltyCard;
 use App\Models\Setting;
 use App\Models\PromoCode;
+use App\Models\PrepaidPack;
 use App\Middleware\AuthMiddleware;
 use App\Services\AuditService;
 use App\Services\MailService;
@@ -199,6 +200,12 @@ class SessionController
         $sessionId = Session::create($data);
         $session = Session::findById($sessionId);
 
+        // Enregistrer l'utilisation du séance prépayée
+        $prepaidPackId = $data['prepaid_pack_id'] ?? null;
+        if ($prepaidPackId) {
+            PrepaidPack::useCredit($prepaidPackId, $sessionId);
+        }
+
         // Enregistrer l'utilisation du code promo
         if ($promoCodeId && $appliedPromo && $originalPrice !== null) {
             PromoCode::recordUsage(
@@ -362,8 +369,32 @@ class SessionController
         $oldPromoCodeId = $session['promo_code_id'] ?? null;
         $promoCodeChanged = array_key_exists('promo_code_id', $data) && $newPromoCodeId !== $oldPromoCodeId;
 
+        // Gérer le pack prépayé si modifié
+        $newPrepaidPackId = array_key_exists('prepaid_pack_id', $data) ? $data['prepaid_pack_id'] : ($session['prepaid_pack_id'] ?? null);
+        $oldPrepaidPackId = $session['prepaid_pack_id'] ?? null;
+        $prepaidPackChanged = array_key_exists('prepaid_pack_id', $data) && $newPrepaidPackId !== $oldPrepaidPackId;
+
         Session::update($id, $data);
         $updatedSession = Session::findById($id);
+
+        // Si le pack prépayé a changé, gérer les crédits
+        if ($prepaidPackChanged) {
+            // Rembourser l'ancien crédit si existant
+            if ($oldPrepaidPackId) {
+                PrepaidPack::refundCredit($id);
+            }
+
+            // Utiliser un nouveau crédit si un pack est assigné
+            if ($newPrepaidPackId) {
+                PrepaidPack::useCredit($newPrepaidPackId, $id);
+                // Mettre le prix à 0 car payé via séance prépayée
+                Session::update($id, ['price' => 0]);
+                $updatedSession = Session::findById($id);
+            } else {
+                // Pack retiré : restaurer le prix normal si nécessaire
+                // Le prix sera géré par le frontend
+            }
+        }
 
         // Si le code promo a changé, gérer les usages
         if ($promoCodeChanged) {
@@ -426,6 +457,11 @@ class SessionController
         // Check access
         if (!Session::canAccess($id, $currentUser['id'], $isAdmin)) {
             Response::forbidden('Accès non autorisé');
+        }
+
+        // Rembourser la séance prépayée si utilisé
+        if (!empty($session['prepaid_pack_id'])) {
+            PrepaidPack::refundCredit($id);
         }
 
         Session::delete($id);

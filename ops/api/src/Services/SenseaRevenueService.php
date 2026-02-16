@@ -112,6 +112,65 @@ class SenseaRevenueService
     }
 
     /**
+     * Get prepaid packs revenue for a specific month
+     */
+    public static function getPrepaidMonthlyRevenue(int $year, int $month): array
+    {
+        try {
+            $response = self::getClient()->get('ops/prepaid-revenue', [
+                'query' => ['year' => $year, 'month' => $month]
+            ]);
+
+            $data = json_decode($response->getBody()->getContents(), true);
+            return $data['data'] ?? [
+                'total' => 0,
+                'count' => 0
+            ];
+        } catch (GuzzleException $e) {
+            error_log('SenseaRevenueService prepaid error: ' . $e->getMessage());
+            return [
+                'total' => 0,
+                'count' => 0,
+                'error' => $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * Get prepaid packs revenue for entire year
+     */
+    public static function getPrepaidYearlyRevenue(int $year): array
+    {
+        try {
+            $response = self::getClient()->get("ops/prepaid-revenue/year/{$year}");
+
+            $data = json_decode($response->getBody()->getContents(), true);
+            return $data['data'] ?? [];
+        } catch (GuzzleException $e) {
+            error_log('SenseaRevenueService prepaid yearly error: ' . $e->getMessage());
+            return ['error' => $e->getMessage()];
+        }
+    }
+
+    /**
+     * Get daily prepaid revenue for a month
+     */
+    public static function getPrepaidDailyRevenue(int $year, int $month): array
+    {
+        try {
+            $response = self::getClient()->get('ops/prepaid-revenue/daily', [
+                'query' => ['year' => $year, 'month' => $month]
+            ]);
+
+            $data = json_decode($response->getBody()->getContents(), true);
+            return $data['data'] ?? [];
+        } catch (GuzzleException $e) {
+            error_log('SenseaRevenueService getPrepaidDailyRevenue error: ' . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
      * Check if Sensea API is available
      */
     public static function ping(): bool

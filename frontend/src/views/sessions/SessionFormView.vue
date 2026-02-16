@@ -4,7 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useSessionsStore } from '@/stores/sessions'
 import { usePersonsStore } from '@/stores/persons'
 import { useProposalsStore } from '@/stores/proposals'
-import { promoCodesApi } from '@/services/api'
+import { promoCodesApi, prepaidPacksApi } from '@/services/api'
 import LoadingSpinner from '@/components/ui/LoadingSpinner.vue'
 import AlertMessage from '@/components/ui/AlertMessage.vue'
 
@@ -40,6 +40,11 @@ const quickPromoValue = ref(null)
 const quickPromoCreating = ref(false)
 const quickPromoError = ref('')
 
+// Prepaid packs
+const availablePrepaidPacks = ref([])
+const selectedPrepaidPack = ref(null)
+const prepaidPackLabels = ref({})
+
 // Get current date/time in local timezone for datetime-local input
 function getLocalDateTime() {
   const now = new Date()
@@ -66,6 +71,7 @@ const form = ref({
   proposals: [],
   price: null,
   promo_code_id: null,
+  prepaid_pack_id: null,
   is_invoiced: false,
   is_paid: false,
 })
@@ -188,6 +194,7 @@ onMounted(async () => {
         })),
         price: session.price ?? null,
         promo_code_id: session.promo_code_id || null,
+        prepaid_pack_id: session.prepaid_pack_id || null,
         is_invoiced: session.is_invoiced || false,
         is_paid: session.is_paid || false
       }
@@ -199,6 +206,16 @@ onMounted(async () => {
         if (session.original_price !== null && session.original_price !== undefined) {
           originalPrice.value = Number(session.original_price)
         }
+      }
+
+      // Charger le pack prépayé actuel si présent
+      if (session.prepaid_pack_id && session.prepaid_pack) {
+        selectedPrepaidPack.value = session.prepaid_pack
+      }
+
+      // Charger les packs prépayés disponibles pour cet utilisateur
+      if (sessionUserId.value) {
+        await fetchAvailablePrepaidPacks()
       }
     }
 
@@ -227,6 +244,42 @@ async function fetchAvailablePromoCodes() {
   } catch (e) {
     console.error('Error fetching promo codes:', e)
   }
+}
+
+async function fetchAvailablePrepaidPacks() {
+  if (!sessionUserId.value) return
+
+  try {
+    const response = await prepaidPacksApi.getByUser(sessionUserId.value)
+    const data = response.data.data || {}
+    prepaidPackLabels.value = data.labels || {}
+
+    // Filtrer pour n'avoir que les packs avec des crédits restants
+    const allPacks = data.packs || []
+    availablePrepaidPacks.value = allPacks.filter(pack => {
+      const remaining = pack.sessions_total - pack.sessions_used
+      return pack.is_active && remaining > 0 && !pack.is_expired
+    })
+  } catch (e) {
+    console.error('Error fetching prepaid packs:', e)
+  }
+}
+
+function selectPrepaidPack(pack) {
+  selectedPrepaidPack.value = pack
+  form.value.prepaid_pack_id = pack.id
+  form.value.price = 0 // Séance prépayée = 0€
+
+  // Désélectionner le code promo si un pack est sélectionné
+  if (selectedPromoCode.value) {
+    clearPromoCode()
+  }
+}
+
+function clearPrepaidPack() {
+  selectedPrepaidPack.value = null
+  form.value.prepaid_pack_id = null
+  // Le prix sera remis à la valeur normale par l'utilisateur
 }
 
 const showProposalDropdown = ref(false)
@@ -328,6 +381,11 @@ function calculateDiscountedPrice(promo, price) {
 }
 
 function selectPromoCode(promo) {
+  // Désélectionner le pack prépayé si un code promo est sélectionné
+  if (selectedPrepaidPack.value) {
+    clearPrepaidPack()
+  }
+
   // Sauvegarder le prix original si pas encore fait (avant toute remise)
   if (originalPrice.value === null && form.value.price !== null) {
     originalPrice.value = form.value.price
@@ -769,8 +827,43 @@ function cancel() {
               </div>
             </div>
 
-            <!-- Code promo -->
-            <div>
+            <!-- Pack prépayé -->
+            <div v-if="sessionUserId">
+              <label class="label">Séance prépayée</label>
+              <div v-if="selectedPrepaidPack" class="px-3 py-2 bg-teal-900/30 border border-teal-700 text-teal-300 rounded-lg flex items-center justify-between">
+                <div>
+                  <span class="font-medium">{{ selectedPrepaidPack.label || prepaidPackLabels?.pack_type?.[selectedPrepaidPack.pack_type] || selectedPrepaidPack.pack_type }}</span>
+                  <span v-if="selectedPrepaidPack.sessions_remaining !== undefined" class="ml-2 text-teal-200 text-sm">
+                    ({{ selectedPrepaidPack.sessions_remaining }} crédit(s) restant(s))
+                  </span>
+                </div>
+                <button type="button" @click="clearPrepaidPack" class="text-teal-400 hover:text-teal-200">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <div v-else-if="availablePrepaidPacks.length > 0" class="space-y-2">
+                <div class="flex flex-wrap gap-2">
+                  <button
+                    v-for="pack in availablePrepaidPacks"
+                    :key="pack.id"
+                    type="button"
+                    @click="selectPrepaidPack(pack)"
+                    class="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors bg-teal-900/30 border border-teal-700/50 text-teal-300 hover:bg-teal-800/50"
+                  >
+                    {{ prepaidPackLabels?.pack_type?.[pack.pack_type] || pack.pack_type }}
+                    <span class="text-teal-400/70 ml-1">({{ pack.sessions_total - pack.sessions_used }} restant(s))</span>
+                  </button>
+                </div>
+              </div>
+              <div v-else class="text-sm text-gray-500">
+                Aucune séance prépayée disponible
+              </div>
+            </div>
+
+            <!-- Code promo (caché si pack prépayé sélectionné) -->
+            <div v-if="!selectedPrepaidPack">
               <label class="label">Code promo</label>
               <div v-if="selectedPromoCode" class="px-3 py-2 bg-green-900/30 border border-green-700 text-green-300 rounded-lg flex items-center justify-between">
                 <div>

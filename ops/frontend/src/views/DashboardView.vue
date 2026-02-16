@@ -152,6 +152,40 @@ function formatCurrency(value) {
     maximumFractionDigits: 0
   }).format(value)
 }
+
+// Revenue subtitles showing breakdown (sessions + prepaid packs)
+const yearRevenueSubtitle = computed(() => {
+  const totals = opsStore.yearData?.totals
+  if (!totals) return ''
+  const parts = []
+  if (totals.sessions > 0) {
+    parts.push(`Seances: ${formatCurrency(totals.sessions)}`)
+  }
+  if (totals.prepaid_packs > 0) {
+    parts.push(`Packs: ${formatCurrency(totals.prepaid_packs)}`)
+  }
+  return parts.join(' | ')
+})
+
+const monthRevenueSubtitle = computed(() => {
+  const totals = opsStore.dailyData?.totals
+  const kpis = opsStore.dashboard?.kpis?.revenue
+  if (!totals && !kpis) return ''
+
+  const parts = []
+  const sessionCount = kpis?.session_count || 0
+  const sessions = totals?.sessions || kpis?.sessions || 0
+  const prepaidPacks = totals?.prepaid_packs || kpis?.prepaid_packs || 0
+
+  if (sessions > 0 || sessionCount > 0) {
+    parts.push(`${sessionCount} seances (${formatCurrency(sessions)})`)
+  }
+  if (prepaidPacks > 0) {
+    const prepaidCount = kpis?.prepaid_count || 0
+    parts.push(`${prepaidCount} pack${prepaidCount > 1 ? 's' : ''} (${formatCurrency(prepaidPacks)})`)
+  }
+  return parts.join(' | ')
+})
 </script>
 
 <template>
@@ -234,7 +268,7 @@ function formatCurrency(value) {
         <KpiCard
           title="CA annuel HT"
           :value="opsStore.yearData?.totals?.revenue"
-          subtitle=""
+          :subtitle="yearRevenueSubtitle"
           color="green"
         />
         <KpiCard
@@ -326,7 +360,7 @@ function formatCurrency(value) {
         <KpiCard
           title="CA du mois HT"
           :value="opsStore.dailyData?.totals?.revenue"
-          :subtitle="`${opsStore.dashboard?.kpis?.revenue?.session_count || 0} seances`"
+          :subtitle="monthRevenueSubtitle"
           color="green"
         />
         <KpiCard
