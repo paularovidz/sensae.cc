@@ -71,7 +71,7 @@
               <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
               </svg>
-              Séance prépayée
+              Séance prépayée (encore {{ bookingStore.prepaidBalance.total_credits - 1 }} restante{{ bookingStore.prepaidBalance.total_credits > 2 ? 's' : '' }})
             </dt>
             <dd class="text-sm text-teal-400">
               -{{ formatPrice(bookingStore.originalPrice) }} &euro;
@@ -83,9 +83,6 @@
               0,00 &euro;
             </dd>
           </div>
-          <p class="text-xs text-teal-400/70 mt-1">
-            -1 séance, encore {{ bookingStore.prepaidBalance.total_credits - 1 }} restante{{ bookingStore.prepaidBalance.total_credits > 2 ? 's' : '' }}
-          </p>
         </div>
         <!-- Price with promo -->
         <div v-else-if="bookingStore.hasPromoApplied" class="pt-3 border-t border-gray-600/50 space-y-1">
