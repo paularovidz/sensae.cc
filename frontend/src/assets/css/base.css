@@ -98,7 +98,7 @@
   }
 
   body {
-    @apply min-h-screen;
+    @apply min-h-screen bg-black;
   }
 
   /* Headings use Syne */

@@ -352,6 +352,11 @@ class AvailabilityService
      */
     public static function getAvailableSlots(\DateTime $date, string $durationType = self::TYPE_REGULAR): array
     {
+        // Check if it's an off day first
+        if (OffDay::isOffDay($date)) {
+            return [];
+        }
+
         $businessHours = self::getBusinessHours($date);
         if (!$businessHours) {
             return [];
