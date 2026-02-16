@@ -168,7 +168,7 @@ function formatInput(e) {
           @click="toggleDropdown"
           @blur="closeDropdown"
           :disabled="disabled"
-          class="flex items-center gap-1 px-3 py-2 text-sm bg-gray-700 border border-gray-600 border-r-0 rounded-l-lg text-white hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
+          class="flex items-center gap-1 px-3 py-2 text-sm bg-gray-700 border border-gray-600 border-r-0 rounded-l-lg text-white hover:bg-gray-600 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <span class="text-lg">{{ selectedCountry.flag }}</span>
           <span class="text-gray-400">{{ selectedCountry.dial }}</span>
@@ -205,7 +205,7 @@ function formatInput(e) {
         :placeholder="dynamicPlaceholder"
         :required="required"
         :disabled="disabled"
-        class="flex-1 px-4 py-2 text-sm bg-gray-700 border border-gray-600 rounded-r-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+        class="flex-1 px-4 py-2 text-sm bg-gray-700 border border-gray-600 rounded-r-lg text-white placeholder-gray-400 focus:outline-none focus:border-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
       />
     </div>
   </div>

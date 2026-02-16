@@ -1,8 +1,10 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { publicBookingApi, publicPromoCodesApi, publicPrepaidApi } from '@/services/api'
+import { useAuthStore } from '@/stores/auth'
 
 export const useBookingStore = defineStore('booking', () => {
+  const authStore = useAuthStore()
   // ========================================
   // STATE
   // ========================================
@@ -449,10 +451,8 @@ export const useBookingStore = defineStore('booking', () => {
         // Pre-fill client type and company info
         clientInfo.value.clientType = data.client_info.client_type || 'personal'
         clientInfo.value.companyName = data.client_info.company_name || ''
-        // Auto-accept GDPR if already accepted
-        if (data.client_info.gdpr_already_accepted) {
-          gdprConsent.value = true
-        }
+        // Auto-accept GDPR for existing clients (they already have an account)
+        gdprConsent.value = true
       } else {
         existingClientInfo.value = null
       }
@@ -513,6 +513,19 @@ export const useBookingStore = defineStore('booking', () => {
     try {
       const response = await publicBookingApi.createBooking(bookingData.value)
       bookingResult.value = response.data.data
+
+      // Refresh user data if authenticated (to get updated phone, etc.)
+      if (authStore.isAuthenticated) {
+        try {
+          await authStore.fetchCurrentUser()
+        } catch (e) {
+          // Ignore refresh errors, booking was successful
+        }
+      }
+
+      // Clear existingClientInfo cache so next booking fetches fresh data
+      existingClientInfo.value = null
+
       return bookingResult.value
     } catch (err) {
       error.value = err.response?.data?.message || 'Erreur lors de la création de la réservation'
