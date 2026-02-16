@@ -12,27 +12,46 @@ const isEmbed = computed(() => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-dark">
+  <div class="min-h-screen bg-black relative overflow-hidden">
+    <!-- Background gradient -->
+    <div class="section-gradient" />
+
     <!-- Impersonation Banner (above header) -->
     <ImpersonationBanner />
 
-    <!-- Header (can be hidden for embed mode) -->
-    <header v-if="!isEmbed" class="header-dark">
-      <div class="max-w-5xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
-        <div class="flex items-center justify-between">
-          <div>
-            <span class="text-2xl font-logo text-white">sensëa</span>
-            <p class="text-sm text-gray-400">Réservation de séance</p>
-          </div>
-        </div>
+    <!-- Header: Logo only, centered -->
+    <header v-if="!isEmbed" class="relative z-10 py-8">
+      <div class="flex justify-center">
+        <span class="text-3xl font-logo text-white">sensëa</span>
       </div>
     </header>
 
     <!-- Main content -->
-    <main :class="[isEmbed ? 'py-4' : 'py-8']">
+    <main :class="['relative z-10', isEmbed ? 'py-4' : 'py-8']">
       <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <router-view />
       </div>
     </main>
   </div>
 </template>
+
+<style scoped>
+.section-gradient::after {
+  pointer-events: none;
+  bottom: 18rem;
+  --tw-translate-x: -50%;
+  width: 80%;
+  height: 540px;
+  translate: var(--tw-translate-x) var(--tw-translate-y);
+  content: "";
+  background-image: radial-gradient(50% 50%, #721ad64d, transparent);
+  position: absolute;
+  left: 50%;
+}
+
+.section-gradient {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+</style>

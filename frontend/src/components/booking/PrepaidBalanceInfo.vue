@@ -41,7 +41,7 @@ const hasCredits = computed(() => props.balance?.total_credits > 0)
             class="w-4 h-4 text-teal-600 border-teal-300 rounded focus:ring-teal-500"
           />
           <span class="text-sm font-medium text-teal-800">
-            Utiliser un séance prépayée (0 € à payer)
+            Utiliser une séance prépayée (0 € à payer)
           </span>
         </label>
       </div>
