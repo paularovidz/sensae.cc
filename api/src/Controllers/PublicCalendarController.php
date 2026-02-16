@@ -33,8 +33,9 @@ class PublicCalendarController
         }
 
         // Get confirmed sessions (past 1 month + future 6 months)
-        $dateFrom = (new \DateTime('-1 month'))->format('Y-m-d');
-        $dateTo = (new \DateTime('+6 months'))->format('Y-m-d');
+        $timezone = new \DateTimeZone($_ENV['APP_TIMEZONE'] ?? 'Europe/Paris');
+        $dateFrom = (new \DateTime('-1 month', $timezone))->format('Y-m-d');
+        $dateTo = (new \DateTime('+6 months', $timezone))->format('Y-m-d');
 
         $sessions = Session::findAll(1000, 0, null, [
             'status' => [Session::STATUS_CONFIRMED, Session::STATUS_COMPLETED],

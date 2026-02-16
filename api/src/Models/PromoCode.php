@@ -332,17 +332,18 @@ class PromoCode
         }
 
         // Vérifier les dates de validité
-        $now = new \DateTime();
+        $timezone = new \DateTimeZone($_ENV['APP_TIMEZONE'] ?? 'Europe/Paris');
+        $now = new \DateTime('now', $timezone);
 
         if (!empty($promo['valid_from'])) {
-            $validFrom = new \DateTime($promo['valid_from']);
+            $validFrom = new \DateTime($promo['valid_from'], $timezone);
             if ($now < $validFrom) {
                 return ['valid' => false, 'error' => 'Ce code promo n\'est pas encore valide'];
             }
         }
 
         if (!empty($promo['valid_until'])) {
-            $validUntil = new \DateTime($promo['valid_until']);
+            $validUntil = new \DateTime($promo['valid_until'], $timezone);
             if ($now > $validUntil) {
                 return ['valid' => false, 'error' => 'Ce code promo a expiré'];
             }
@@ -410,8 +411,8 @@ class PromoCode
         ?string $clientType = null
     ): ?array {
         $db = Database::getInstance();
-
-        $now = (new \DateTime())->format('Y-m-d H:i:s');
+        $timezone = new \DateTimeZone($_ENV['APP_TIMEZONE'] ?? 'Europe/Paris');
+        $now = (new \DateTime('now', $timezone))->format('Y-m-d H:i:s');
 
         // Chercher les promos automatiques actives
         $stmt = $db->prepare("
@@ -467,7 +468,8 @@ class PromoCode
     public static function hasActiveManualCodes(): bool
     {
         $db = Database::getInstance();
-        $now = (new \DateTime())->format('Y-m-d H:i:s');
+        $timezone = new \DateTimeZone($_ENV['APP_TIMEZONE'] ?? 'Europe/Paris');
+        $now = (new \DateTime('now', $timezone))->format('Y-m-d H:i:s');
 
         $stmt = $db->prepare("
             SELECT COUNT(*) FROM promo_codes
@@ -494,7 +496,8 @@ class PromoCode
         ?string $excludeSessionId = null
     ): array {
         $db = Database::getInstance();
-        $now = (new \DateTime())->format('Y-m-d H:i:s');
+        $timezone = new \DateTimeZone($_ENV['APP_TIMEZONE'] ?? 'Europe/Paris');
+        $now = (new \DateTime('now', $timezone))->format('Y-m-d H:i:s');
 
         // Récupérer tous les codes actifs et dans leur période de validité
         $stmt = $db->prepare("

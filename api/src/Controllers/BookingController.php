@@ -335,8 +335,9 @@ class BookingController
         AuthMiddleware::handle();
         AuthMiddleware::requireAdmin();
 
-        $dateFrom = $_GET['date_from'] ?? (new \DateTime())->format('Y-m-d');
-        $dateTo = $_GET['date_to'] ?? (new \DateTime('+3 months'))->format('Y-m-d');
+        $timezone = new \DateTimeZone($_ENV['APP_TIMEZONE'] ?? 'Europe/Paris');
+        $dateFrom = $_GET['date_from'] ?? (new \DateTime('now', $timezone))->format('Y-m-d');
+        $dateTo = $_GET['date_to'] ?? (new \DateTime('+3 months', $timezone))->format('Y-m-d');
 
         $bookings = Session::findAll([
             'status' => Session::STATUS_CONFIRMED,
@@ -395,15 +396,17 @@ class BookingController
         }
 
         // Mettre à jour la date d'envoi du rappel
+        $timezone = new \DateTimeZone($_ENV['APP_TIMEZONE'] ?? 'Europe/Paris');
+        $nowFormatted = (new \DateTime('now', $timezone))->format('Y-m-d H:i:s');
         if ($results['email']) {
             Session::update($id, [
-                'reminder_email_sent_at' => (new \DateTime())->format('Y-m-d H:i:s')
+                'reminder_email_sent_at' => $nowFormatted
             ]);
         }
 
         if ($results['sms']) {
             Session::update($id, [
-                'reminder_sms_sent_at' => (new \DateTime())->format('Y-m-d H:i:s')
+                'reminder_sms_sent_at' => $nowFormatted
             ]);
         }
 
@@ -537,7 +540,8 @@ class BookingController
         AuthMiddleware::handle();
         AuthMiddleware::requireAdmin();
 
-        $today = new \DateTime();
+        $timezone = new \DateTimeZone($_ENV['APP_TIMEZONE'] ?? 'Europe/Paris');
+        $today = new \DateTime('now', $timezone);
         $bookings = Session::getConfirmedForDate($today);
 
         Response::success([

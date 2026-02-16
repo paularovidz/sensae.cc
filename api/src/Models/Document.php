@@ -180,7 +180,8 @@ class Document
         }
 
         try {
-            $createdAt = new \DateTime($document['created_at']);
+            $timezone = new \DateTimeZone($_ENV['APP_TIMEZONE'] ?? 'Europe/Paris');
+            $createdAt = new \DateTime($document['created_at'], $timezone);
             $year = $createdAt->format('Y');
             $month = $createdAt->format('m');
             return __DIR__ . '/../../uploads/documents/' . $year . '/' . $month . '/' . $document['filename'];

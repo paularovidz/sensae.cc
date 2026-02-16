@@ -132,7 +132,8 @@ class PublicBookingController
         }
 
         // Ne pas permettre de remonter trop loin dans le passé
-        $now = new \DateTime();
+        $timezone = new \DateTimeZone($_ENV['APP_TIMEZONE'] ?? 'Europe/Paris');
+        $now = new \DateTime('now', $timezone);
         $currentYear = (int) $now->format('Y');
         $currentMonth = (int) $now->format('n');
 
@@ -165,7 +166,7 @@ class PublicBookingController
         }
 
         $maxDate = (clone $now)->modify("+{$maxAdvanceDays} days");
-        $requestedDate = new \DateTime("$year-$month-01");
+        $requestedDate = new \DateTime("$year-$month-01", $timezone)
 
         if ($requestedDate > $maxDate) {
             Response::success([
@@ -210,14 +211,15 @@ class PublicBookingController
             Response::validationError(['type' => 'Type de séance invalide']);
         }
 
+        $timezone = new \DateTimeZone($_ENV['APP_TIMEZONE'] ?? 'Europe/Paris');
         try {
-            $date = new \DateTime($dateStr);
+            $date = new \DateTime($dateStr, $timezone);
         } catch (\Exception $e) {
             Response::validationError(['date' => 'Date invalide']);
         }
 
         // Vérifier que la date n'est pas dans le passé
-        $today = new \DateTime('today');
+        $today = new \DateTime('today', $timezone);
         if ($date < $today) {
             Response::success([
                 'date' => $dateStr,
@@ -443,8 +445,9 @@ class PublicBookingController
         }
 
         // Valider le créneau
+        $timezone = new \DateTimeZone($_ENV['APP_TIMEZONE'] ?? 'Europe/Paris');
         try {
-            $sessionDate = new \DateTime($data['session_date']);
+            $sessionDate = new \DateTime($data['session_date'], $timezone);
         } catch (\Exception $e) {
             Response::validationError(['session_date' => 'Date/heure invalide']);
             return;
@@ -455,7 +458,7 @@ class PublicBookingController
             ? Setting::getInteger('booking_max_advance_days_association', 90)
             : Setting::getInteger('booking_max_advance_days', 60));
 
-        $maxDate = (new \DateTime())->modify("+{$maxAdvanceDays} days");
+        $maxDate = (new \DateTime('now', $timezone))->modify("+{$maxAdvanceDays} days");
         if ($sessionDate > $maxDate) {
             Response::validationError(['session_date' => "Les réservations sont limitées à {$maxAdvanceDays} jours à l'avance"]);
         }
@@ -776,7 +779,8 @@ class PublicBookingController
         }
 
         // Vérifier que le créneau est toujours disponible
-        $sessionDate = new \DateTime($booking['session_date']);
+        $timezone = new \DateTimeZone($_ENV['APP_TIMEZONE'] ?? 'Europe/Paris');
+        $sessionDate = new \DateTime($booking['session_date'], $timezone);
         $slotErrors = AvailabilityService::validateSlot($sessionDate, $booking['duration_type']);
 
         if (!empty($slotErrors)) {

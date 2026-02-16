@@ -178,7 +178,8 @@ class RecurringExpense
     private static function shouldGenerateForMonth(array $recurring, int $year, int $month): bool
     {
         $frequency = $recurring['frequency'];
-        $startDate = new \DateTime($recurring['start_date']);
+        $timezone = new \DateTimeZone($_ENV['APP_TIMEZONE'] ?? 'Europe/Paris');
+        $startDate = new \DateTime($recurring['start_date'], $timezone);
         $startMonth = (int) $startDate->format('n');
         $startYear = (int) $startDate->format('Y');
 

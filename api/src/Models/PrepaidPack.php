@@ -190,12 +190,13 @@ class PrepaidPack
 
         // Calculate expiration if configured
         $expiresAt = null;
+        $timezone = new \DateTimeZone($_ENV['APP_TIMEZONE'] ?? 'Europe/Paris');
         if (!empty($data['expires_at'])) {
             $expiresAt = $data['expires_at'];
         } else {
             $expiryMonths = Setting::getInteger('prepaid_default_expiry_months', 12);
             if ($expiryMonths > 0) {
-                $expiresAt = (new \DateTime())->modify("+{$expiryMonths} months")->format('Y-m-d H:i:s');
+                $expiresAt = (new \DateTime('now', $timezone))->modify("+{$expiryMonths} months")->format('Y-m-d H:i:s');
             }
         }
 
@@ -220,7 +221,7 @@ class PrepaidPack
             'price_paid' => (float)$data['price_paid'],
             'duration_type' => $data['duration_type'] ?? self::DURATION_ANY,
             'expires_at' => $expiresAt,
-            'purchased_at' => $data['purchased_at'] ?? (new \DateTime())->format('Y-m-d H:i:s'),
+            'purchased_at' => $data['purchased_at'] ?? (new \DateTime('now', $timezone))->format('Y-m-d H:i:s'),
             'admin_notes' => !empty($data['admin_notes']) ? trim($data['admin_notes']) : null,
             'created_by' => $data['created_by'] ?? null,
             'is_active' => ($data['is_active'] ?? true) ? 1 : 0
@@ -703,7 +704,8 @@ class PrepaidPack
         if (empty($pack['expires_at'])) {
             return false;
         }
-        return new \DateTime($pack['expires_at']) < new \DateTime();
+        $timezone = new \DateTimeZone($_ENV['APP_TIMEZONE'] ?? 'Europe/Paris');
+        return new \DateTime($pack['expires_at'], $timezone) < new \DateTime('now', $timezone);
     }
 
     private static function castBooleans(array $pack): array

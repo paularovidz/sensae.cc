@@ -664,7 +664,7 @@ class Session
             'status' => self::STATUS_PENDING,
             'confirmation_token' => $token,
             'gdpr_consent' => $data['gdpr_consent'] ? 1 : 0,
-            'gdpr_consent_at' => $data['gdpr_consent'] ? (new \DateTime())->format('Y-m-d H:i:s') : null,
+            'gdpr_consent_at' => $data['gdpr_consent'] ? (new \DateTime('now', new \DateTimeZone($_ENV['APP_TIMEZONE'] ?? 'Europe/Paris')))->format('Y-m-d H:i:s') : null,
             'ip_address' => $data['ip_address'] ?? null,
             'user_agent' => $data['user_agent'] ?? null,
             'promo_code_id' => $data['promo_code_id'] ?? null,
@@ -735,7 +735,7 @@ class Session
             'price' => $data['price'] ?? null,
             'status' => $data['status'] ?? self::STATUS_COMPLETED,
             'confirmation_token' => $token,
-            'confirmed_at' => (new \DateTime())->format('Y-m-d H:i:s'),
+            'confirmed_at' => (new \DateTime('now', new \DateTimeZone($_ENV['APP_TIMEZONE'] ?? 'Europe/Paris')))->format('Y-m-d H:i:s'),
             'sessions_per_month' => $data['sessions_per_month'] ?? null,
             'behavior_start' => !empty($data['behavior_start']) ? $data['behavior_start'] : null,
             'proposal_origin' => !empty($data['proposal_origin']) ? $data['proposal_origin'] : null,
@@ -832,9 +832,10 @@ class Session
 
     public static function confirm(string $id): bool
     {
+        $timezone = new \DateTimeZone($_ENV['APP_TIMEZONE'] ?? 'Europe/Paris');
         return self::update($id, [
             'status' => self::STATUS_CONFIRMED,
-            'confirmed_at' => (new \DateTime())->format('Y-m-d H:i:s')
+            'confirmed_at' => (new \DateTime('now', $timezone))->format('Y-m-d H:i:s')
         ]);
     }
 
@@ -990,7 +991,8 @@ class Session
     public static function getPendingReminders(): array
     {
         $db = Database::getInstance();
-        $tomorrow = (new \DateTime('tomorrow'))->format('Y-m-d');
+        $timezone = new \DateTimeZone($_ENV['APP_TIMEZONE'] ?? 'Europe/Paris');
+        $tomorrow = (new \DateTime('tomorrow', $timezone))->format('Y-m-d');
 
         $stmt = $db->prepare("
             SELECT s.*,

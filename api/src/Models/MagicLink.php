@@ -28,7 +28,8 @@ class MagicLink
         $tokenHash = hash('sha256', $token);
 
         $id = UUID::generate();
-        $expiresAt = (new \DateTime())->modify('+' . self::EXPIRY_MINUTES . ' minutes');
+        $timezone = new \DateTimeZone($_ENV['APP_TIMEZONE'] ?? 'Europe/Paris');
+        $expiresAt = (new \DateTime('now', $timezone))->modify('+' . self::EXPIRY_MINUTES . ' minutes');
 
         $stmt = $db->prepare('
             INSERT INTO magic_links (id, user_id, token, expires_at, ip_address)

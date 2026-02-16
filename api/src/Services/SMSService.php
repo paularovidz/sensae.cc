@@ -22,6 +22,12 @@ class SMSService
         return $_ENV[$key] ?? getenv($key) ?: $default;
     }
 
+    private static function parseDate(string $dateString): \DateTime
+    {
+        $timezone = new \DateTimeZone(self::env('APP_TIMEZONE', 'Europe/Paris'));
+        return new \DateTime($dateString, $timezone);
+    }
+
     /**
      * Vérifie si le service SMS est configuré
      */
@@ -47,7 +53,7 @@ class SMSService
             return false;
         }
 
-        $dateFormatted = (new \DateTime($booking['session_date']))->format('d/m à H:i');
+        $dateFormatted = self::parseDate($booking['session_date'])->format('d/m à H:i');
         $message = "Rappel sensëa: Votre séance pour {$booking['person_first_name']} est prévue demain {$dateFormatted}. A bientôt !";
 
         return self::send(
@@ -71,7 +77,7 @@ class SMSService
             return false;
         }
 
-        $dateFormatted = (new \DateTime($booking['session_date']))->format('d/m/Y à H:i');
+        $dateFormatted = self::parseDate($booking['session_date'])->format('d/m/Y à H:i');
         $message = "sensëa: Votre RDV du {$dateFormatted} pour {$booking['person_first_name']} est confirmé. A bientôt !";
 
         return self::send(
@@ -95,7 +101,7 @@ class SMSService
             return false;
         }
 
-        $dateFormatted = (new \DateTime($booking['session_date']))->format('d/m/Y');
+        $dateFormatted = self::parseDate($booking['session_date'])->format('d/m/Y');
         $message = "sensëa: Votre RDV du {$dateFormatted} a été annulé. N'hésitez pas à reprendre RDV sur notre site.";
 
         return self::send(
@@ -292,7 +298,7 @@ class SMSService
                 'provider_message_id' => $messageId,
                 'provider_response' => $response ? json_encode($response) : null,
                 'status' => $status,
-                'sent_at' => $status === 'sent' ? (new \DateTime())->format('Y-m-d H:i:s') : null,
+                'sent_at' => $status === 'sent' ? self::parseDate('now')->format('Y-m-d H:i:s') : null,
                 'error_message' => $error
             ]);
         } catch (\Exception $e) {

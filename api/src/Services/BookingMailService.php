@@ -20,6 +20,16 @@ class BookingMailService
         return $_ENV[$key] ?? getenv($key) ?: $default;
     }
 
+    private static function getTimezone(): \DateTimeZone
+    {
+        return new \DateTimeZone(self::env('APP_TIMEZONE', 'Europe/Paris'));
+    }
+
+    private static function parseDate(string $dateString): \DateTime
+    {
+        return new \DateTime($dateString, self::getTimezone());
+    }
+
     public function __construct()
     {
         $this->mailer = new PHPMailer(true);
@@ -109,7 +119,7 @@ class BookingMailService
 
             $this->mailer->isHTML(true);
 
-            $dateFormatted = (new \DateTime($booking['session_date']))->format('d/m/Y à H:i');
+            $dateFormatted = self::parseDate($booking['session_date'])->format('d/m/Y à H:i');
             $this->mailer->Subject = "Nouvelle réservation - {$booking['person_first_name']} {$booking['person_last_name']} - {$dateFormatted}";
 
             $this->mailer->Body = $this->getAdminNotificationHtml($booking);
@@ -135,7 +145,7 @@ class BookingMailService
 
             $this->mailer->isHTML(true);
 
-            $dateFormatted = (new \DateTime($booking['session_date']))->format('d/m/Y à H:i');
+            $dateFormatted = self::parseDate($booking['session_date'])->format('d/m/Y à H:i');
             $this->mailer->Subject = "Rappel : Votre séance demain - {$dateFormatted}";
 
             $this->mailer->Body = $this->getReminderHtml($booking);
@@ -211,8 +221,8 @@ class BookingMailService
 
     private function getClientConfirmationHtml(array $booking, string $confirmLink, string $cancelLink): string
     {
-        $dateFormatted = (new \DateTime($booking['session_date']))->format('d/m/Y');
-        $timeFormatted = (new \DateTime($booking['session_date']))->format('H:i');
+        $dateFormatted = self::parseDate($booking['session_date'])->format('d/m/Y');
+        $timeFormatted = self::parseDate($booking['session_date'])->format('H:i');
         $type = $booking['duration_type'] === 'discovery' ? 'Séance découverte' : 'Séance classique';
         $duration = $booking['duration_display_minutes'] . ' minutes';
 
@@ -310,7 +320,7 @@ HTML;
 
     private function getClientConfirmationText(array $booking, string $confirmLink, string $cancelLink): string
     {
-        $dateFormatted = (new \DateTime($booking['session_date']))->format('d/m/Y à H:i');
+        $dateFormatted = self::parseDate($booking['session_date'])->format('d/m/Y à H:i');
         $type = $booking['duration_type'] === 'discovery' ? 'Séance découverte' : 'Séance classique';
 
         return <<<TEXT
@@ -342,7 +352,7 @@ TEXT;
 
     private function getAdminNotificationHtml(array $booking): string
     {
-        $dateFormatted = (new \DateTime($booking['session_date']))->format('d/m/Y à H:i');
+        $dateFormatted = self::parseDate($booking['session_date'])->format('d/m/Y à H:i');
         $type = $booking['duration_type'] === 'discovery' ? 'Séance découverte' : 'Séance classique';
         $status = $booking['status'] === 'pending' ? 'En attente de confirmation client' : 'Confirmé';
 
@@ -395,7 +405,7 @@ HTML;
 
     private function getAdminNotificationText(array $booking): string
     {
-        $dateFormatted = (new \DateTime($booking['session_date']))->format('d/m/Y à H:i');
+        $dateFormatted = self::parseDate($booking['session_date'])->format('d/m/Y à H:i');
         $type = $booking['duration_type'] === 'discovery' ? 'Séance découverte' : 'Séance classique';
 
         return <<<TEXT
@@ -416,7 +426,7 @@ TEXT;
 
     private function getReminderHtml(array $booking): string
     {
-        $timeFormatted = (new \DateTime($booking['session_date']))->format('H:i');
+        $timeFormatted = self::parseDate($booking['session_date'])->format('H:i');
 
         return <<<HTML
 <!DOCTYPE html>
@@ -462,7 +472,7 @@ HTML;
 
     private function getReminderText(array $booking): string
     {
-        $dateFormatted = (new \DateTime($booking['session_date']))->format('d/m/Y à H:i');
+        $dateFormatted = self::parseDate($booking['session_date'])->format('d/m/Y à H:i');
 
         return <<<TEXT
 Bonjour {$booking['client_first_name']},
@@ -481,7 +491,7 @@ TEXT;
 
     private function getCancellationHtml(array $booking): string
     {
-        $dateFormatted = (new \DateTime($booking['session_date']))->format('d/m/Y à H:i');
+        $dateFormatted = self::parseDate($booking['session_date'])->format('d/m/Y à H:i');
 
         return <<<HTML
 <!DOCTYPE html>
@@ -520,7 +530,7 @@ HTML;
 
     private function getCancellationText(array $booking): string
     {
-        $dateFormatted = (new \DateTime($booking['session_date']))->format('d/m/Y à H:i');
+        $dateFormatted = self::parseDate($booking['session_date'])->format('d/m/Y à H:i');
 
         return <<<TEXT
 Bonjour {$booking['client_first_name']},
@@ -535,8 +545,8 @@ TEXT;
 
     private function getBookingConfirmedHtml(array $booking): string
     {
-        $dateFormatted = (new \DateTime($booking['session_date']))->format('d/m/Y');
-        $timeFormatted = (new \DateTime($booking['session_date']))->format('H:i');
+        $dateFormatted = self::parseDate($booking['session_date'])->format('d/m/Y');
+        $timeFormatted = self::parseDate($booking['session_date'])->format('H:i');
         $type = $booking['duration_type'] === 'discovery' ? 'Séance découverte' : 'Séance classique';
 
         return <<<HTML
@@ -605,7 +615,7 @@ HTML;
 
     private function getBookingConfirmedText(array $booking): string
     {
-        $dateFormatted = (new \DateTime($booking['session_date']))->format('d/m/Y à H:i');
+        $dateFormatted = self::parseDate($booking['session_date'])->format('d/m/Y à H:i');
         $type = $booking['duration_type'] === 'discovery' ? 'Séance découverte' : 'Séance classique';
 
         return <<<TEXT

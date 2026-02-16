@@ -144,7 +144,8 @@ class StatsController
         $freeCount = (int)($monthStats['free_count'] ?? 0);
 
         // Fiscal year revenue (October 1 - September 30)
-        $now = new \DateTime();
+        $timezone = new \DateTimeZone($_ENV['APP_TIMEZONE'] ?? 'Europe/Paris');
+        $now = new \DateTime('now', $timezone);
         $currentMonth = (int) $now->format('n');
         $currentYear = (int) $now->format('Y');
 

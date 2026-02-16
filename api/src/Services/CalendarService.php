@@ -144,8 +144,9 @@ class CalendarService
         $lastFetch = $stmt->fetchColumn();
 
         if ($lastFetch) {
-            $lastFetchTime = new \DateTime($lastFetch);
-            $now = new \DateTime();
+            $timezone = new \DateTimeZone(self::env('APP_TIMEZONE', 'Europe/Paris'));
+            $lastFetchTime = new \DateTime($lastFetch, $timezone);
+            $now = new \DateTime('now', $timezone);
             $diff = $now->getTimestamp() - $lastFetchTime->getTimestamp();
 
             if ($diff < self::getCacheTTL()) {
@@ -376,7 +377,8 @@ class CalendarService
     private static function updateCache(array $events): void
     {
         $db = Database::getInstance();
-        $now = (new \DateTime())->format('Y-m-d H:i:s');
+        $timezone = new \DateTimeZone(self::env('APP_TIMEZONE', 'Europe/Paris'));
+        $now = (new \DateTime('now', $timezone))->format('Y-m-d H:i:s');
 
         // Supprimer les anciens événements qui ne sont plus dans le calendrier
         $uids = array_map(fn($e) => $e['uid'], $events);

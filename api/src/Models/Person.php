@@ -289,8 +289,9 @@ class Person
             return null;
         }
 
-        $birth = new \DateTime($birthDate);
-        $now = new \DateTime();
+        $timezone = new \DateTimeZone($_ENV['APP_TIMEZONE'] ?? 'Europe/Paris');
+        $birth = new \DateTime($birthDate, $timezone);
+        $now = new \DateTime('now', $timezone);
 
         return $birth->diff($now)->y;
     }

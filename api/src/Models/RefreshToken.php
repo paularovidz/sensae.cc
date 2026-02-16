@@ -24,7 +24,8 @@ class RefreshToken
         $tokenHash = hash('sha256', $token);
 
         $id = UUID::generate();
-        $expiresAt = (new \DateTime())->modify('+' . self::EXPIRY_DAYS . ' days');
+        $timezone = new \DateTimeZone($_ENV['APP_TIMEZONE'] ?? 'Europe/Paris');
+        $expiresAt = (new \DateTime('now', $timezone))->modify('+' . self::EXPIRY_DAYS . ' days');
 
         $stmt = $db->prepare('
             INSERT INTO refresh_tokens (id, user_id, impersonator_id, token_hash, expires_at, ip_address, user_agent)
