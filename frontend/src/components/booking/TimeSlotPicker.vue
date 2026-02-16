@@ -6,9 +6,31 @@
       </h3>
     </div>
 
-    <!-- Loading -->
-    <div v-if="loading" class="p-8 flex items-center justify-center">
-      <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-400"></div>
+    <!-- Loading skeleton -->
+    <div v-if="loading" class="p-4">
+      <!-- Morning skeleton -->
+      <div class="mb-4">
+        <div class="h-3 w-12 bg-gray-600/50 rounded animate-pulse mb-2" />
+        <div class="grid grid-cols-3 sm:grid-cols-4 gap-2">
+          <div
+            v-for="n in 4"
+            :key="'skeleton-morning-' + n"
+            class="h-10 rounded-lg bg-gray-700/50 animate-pulse"
+          />
+        </div>
+      </div>
+
+      <!-- Afternoon skeleton -->
+      <div>
+        <div class="h-3 w-16 bg-gray-600/50 rounded animate-pulse mb-2" />
+        <div class="grid grid-cols-3 sm:grid-cols-4 gap-2">
+          <div
+            v-for="n in 4"
+            :key="'skeleton-afternoon-' + n"
+            class="h-10 rounded-lg bg-gray-700/50 animate-pulse"
+          />
+        </div>
+      </div>
     </div>
 
     <!-- No slots -->

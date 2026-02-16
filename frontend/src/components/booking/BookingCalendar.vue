@@ -37,9 +37,27 @@
       </button>
     </div>
 
-    <!-- Loading overlay -->
-    <div v-if="loading" class="p-8 flex items-center justify-center">
-      <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-400"></div>
+    <!-- Loading skeleton -->
+    <div v-if="loading" class="p-4">
+      <!-- Day names skeleton -->
+      <div class="grid grid-cols-7 mb-2">
+        <div
+          v-for="day in dayNames"
+          :key="'skeleton-header-' + day"
+          class="text-center text-xs font-medium text-gray-400 py-2"
+        >
+          {{ day }}
+        </div>
+      </div>
+
+      <!-- Skeleton rows (5 rows of 7 cells) -->
+      <div class="grid grid-cols-7 gap-1">
+        <div
+          v-for="n in 35"
+          :key="'skeleton-' + n"
+          class="aspect-square rounded-lg bg-gray-700/50 animate-pulse"
+        />
+      </div>
     </div>
 
     <!-- Calendar grid -->
