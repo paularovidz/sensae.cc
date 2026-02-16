@@ -166,7 +166,7 @@ class PublicBookingController
         }
 
         $maxDate = (clone $now)->modify("+{$maxAdvanceDays} days");
-        $requestedDate = new \DateTime("$year-$month-01", $timezone)
+        $requestedDate = new \DateTime("$year-$month-01", $timezone);
 
         if ($requestedDate > $maxDate) {
             Response::success([
