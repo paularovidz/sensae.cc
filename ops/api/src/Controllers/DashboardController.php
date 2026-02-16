@@ -38,6 +38,8 @@ class DashboardController
         // Calculate total revenue (sessions + prepaid packs)
         $sessionRevenue = $revenue['total'] ?? 0;
         $packRevenue = $prepaidRevenue['total'] ?? 0;
+        $pack2Revenue = $prepaidRevenue['pack_2']['total'] ?? 0;
+        $pack4Revenue = $prepaidRevenue['pack_4']['total'] ?? 0;
         $totalRevenue = $sessionRevenue + $packRevenue;
 
         // Calculate balance
@@ -52,7 +54,11 @@ class DashboardController
                     'session_count' => $revenue['count'] ?? 0,
                     'sessions' => $sessionRevenue,
                     'prepaid_packs' => $packRevenue,
-                    'prepaid_count' => $prepaidRevenue['count'] ?? 0
+                    'prepaid_count' => $prepaidRevenue['count'] ?? 0,
+                    'pack_2' => $pack2Revenue,
+                    'pack_2_count' => $prepaidRevenue['pack_2']['count'] ?? 0,
+                    'pack_4' => $pack4Revenue,
+                    'pack_4_count' => $prepaidRevenue['pack_4']['count'] ?? 0
                 ],
                 'expenses' => [
                     'total' => $expenseTotal,
@@ -85,10 +91,14 @@ class DashboardController
         $totalExpenses = 0;
         $totalSessionRevenue = 0;
         $totalPrepaidRevenue = 0;
+        $totalPack2Revenue = 0;
+        $totalPack4Revenue = 0;
 
         for ($m = 1; $m <= 12; $m++) {
             $sessionRevenue = $revenueByMonth[$m]['total'] ?? 0;
             $prepaidRevenue = $prepaidByMonth[$m]['total'] ?? 0;
+            $pack2Revenue = $prepaidByMonth[$m]['pack_2']['total'] ?? 0;
+            $pack4Revenue = $prepaidByMonth[$m]['pack_4']['total'] ?? 0;
             $revenue = $sessionRevenue + $prepaidRevenue;
             $expenses = $expenseTotals[$m] ?? 0;
 
@@ -97,6 +107,8 @@ class DashboardController
                 'revenue' => $revenue,
                 'sessions' => $sessionRevenue,
                 'prepaid_packs' => $prepaidRevenue,
+                'pack_2' => $pack2Revenue,
+                'pack_4' => $pack4Revenue,
                 'expenses' => $expenses,
                 'balance' => $revenue - $expenses
             ];
@@ -104,6 +116,8 @@ class DashboardController
             $totalRevenue += $revenue;
             $totalSessionRevenue += $sessionRevenue;
             $totalPrepaidRevenue += $prepaidRevenue;
+            $totalPack2Revenue += $pack2Revenue;
+            $totalPack4Revenue += $pack4Revenue;
             $totalExpenses += $expenses;
         }
 
@@ -114,6 +128,8 @@ class DashboardController
                 'revenue' => $totalRevenue,
                 'sessions' => $totalSessionRevenue,
                 'prepaid_packs' => $totalPrepaidRevenue,
+                'pack_2' => $totalPack2Revenue,
+                'pack_4' => $totalPack4Revenue,
                 'expenses' => $totalExpenses,
                 'balance' => $totalRevenue - $totalExpenses
             ]
@@ -154,10 +170,15 @@ class DashboardController
         $days = [];
         $totalSessionRevenue = 0;
         $totalPrepaidRevenue = 0;
+        $totalPack2Revenue = 0;
+        $totalPack4Revenue = 0;
 
         for ($day = 1; $day <= $daysInMonth; $day++) {
             $sessionRevenue = $dailyRevenue[$day] ?? 0;
-            $prepaidRevenue = $dailyPrepaid[$day] ?? 0;
+            $prepaidData = $dailyPrepaid[$day] ?? ['total' => 0, 'pack_2' => ['total' => 0], 'pack_4' => ['total' => 0]];
+            $prepaidRevenue = is_array($prepaidData) ? ($prepaidData['total'] ?? 0) : $prepaidData;
+            $pack2Revenue = is_array($prepaidData) ? ($prepaidData['pack_2']['total'] ?? 0) : 0;
+            $pack4Revenue = is_array($prepaidData) ? ($prepaidData['pack_4']['total'] ?? 0) : 0;
             $revenue = $sessionRevenue + $prepaidRevenue;
             $expenses = $dailyExpenses[$day] ?? 0;
 
@@ -166,12 +187,16 @@ class DashboardController
                 'revenue' => $revenue,
                 'sessions' => $sessionRevenue,
                 'prepaid_packs' => $prepaidRevenue,
+                'pack_2' => $pack2Revenue,
+                'pack_4' => $pack4Revenue,
                 'expenses' => $expenses,
                 'balance' => $revenue - $expenses
             ];
 
             $totalSessionRevenue += $sessionRevenue;
             $totalPrepaidRevenue += $prepaidRevenue;
+            $totalPack2Revenue += $pack2Revenue;
+            $totalPack4Revenue += $pack4Revenue;
         }
 
         // Calculate totals
@@ -186,6 +211,8 @@ class DashboardController
                 'revenue' => $totalRevenue,
                 'sessions' => $totalSessionRevenue,
                 'prepaid_packs' => $totalPrepaidRevenue,
+                'pack_2' => $totalPack2Revenue,
+                'pack_4' => $totalPack4Revenue,
                 'expenses' => $totalExpenses,
                 'balance' => $totalRevenue - $totalExpenses
             ]

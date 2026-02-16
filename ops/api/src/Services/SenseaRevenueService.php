@@ -124,13 +124,17 @@ class SenseaRevenueService
             $data = json_decode($response->getBody()->getContents(), true);
             return $data['data'] ?? [
                 'total' => 0,
-                'count' => 0
+                'count' => 0,
+                'pack_2' => ['total' => 0, 'count' => 0],
+                'pack_4' => ['total' => 0, 'count' => 0]
             ];
         } catch (GuzzleException $e) {
             error_log('SenseaRevenueService prepaid error: ' . $e->getMessage());
             return [
                 'total' => 0,
                 'count' => 0,
+                'pack_2' => ['total' => 0, 'count' => 0],
+                'pack_4' => ['total' => 0, 'count' => 0],
                 'error' => $e->getMessage()
             ];
         }

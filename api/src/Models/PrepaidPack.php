@@ -555,14 +555,26 @@ class PrepaidPack
 
         if ($month !== null) {
             $stmt = $db->prepare("
-                SELECT SUM(price_paid) as total, COUNT(*) as count
+                SELECT
+                    SUM(price_paid) as total,
+                    COUNT(*) as count,
+                    SUM(CASE WHEN pack_type = 'pack_2' THEN price_paid ELSE 0 END) as pack_2_total,
+                    SUM(CASE WHEN pack_type = 'pack_2' THEN 1 ELSE 0 END) as pack_2_count,
+                    SUM(CASE WHEN pack_type = 'pack_4' THEN price_paid ELSE 0 END) as pack_4_total,
+                    SUM(CASE WHEN pack_type = 'pack_4' THEN 1 ELSE 0 END) as pack_4_count
                 FROM prepaid_packs
                 WHERE YEAR(purchased_at) = :year AND MONTH(purchased_at) = :month
             ");
             $stmt->execute(['year' => $year, 'month' => $month]);
         } else {
             $stmt = $db->prepare("
-                SELECT SUM(price_paid) as total, COUNT(*) as count
+                SELECT
+                    SUM(price_paid) as total,
+                    COUNT(*) as count,
+                    SUM(CASE WHEN pack_type = 'pack_2' THEN price_paid ELSE 0 END) as pack_2_total,
+                    SUM(CASE WHEN pack_type = 'pack_2' THEN 1 ELSE 0 END) as pack_2_count,
+                    SUM(CASE WHEN pack_type = 'pack_4' THEN price_paid ELSE 0 END) as pack_4_total,
+                    SUM(CASE WHEN pack_type = 'pack_4' THEN 1 ELSE 0 END) as pack_4_count
                 FROM prepaid_packs
                 WHERE YEAR(purchased_at) = :year
             ");
@@ -573,7 +585,15 @@ class PrepaidPack
 
         return [
             'total' => (float)($result['total'] ?? 0),
-            'count' => (int)($result['count'] ?? 0)
+            'count' => (int)($result['count'] ?? 0),
+            'pack_2' => [
+                'total' => (float)($result['pack_2_total'] ?? 0),
+                'count' => (int)($result['pack_2_count'] ?? 0)
+            ],
+            'pack_4' => [
+                'total' => (float)($result['pack_4_total'] ?? 0),
+                'count' => (int)($result['pack_4_count'] ?? 0)
+            ]
         ];
     }
 
@@ -586,7 +606,11 @@ class PrepaidPack
         $stmt = $db->prepare("
             SELECT MONTH(purchased_at) as month,
                    SUM(price_paid) as total,
-                   COUNT(*) as count
+                   COUNT(*) as count,
+                   SUM(CASE WHEN pack_type = 'pack_2' THEN price_paid ELSE 0 END) as pack_2_total,
+                   SUM(CASE WHEN pack_type = 'pack_2' THEN 1 ELSE 0 END) as pack_2_count,
+                   SUM(CASE WHEN pack_type = 'pack_4' THEN price_paid ELSE 0 END) as pack_4_total,
+                   SUM(CASE WHEN pack_type = 'pack_4' THEN 1 ELSE 0 END) as pack_4_count
             FROM prepaid_packs
             WHERE YEAR(purchased_at) = :year
             GROUP BY MONTH(purchased_at)
@@ -600,14 +624,27 @@ class PrepaidPack
         foreach ($results as $row) {
             $byMonth[(int)$row['month']] = [
                 'total' => (float)$row['total'],
-                'count' => (int)$row['count']
+                'count' => (int)$row['count'],
+                'pack_2' => [
+                    'total' => (float)$row['pack_2_total'],
+                    'count' => (int)$row['pack_2_count']
+                ],
+                'pack_4' => [
+                    'total' => (float)$row['pack_4_total'],
+                    'count' => (int)$row['pack_4_count']
+                ]
             ];
         }
 
         // Fill missing months with zeros
         for ($m = 1; $m <= 12; $m++) {
             if (!isset($byMonth[$m])) {
-                $byMonth[$m] = ['total' => 0, 'count' => 0];
+                $byMonth[$m] = [
+                    'total' => 0,
+                    'count' => 0,
+                    'pack_2' => ['total' => 0, 'count' => 0],
+                    'pack_4' => ['total' => 0, 'count' => 0]
+                ];
             }
         }
 
@@ -624,7 +661,11 @@ class PrepaidPack
         $stmt = $db->prepare("
             SELECT DAY(purchased_at) as day,
                    SUM(price_paid) as total,
-                   COUNT(*) as count
+                   COUNT(*) as count,
+                   SUM(CASE WHEN pack_type = 'pack_2' THEN price_paid ELSE 0 END) as pack_2_total,
+                   SUM(CASE WHEN pack_type = 'pack_2' THEN 1 ELSE 0 END) as pack_2_count,
+                   SUM(CASE WHEN pack_type = 'pack_4' THEN price_paid ELSE 0 END) as pack_4_total,
+                   SUM(CASE WHEN pack_type = 'pack_4' THEN 1 ELSE 0 END) as pack_4_count
             FROM prepaid_packs
             WHERE YEAR(purchased_at) = :year AND MONTH(purchased_at) = :month
             GROUP BY DAY(purchased_at)
@@ -638,7 +679,15 @@ class PrepaidPack
         foreach ($results as $row) {
             $byDay[(int)$row['day']] = [
                 'total' => (float)$row['total'],
-                'count' => (int)$row['count']
+                'count' => (int)$row['count'],
+                'pack_2' => [
+                    'total' => (float)$row['pack_2_total'],
+                    'count' => (int)$row['pack_2_count']
+                ],
+                'pack_4' => [
+                    'total' => (float)$row['pack_4_total'],
+                    'count' => (int)$row['pack_4_count']
+                ]
             ];
         }
 

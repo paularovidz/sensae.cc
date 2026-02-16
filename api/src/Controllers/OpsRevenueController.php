@@ -214,7 +214,9 @@ class OpsRevenueController
             'year' => $year,
             'month' => $month,
             'total' => $revenue['total'],
-            'count' => $revenue['count']
+            'count' => $revenue['count'],
+            'pack_2' => $revenue['pack_2'],
+            'pack_4' => $revenue['pack_4']
         ]);
     }
 

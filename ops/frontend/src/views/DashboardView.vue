@@ -79,14 +79,28 @@ const yearChartData = computed(() => {
     labels: monthLabels,
     datasets: [
       {
-        label: 'CA HT',
-        data: Object.values(months).map(m => m.revenue),
-        backgroundColor: '#10B981'
+        label: 'Séances',
+        data: Object.values(months).map(m => m.sessions || 0),
+        backgroundColor: '#10B981', // Emerald-500
+        stack: 'main'
       },
       {
-        label: 'Depenses HT',
-        data: Object.values(months).map(m => m.expenses),
-        backgroundColor: '#EF4444'
+        label: 'Pack 2 séances',
+        data: Object.values(months).map(m => m.pack_2 || 0),
+        backgroundColor: '#3B82F6', // Blue-500
+        stack: 'main'
+      },
+      {
+        label: 'Pack 4 séances',
+        data: Object.values(months).map(m => m.pack_4 || 0),
+        backgroundColor: '#8B5CF6', // Violet-500
+        stack: 'main'
+      },
+      {
+        label: 'Dépenses HT',
+        data: Object.values(months).map(m => -(m.expenses || 0)),
+        backgroundColor: '#EF4444', // Red-500
+        stack: 'main'
       }
     ]
   }
@@ -104,14 +118,28 @@ const dailyChartData = computed(() => {
     labels: dayLabels,
     datasets: [
       {
-        label: 'CA HT',
-        data: dayValues.map(d => d.revenue),
-        backgroundColor: '#10B981'
+        label: 'Séances',
+        data: dayValues.map(d => d.sessions || 0),
+        backgroundColor: '#10B981', // Emerald-500
+        stack: 'main'
       },
       {
-        label: 'Depenses HT',
-        data: dayValues.map(d => d.expenses),
-        backgroundColor: '#EF4444'
+        label: 'Pack 2 séances',
+        data: dayValues.map(d => d.pack_2 || 0),
+        backgroundColor: '#3B82F6', // Blue-500
+        stack: 'main'
+      },
+      {
+        label: 'Pack 4 séances',
+        data: dayValues.map(d => d.pack_4 || 0),
+        backgroundColor: '#8B5CF6', // Violet-500
+        stack: 'main'
+      },
+      {
+        label: 'Dépenses HT',
+        data: dayValues.map(d => -(d.expenses || 0)),
+        backgroundColor: '#EF4444', // Red-500
+        stack: 'main'
       }
     ]
   }
@@ -123,17 +151,28 @@ const chartOptions = {
   plugins: {
     legend: {
       labels: { color: '#9CA3AF' }
+    },
+    tooltip: {
+      callbacks: {
+        label: (context) => {
+          const label = context.dataset.label || ''
+          const value = Math.abs(context.parsed.y || 0)
+          return `${label}: ${value.toLocaleString('fr-FR')} €`
+        }
+      }
     }
   },
   scales: {
     x: {
+      stacked: true,
       ticks: { color: '#9CA3AF' },
       grid: { color: '#374151' }
     },
     y: {
+      stacked: true,
       ticks: {
         color: '#9CA3AF',
-        callback: (value) => value.toLocaleString('fr-FR') + ' €'
+        callback: (value) => Math.abs(value).toLocaleString('fr-FR') + ' €'
       },
       grid: { color: '#374151' }
     }
@@ -153,16 +192,19 @@ function formatCurrency(value) {
   }).format(value)
 }
 
-// Revenue subtitles showing breakdown (sessions + prepaid packs)
+// Revenue subtitles showing breakdown (sessions + prepaid packs by type)
 const yearRevenueSubtitle = computed(() => {
   const totals = opsStore.yearData?.totals
   if (!totals) return ''
   const parts = []
   if (totals.sessions > 0) {
-    parts.push(`Seances: ${formatCurrency(totals.sessions)}`)
+    parts.push(`Séances: ${formatCurrency(totals.sessions)}`)
   }
-  if (totals.prepaid_packs > 0) {
-    parts.push(`Packs: ${formatCurrency(totals.prepaid_packs)}`)
+  if (totals.pack_2 > 0) {
+    parts.push(`Pack 2 séances: ${formatCurrency(totals.pack_2)}`)
+  }
+  if (totals.pack_4 > 0) {
+    parts.push(`Pack 4 séances: ${formatCurrency(totals.pack_4)}`)
   }
   return parts.join(' | ')
 })
@@ -175,14 +217,19 @@ const monthRevenueSubtitle = computed(() => {
   const parts = []
   const sessionCount = kpis?.session_count || 0
   const sessions = totals?.sessions || kpis?.sessions || 0
-  const prepaidPacks = totals?.prepaid_packs || kpis?.prepaid_packs || 0
+  const pack2 = totals?.pack_2 || kpis?.pack_2 || 0
+  const pack4 = totals?.pack_4 || kpis?.pack_4 || 0
 
   if (sessions > 0 || sessionCount > 0) {
-    parts.push(`${sessionCount} seances (${formatCurrency(sessions)})`)
+    parts.push(`${sessionCount} séances (${formatCurrency(sessions)})`)
   }
-  if (prepaidPacks > 0) {
-    const prepaidCount = kpis?.prepaid_count || 0
-    parts.push(`${prepaidCount} pack${prepaidCount > 1 ? 's' : ''} (${formatCurrency(prepaidPacks)})`)
+  if (pack2 > 0) {
+    const pack2Count = kpis?.pack_2_count || 0
+    parts.push(`${pack2Count} pack 2 séances (${formatCurrency(pack2)})`)
+  }
+  if (pack4 > 0) {
+    const pack4Count = kpis?.pack_4_count || 0
+    parts.push(`${pack4Count} pack 4 séances (${formatCurrency(pack4)})`)
   }
   return parts.join(' | ')
 })
