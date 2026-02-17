@@ -30,7 +30,8 @@
       </h3>
 
       <dl class="space-y-3">
-        <div>
+        <!-- Bénéficiaire uniquement pour séances individuelles -->
+        <div v-if="!bookingStore.isGroupSession">
           <dt class="text-xs text-gray-500">Bénéficiaire</dt>
           <dd class="text-sm font-medium text-white">
             {{ bookingStore.personInfo.firstName }} {{ bookingStore.personInfo.lastName }}

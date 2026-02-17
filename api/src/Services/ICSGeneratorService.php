@@ -103,16 +103,32 @@ class ICSGeneratorService
      * Construit le titre (summary) de l'événement
      * Format: [Icône] NOM Prénom - 14h30 - 1h05
      * Icône: 👤 Particulier, 🏢 Association
+     * Pour privatisations: [🔒] Privatisation - 09h00 - 4h
      */
     private static function buildSummary(array $booking, \DateTime $startDate): string
     {
-        $lastName = mb_strtoupper($booking['person_last_name']);
-        $firstName = $booking['person_first_name'];
         $time = $startDate->format('H\hi');
+        $durationType = $booking['duration_type'] ?? 'regular';
 
-        // Icône selon le type de client
-        $isAssociation = ($booking['client_type'] ?? 'personal') === 'association';
-        $icon = $isAssociation ? '🏢' : '👤';
+        // Vérifier si c'est une privatisation
+        $isPrivatization = in_array($durationType, ['half_day', 'full_day']);
+
+        if ($isPrivatization) {
+            // Privatisation - pas de bénéficiaire spécifique
+            $withAccompaniment = !empty($booking['with_accompaniment']);
+            $accompLabel = $withAccompaniment ? 'accomp.' : 'sans accomp.';
+            $typeLabel = $durationType === 'half_day' ? '½ jour' : 'Journée';
+            $beneficiaryLabel = "Privatisation {$typeLabel} ({$accompLabel})";
+            $icon = '🔒';
+        } else {
+            // Séance individuelle
+            $lastName = mb_strtoupper($booking['person_last_name'] ?? '');
+            $firstName = $booking['person_first_name'] ?? '';
+            $beneficiaryLabel = trim("{$lastName} {$firstName}");
+
+            $isAssociation = ($booking['client_type'] ?? 'personal') === 'association';
+            $icon = $isAssociation ? '🏢' : '👤';
+        }
 
         // Durée totale (séance + ménage)
         $totalMinutes = (int) $booking['duration_blocked_minutes'];
@@ -124,7 +140,7 @@ class ICSGeneratorService
             $duration = "{$totalMinutes}min";
         }
 
-        return "{$icon} {$lastName} {$firstName} - {$time} - {$duration}";
+        return "{$icon} {$beneficiaryLabel} - {$time} - {$duration}";
     }
 
     /**
@@ -132,7 +148,19 @@ class ICSGeneratorService
      */
     private static function buildDescription(array $booking): string
     {
-        $type = $booking['duration_type'] === 'discovery' ? 'Séance découverte' : 'Séance classique';
+        $durationType = $booking['duration_type'] ?? 'regular';
+        $isPrivatization = in_array($durationType, ['half_day', 'full_day']);
+
+        // Type de séance
+        if ($isPrivatization) {
+            $withAccompaniment = !empty($booking['with_accompaniment']);
+            $accompLabel = $withAccompaniment ? 'avec accompagnement' : 'sans accompagnement';
+            $typeLabel = $durationType === 'half_day' ? 'demi-journée' : 'journée';
+            $type = "Privatisation {$typeLabel} ({$accompLabel})";
+        } else {
+            $type = $durationType === 'discovery' ? 'Séance découverte' : 'Séance classique';
+        }
+
         $sessionDuration = $booking['duration_display_minutes'] . ' minutes';
         $totalDuration = $booking['duration_blocked_minutes'] . ' minutes';
         $pauseDuration = $booking['duration_blocked_minutes'] - $booking['duration_display_minutes'];
@@ -146,11 +174,16 @@ class ICSGeneratorService
             "Client: {$clientType}",
             "Durée séance: {$sessionDuration}",
             "Durée totale (+ {$pauseDuration}min ménage): {$totalDuration}",
-            "",
-            "Bénéficiaire: {$booking['person_first_name']} {$booking['person_last_name']}",
-            "Contact: {$booking['client_first_name']} {$booking['client_last_name']}",
-            "Email: {$booking['client_email']}"
+            ""
         ];
+
+        // Bénéficiaire seulement pour les séances individuelles
+        if (!$isPrivatization) {
+            $lines[] = "Bénéficiaire: {$booking['person_first_name']} {$booking['person_last_name']}";
+        }
+
+        $lines[] = "Contact: {$booking['client_first_name']} {$booking['client_last_name']}";
+        $lines[] = "Email: {$booking['client_email']}";
 
         if (!empty($booking['client_phone'])) {
             $lines[] = "Téléphone: {$booking['client_phone']}";

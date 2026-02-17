@@ -38,8 +38,24 @@ class Session
     // Types de durée
     public const TYPE_DISCOVERY = 'discovery';
     public const TYPE_REGULAR = 'regular';
+    public const TYPE_HALF_DAY = 'half_day';
+    public const TYPE_FULL_DAY = 'full_day';
 
     public const TYPES = [
+        self::TYPE_DISCOVERY,
+        self::TYPE_REGULAR,
+        self::TYPE_HALF_DAY,
+        self::TYPE_FULL_DAY
+    ];
+
+    // Types de séances groupe (demi-journée, journée) - réservés aux associations
+    public const GROUP_TYPES = [
+        self::TYPE_HALF_DAY,
+        self::TYPE_FULL_DAY
+    ];
+
+    // Types de séances individuelles
+    public const INDIVIDUAL_TYPES = [
         self::TYPE_DISCOVERY,
         self::TYPE_REGULAR
     ];
@@ -64,7 +80,9 @@ class Session
         ],
         'duration_type' => [
             'discovery' => 'Séance découverte (1h15)',
-            'regular' => 'Séance classique (45min)'
+            'regular' => 'Séance classique (45min)',
+            'half_day' => 'Privatisation demi-journée (4h)',
+            'full_day' => 'Privatisation journée (8h)'
         ],
         'client_type' => [
             'personal' => 'Particulier',
@@ -142,7 +160,7 @@ class Session
                    pp.sessions_total as prepaid_sessions_total,
                    pp.sessions_used as prepaid_sessions_used
             FROM sessions s
-            INNER JOIN persons p ON s.person_id = p.id
+            LEFT JOIN persons p ON s.person_id = p.id
             LEFT JOIN users u ON s.created_by = u.id
             LEFT JOIN users client ON s.user_id = client.id
             LEFT JOIN promo_codes pc ON s.promo_code_id = pc.id
@@ -417,7 +435,7 @@ class Session
                    client.company_name,
                    CASE WHEN s.status = 'completed' THEN s.id ELSE NULL END as linked_session_id
             FROM sessions s
-            INNER JOIN persons p ON s.person_id = p.id
+            LEFT JOIN persons p ON s.person_id = p.id
             LEFT JOIN users u ON s.created_by = u.id
             LEFT JOIN users client ON s.user_id = client.id
             {$whereClause}
@@ -634,7 +652,7 @@ class Session
         $stmt = $db->prepare('
             INSERT INTO sessions (
                 id, user_id, person_id, created_by, session_date,
-                duration_minutes, duration_type, duration_blocked_minutes,
+                duration_minutes, duration_type, with_accompaniment, duration_blocked_minutes,
                 price, status, confirmation_token,
                 gdpr_consent, gdpr_consent_at,
                 ip_address, user_agent,
@@ -642,7 +660,7 @@ class Session
                 prepaid_pack_id
             ) VALUES (
                 :id, :user_id, :person_id, :created_by, :session_date,
-                :duration_minutes, :duration_type, :duration_blocked_minutes,
+                :duration_minutes, :duration_type, :with_accompaniment, :duration_blocked_minutes,
                 :price, :status, :confirmation_token,
                 :gdpr_consent, :gdpr_consent_at,
                 :ip_address, :user_agent,
@@ -659,6 +677,7 @@ class Session
             'session_date' => $data['session_date'],
             'duration_minutes' => $durations['display'],
             'duration_type' => $data['duration_type'],
+            'with_accompaniment' => ($data['with_accompaniment'] ?? true) ? 1 : 0,
             'duration_blocked_minutes' => $durations['blocked'],
             'price' => $data['price'] ?? null,
             'status' => self::STATUS_PENDING,
@@ -695,7 +714,7 @@ class Session
         $stmt = $db->prepare('
             INSERT INTO sessions (
                 id, user_id, person_id, created_by, session_date,
-                duration_minutes, duration_type, duration_blocked_minutes, price,
+                duration_minutes, duration_type, with_accompaniment, duration_blocked_minutes, price,
                 status, confirmation_token, confirmed_at,
                 sessions_per_month, behavior_start, proposal_origin, attitude_start,
                 position, communication, session_end, behavior_end, wants_to_return,
@@ -703,7 +722,7 @@ class Session
                 is_invoiced, is_paid, is_free_session, prepaid_pack_id
             ) VALUES (
                 :id, :user_id, :person_id, :created_by, :session_date,
-                :duration_minutes, :duration_type, :duration_blocked_minutes, :price,
+                :duration_minutes, :duration_type, :with_accompaniment, :duration_blocked_minutes, :price,
                 :status, :confirmation_token, :confirmed_at,
                 :sessions_per_month, :behavior_start, :proposal_origin, :attitude_start,
                 :position, :communication, :session_end, :behavior_end, :wants_to_return,
@@ -731,6 +750,7 @@ class Session
             'session_date' => $data['session_date'],
             'duration_minutes' => $durationMinutes,
             'duration_type' => $data['duration_type'] ?? $durationType,
+            'with_accompaniment' => ($data['with_accompaniment'] ?? true) ? 1 : 0,
             'duration_blocked_minutes' => $data['duration_blocked_minutes'] ?? null,
             'price' => $data['price'] ?? null,
             'status' => $data['status'] ?? self::STATUS_COMPLETED,
@@ -773,7 +793,7 @@ class Session
         $params = ['id' => $id];
 
         $allowedFields = [
-            'session_date', 'duration_minutes', 'duration_type', 'duration_blocked_minutes',
+            'session_date', 'duration_minutes', 'duration_type', 'with_accompaniment', 'duration_blocked_minutes',
             'price', 'status', 'confirmed_at', 'admin_notes',
             'sessions_per_month', 'behavior_start', 'proposal_origin', 'attitude_start',
             'position', 'communication', 'session_end', 'behavior_end', 'wants_to_return',
@@ -801,7 +821,7 @@ class Session
                     }
                 } elseif (in_array($field, ['behavior_start', 'proposal_origin', 'attitude_start', 'position', 'session_end', 'behavior_end'])) {
                     $value = !empty($value) ? $value : null;
-                } elseif (in_array($field, ['is_invoiced', 'is_paid', 'is_free_session'])) {
+                } elseif (in_array($field, ['is_invoiced', 'is_paid', 'is_free_session', 'with_accompaniment'])) {
                     $value = $value ? 1 : 0;
                 } elseif ($field === 'price' && $value !== null) {
                     $value = max(0, (float) $value);
@@ -1061,10 +1081,40 @@ class Session
         return bin2hex(random_bytes(32));
     }
 
-    public static function getPriceForType(string $durationType, string $clientType = 'personal'): int
+    /**
+     * Vérifie si un type de durée est une séance groupe (demi-journée ou journée)
+     */
+    public static function isGroupSession(string $durationType): bool
+    {
+        return in_array($durationType, self::GROUP_TYPES, true);
+    }
+
+    /**
+     * Récupère le prix pour un type de séance et un type de client
+     *
+     * @param string $durationType Type de durée (discovery, regular, half_day, full_day)
+     * @param string $clientType Type de client (personal, association)
+     * @param bool $withAccompaniment Avec accompagnement (pour séances groupe uniquement)
+     * @return int Prix en euros
+     */
+    public static function getPriceForType(string $durationType, string $clientType = 'personal', bool $withAccompaniment = true): int
     {
         $isAssociation = $clientType === 'association';
 
+        // Séances groupe (demi-journée, journée) - uniquement pour les associations
+        if ($durationType === self::TYPE_HALF_DAY) {
+            return $withAccompaniment
+                ? Setting::getInteger('session_half_day_price_with', 200)
+                : Setting::getInteger('session_half_day_price_without', 120);
+        }
+
+        if ($durationType === self::TYPE_FULL_DAY) {
+            return $withAccompaniment
+                ? Setting::getInteger('session_full_day_price_with', 350)
+                : Setting::getInteger('session_full_day_price_without', 200);
+        }
+
+        // Séances individuelles (discovery, regular)
         if ($durationType === self::TYPE_DISCOVERY) {
             return $isAssociation
                 ? Setting::getInteger('session_discovery_price_association', 50)

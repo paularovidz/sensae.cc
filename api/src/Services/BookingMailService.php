@@ -62,6 +62,113 @@ class BookingMailService
     }
 
     /**
+     * Retourne le libellé du bénéficiaire selon le type de session
+     * Pour les privatisations (half_day/full_day sans person_id), retourne "Privatisation"
+     * Pour les séances individuelles, retourne "Prénom Nom" de la personne
+     */
+    private function getBeneficiaryLabel(array $booking): string
+    {
+        // Si c'est une privatisation (pas de personne)
+        if (empty($booking['person_id']) || empty($booking['person_first_name'])) {
+            $durationType = $booking['duration_type'] ?? '';
+            $withAccompaniment = !empty($booking['with_accompaniment']);
+            $accompLabel = $withAccompaniment ? 'avec accompagnement' : 'sans accompagnement';
+
+            if ($durationType === 'half_day') {
+                return "Privatisation demi-journée ({$accompLabel})";
+            } elseif ($durationType === 'full_day') {
+                return "Privatisation journée complète ({$accompLabel})";
+            }
+            return 'Privatisation';
+        }
+
+        return trim("{$booking['person_first_name']} {$booking['person_last_name']}");
+    }
+
+    /**
+     * Vérifie si la session est une privatisation
+     */
+    private function isPrivatization(array $booking): bool
+    {
+        return in_array($booking['duration_type'] ?? '', ['half_day', 'full_day']);
+    }
+
+    /**
+     * Retourne le libellé du type de session
+     */
+    private function getSessionTypeLabel(array $booking): string
+    {
+        $durationType = $booking['duration_type'] ?? 'regular';
+        $withAccompaniment = !empty($booking['with_accompaniment']);
+        $accompLabel = $withAccompaniment ? 'avec accompagnement' : 'sans accompagnement';
+
+        return match ($durationType) {
+            'discovery' => 'Séance découverte',
+            'half_day' => "Privatisation demi-journée ({$accompLabel})",
+            'full_day' => "Privatisation journée ({$accompLabel})",
+            default => 'Séance classique'
+        };
+    }
+
+    /**
+     * Retourne la ligne HTML du bénéficiaire ou vide si privatisation
+     */
+    private function getBeneficiaryHtmlRow(array $booking): string
+    {
+        if ($this->isPrivatization($booking)) {
+            return '';
+        }
+        $beneficiary = $this->getBeneficiaryLabel($booking);
+        return <<<HTML
+                                    <tr>
+                                        <td style="padding: 5px 0;"><strong>Pour :</strong></td>
+                                        <td style="padding: 5px 0;">{$beneficiary}</td>
+                                    </tr>
+HTML;
+    }
+
+    /**
+     * Retourne la ligne HTML admin du bénéficiaire ou vide si privatisation
+     */
+    private function getBeneficiaryAdminHtmlRow(array $booking): string
+    {
+        if ($this->isPrivatization($booking)) {
+            return '';
+        }
+        $beneficiary = $this->getBeneficiaryLabel($booking);
+        return <<<HTML
+            <tr>
+                <td style="padding: 10px 0; border-bottom: 1px solid #eee;"><strong>Bénéficiaire :</strong></td>
+                <td style="padding: 10px 0; border-bottom: 1px solid #eee;">{$beneficiary}</td>
+            </tr>
+HTML;
+    }
+
+    /**
+     * Retourne la ligne texte du bénéficiaire ou vide si privatisation
+     */
+    private function getBeneficiaryTextLine(array $booking): string
+    {
+        if ($this->isPrivatization($booking)) {
+            return '';
+        }
+        $beneficiary = $this->getBeneficiaryLabel($booking);
+        return "Pour : {$beneficiary}\n";
+    }
+
+    /**
+     * Retourne la ligne texte admin du bénéficiaire ou vide si privatisation
+     */
+    private function getBeneficiaryAdminTextLine(array $booking): string
+    {
+        if ($this->isPrivatization($booking)) {
+            return '';
+        }
+        $beneficiary = $this->getBeneficiaryLabel($booking);
+        return "Bénéficiaire : {$beneficiary}\n";
+    }
+
+    /**
      * Envoie l'email de confirmation au client
      */
     public function sendClientConfirmation(array $booking): bool
@@ -120,7 +227,8 @@ class BookingMailService
             $this->mailer->isHTML(true);
 
             $dateFormatted = self::parseDate($booking['session_date'])->format('d/m/Y à H:i');
-            $this->mailer->Subject = "Nouvelle réservation - {$booking['person_first_name']} {$booking['person_last_name']} - {$dateFormatted}";
+            $beneficiary = $this->getBeneficiaryLabel($booking);
+            $this->mailer->Subject = "Nouvelle réservation - {$beneficiary} - {$dateFormatted}";
 
             $this->mailer->Body = $this->getAdminNotificationHtml($booking);
             $this->mailer->AltBody = $this->getAdminNotificationText($booking);
@@ -223,8 +331,9 @@ class BookingMailService
     {
         $dateFormatted = self::parseDate($booking['session_date'])->format('d/m/Y');
         $timeFormatted = self::parseDate($booking['session_date'])->format('H:i');
-        $type = $booking['duration_type'] === 'discovery' ? 'Séance découverte' : 'Séance classique';
+        $type = $this->getSessionTypeLabel($booking);
         $duration = $booking['duration_display_minutes'] . ' minutes';
+        $beneficiaryRow = $this->getBeneficiaryHtmlRow($booking);
 
         return <<<HTML
 <!DOCTYPE html>
@@ -269,10 +378,7 @@ class BookingMailService
                                         <td style="padding: 5px 0;"><strong>Durée :</strong></td>
                                         <td style="padding: 5px 0;">{$duration}</td>
                                     </tr>
-                                    <tr>
-                                        <td style="padding: 5px 0;"><strong>Pour :</strong></td>
-                                        <td style="padding: 5px 0;">{$booking['person_first_name']} {$booking['person_last_name']}</td>
-                                    </tr>
+{$beneficiaryRow}
                                 </table>
                             </div>
 
@@ -321,7 +427,8 @@ HTML;
     private function getClientConfirmationText(array $booking, string $confirmLink, string $cancelLink): string
     {
         $dateFormatted = self::parseDate($booking['session_date'])->format('d/m/Y à H:i');
-        $type = $booking['duration_type'] === 'discovery' ? 'Séance découverte' : 'Séance classique';
+        $type = $this->getSessionTypeLabel($booking);
+        $beneficiaryLine = $this->getBeneficiaryTextLine($booking);
 
         return <<<TEXT
 Bonjour {$booking['client_first_name']},
@@ -333,8 +440,7 @@ DÉTAILS DU RENDEZ-VOUS
 Date : {$dateFormatted}
 Type : {$type}
 Durée : {$booking['duration_display_minutes']} minutes
-Pour : {$booking['person_first_name']} {$booking['person_last_name']}
-
+{$beneficiaryLine}
 CONSEIL : Pensez à vous habiller confortablement pour la séance, idéalement une tenue de sport ou des vêtements souples.
 
 Pour confirmer votre rendez-vous, cliquez sur ce lien :
@@ -353,8 +459,9 @@ TEXT;
     private function getAdminNotificationHtml(array $booking): string
     {
         $dateFormatted = self::parseDate($booking['session_date'])->format('d/m/Y à H:i');
-        $type = $booking['duration_type'] === 'discovery' ? 'Séance découverte' : 'Séance classique';
+        $type = $this->getSessionTypeLabel($booking);
         $status = $booking['status'] === 'pending' ? 'En attente de confirmation client' : 'Confirmé';
+        $beneficiaryRow = $this->getBeneficiaryAdminHtmlRow($booking);
 
         return <<<HTML
 <!DOCTYPE html>
@@ -375,10 +482,7 @@ TEXT;
                 <td style="padding: 10px 0; border-bottom: 1px solid #eee;"><strong>Type :</strong></td>
                 <td style="padding: 10px 0; border-bottom: 1px solid #eee;">{$type} ({$booking['duration_display_minutes']} min)</td>
             </tr>
-            <tr>
-                <td style="padding: 10px 0; border-bottom: 1px solid #eee;"><strong>Bénéficiaire :</strong></td>
-                <td style="padding: 10px 0; border-bottom: 1px solid #eee;">{$booking['person_first_name']} {$booking['person_last_name']}</td>
-            </tr>
+{$beneficiaryRow}
             <tr>
                 <td style="padding: 10px 0; border-bottom: 1px solid #eee;"><strong>Contact :</strong></td>
                 <td style="padding: 10px 0; border-bottom: 1px solid #eee;">{$booking['client_first_name']} {$booking['client_last_name']}</td>
@@ -406,7 +510,8 @@ HTML;
     private function getAdminNotificationText(array $booking): string
     {
         $dateFormatted = self::parseDate($booking['session_date'])->format('d/m/Y à H:i');
-        $type = $booking['duration_type'] === 'discovery' ? 'Séance découverte' : 'Séance classique';
+        $type = $this->getSessionTypeLabel($booking);
+        $beneficiaryLine = $this->getBeneficiaryAdminTextLine($booking);
 
         return <<<TEXT
 NOUVELLE RÉSERVATION
@@ -415,8 +520,7 @@ NOUVELLE RÉSERVATION
 Date : {$dateFormatted}
 Type : {$type} ({$booking['duration_display_minutes']} min)
 
-Bénéficiaire : {$booking['person_first_name']} {$booking['person_last_name']}
-Contact : {$booking['client_first_name']} {$booking['client_last_name']}
+{$beneficiaryLine}Contact : {$booking['client_first_name']} {$booking['client_last_name']}
 Email : {$booking['client_email']}
 Téléphone : {$booking['client_phone']}
 
@@ -427,6 +531,12 @@ TEXT;
     private function getReminderHtml(array $booking): string
     {
         $timeFormatted = self::parseDate($booking['session_date'])->format('H:i');
+        $beneficiary = $this->getBeneficiaryLabel($booking);
+        $beneficiaryParagraph = $this->isPrivatization($booking) ? '' : <<<HTML
+                            <p style="margin: 0 0 20px; font-size: 16px; color: #555;">
+                                Pour : <strong>{$beneficiary}</strong>
+                            </p>
+HTML;
 
         return <<<HTML
 <!DOCTYPE html>
@@ -448,9 +558,7 @@ TEXT;
                             <p style="margin: 0 0 20px; font-size: 16px; color: #555; line-height: 1.6;">
                                 Nous vous rappelons votre séance Snoezelen <strong>demain à {$timeFormatted}</strong>.
                             </p>
-                            <p style="margin: 0 0 20px; font-size: 16px; color: #555;">
-                                Pour : <strong>{$booking['person_first_name']} {$booking['person_last_name']}</strong>
-                            </p>
+{$beneficiaryParagraph}
                             <div style="background-color: #fff3cd; border: 1px solid #ffc107; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
                                 <p style="margin: 0; font-size: 14px; color: #856404;">
                                     <strong>Rappel :</strong> Pensez à vous habiller confortablement, idéalement une tenue de sport ou des vêtements souples.
@@ -473,6 +581,7 @@ HTML;
     private function getReminderText(array $booking): string
     {
         $dateFormatted = self::parseDate($booking['session_date'])->format('d/m/Y à H:i');
+        $beneficiaryLine = $this->getBeneficiaryTextLine($booking);
 
         return <<<TEXT
 Bonjour {$booking['client_first_name']},
@@ -480,8 +589,7 @@ Bonjour {$booking['client_first_name']},
 Nous vous rappelons votre séance Snoezelen demain.
 
 Date : {$dateFormatted}
-Pour : {$booking['person_first_name']} {$booking['person_last_name']}
-
+{$beneficiaryLine}
 RAPPEL : Pensez à vous habiller confortablement, idéalement une tenue de sport ou des vêtements souples.
 
 À demain !
@@ -492,6 +600,8 @@ TEXT;
     private function getCancellationHtml(array $booking): string
     {
         $dateFormatted = self::parseDate($booking['session_date'])->format('d/m/Y à H:i');
+        $beneficiary = $this->getBeneficiaryLabel($booking);
+        $forBeneficiary = $this->isPrivatization($booking) ? '' : " pour <strong>{$beneficiary}</strong>";
 
         return <<<HTML
 <!DOCTYPE html>
@@ -511,7 +621,7 @@ TEXT;
                         <td style="padding: 40px;">
                             <p style="margin: 0 0 20px; font-size: 16px; color: #333;">Bonjour {$booking['client_first_name']},</p>
                             <p style="margin: 0 0 20px; font-size: 16px; color: #555;">
-                                Votre rendez-vous du <strong>{$dateFormatted}</strong> pour <strong>{$booking['person_first_name']} {$booking['person_last_name']}</strong> a bien été annulé.
+                                Votre rendez-vous du <strong>{$dateFormatted}</strong>{$forBeneficiary} a bien été annulé.
                             </p>
                             <p style="margin: 0; font-size: 14px; color: #888;">
                                 N'hésitez pas à reprendre rendez-vous quand vous le souhaitez.<br>
@@ -531,11 +641,13 @@ HTML;
     private function getCancellationText(array $booking): string
     {
         $dateFormatted = self::parseDate($booking['session_date'])->format('d/m/Y à H:i');
+        $beneficiary = $this->getBeneficiaryLabel($booking);
+        $forBeneficiary = $this->isPrivatization($booking) ? '' : " pour {$beneficiary}";
 
         return <<<TEXT
 Bonjour {$booking['client_first_name']},
 
-Votre rendez-vous du {$dateFormatted} pour {$booking['person_first_name']} {$booking['person_last_name']} a bien été annulé.
+Votre rendez-vous du {$dateFormatted}{$forBeneficiary} a bien été annulé.
 
 N'hésitez pas à reprendre rendez-vous quand vous le souhaitez.
 
@@ -547,7 +659,8 @@ TEXT;
     {
         $dateFormatted = self::parseDate($booking['session_date'])->format('d/m/Y');
         $timeFormatted = self::parseDate($booking['session_date'])->format('H:i');
-        $type = $booking['duration_type'] === 'discovery' ? 'Séance découverte' : 'Séance classique';
+        $type = $this->getSessionTypeLabel($booking);
+        $beneficiaryRow = $this->getBeneficiaryHtmlRow($booking);
 
         return <<<HTML
 <!DOCTYPE html>
@@ -584,10 +697,7 @@ TEXT;
                                         <td style="padding: 5px 0;"><strong>Type :</strong></td>
                                         <td style="padding: 5px 0;">{$type}</td>
                                     </tr>
-                                    <tr>
-                                        <td style="padding: 5px 0;"><strong>Pour :</strong></td>
-                                        <td style="padding: 5px 0;">{$booking['person_first_name']} {$booking['person_last_name']}</td>
-                                    </tr>
+{$beneficiaryRow}
                                 </table>
                             </div>
 
@@ -616,7 +726,8 @@ HTML;
     private function getBookingConfirmedText(array $booking): string
     {
         $dateFormatted = self::parseDate($booking['session_date'])->format('d/m/Y à H:i');
-        $type = $booking['duration_type'] === 'discovery' ? 'Séance découverte' : 'Séance classique';
+        $type = $this->getSessionTypeLabel($booking);
+        $beneficiaryLine = $this->getBeneficiaryTextLine($booking);
 
         return <<<TEXT
 Bonjour {$booking['client_first_name']},
@@ -627,8 +738,7 @@ DÉTAILS
 -------
 Date : {$dateFormatted}
 Type : {$type}
-Pour : {$booking['person_first_name']} {$booking['person_last_name']}
-
+{$beneficiaryLine}
 CONSEIL : Pensez à vous habiller confortablement pour la séance, idéalement une tenue de sport ou des vêtements souples.
 
 Cet email contient une invitation calendrier que vous pouvez accepter depuis votre application mail.

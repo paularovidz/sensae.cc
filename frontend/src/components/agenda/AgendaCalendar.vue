@@ -105,6 +105,19 @@ function formatTime(dateString) {
   })
 }
 
+// Vérifie si c'est une privatisation
+function isPrivatization(booking) {
+  return booking.duration_type === 'half_day' || booking.duration_type === 'full_day'
+}
+
+// Retourne le label pour le calendrier (personne ou association pour privatisation)
+function getBookingLabel(booking) {
+  if (isPrivatization(booking)) {
+    return booking.company_name || 'Privatisation'
+  }
+  return `${booking.person_first_name || ''} ${booking.person_last_name || ''}`.trim()
+}
+
 // Position et hauteur des bookings
 function getBookingStyle(booking) {
   const date = new Date(booking.session_date)
@@ -300,7 +313,7 @@ emit('week-change', { start: currentWeekStart.value, end: getWeekEnd(currentWeek
               @click="selectBooking(booking)"
               :style="getBookingStyle(booking)"
               class="absolute left-0.5 right-0.5 flex flex-col cursor-pointer overflow-hidden"
-              :title="`${booking.person_first_name} ${booking.person_last_name} - ${formatTime(booking.session_date)}`"
+              :title="`${getBookingLabel(booking)} - ${formatTime(booking.session_date)}`"
             >
               <!-- Partie séance -->
               <div
@@ -321,7 +334,7 @@ emit('week-change', { start: currentWeekStart.value, end: getWeekEnd(currentWeek
                   <span class="truncate">{{ formatTime(booking.session_date) }}</span>
                 </div>
                 <div class="truncate text-[10px] opacity-80 pl-3.5">
-                  {{ booking.person_first_name }} {{ booking.person_last_name }}
+                  {{ getBookingLabel(booking) }}
                 </div>
               </div>
               <!-- Partie pause inter-séance -->

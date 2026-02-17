@@ -95,31 +95,44 @@ class SessionController
 
         $data = json_decode(file_get_contents('php://input'), true) ?? [];
 
+        // Determine if this is a group session (half_day or full_day)
+        $durationType = $data['duration_type'] ?? 'regular';
+        $isGroupSession = in_array($durationType, ['half_day', 'full_day'], true);
+
         // Validate required fields
         $validator = new Validator($data);
+
+        // person_id is optional for group sessions
+        if (!$isGroupSession) {
+            $validator->required('person_id')->uuid('person_id');
+        } elseif (!empty($data['person_id'])) {
+            $validator->uuid('person_id');
+        }
+
         $validator
-            ->required('person_id')->uuid('person_id')
             ->required('session_date')->datetime('session_date')
             ->required('duration_minutes')->integer('duration_minutes');
 
-        // Validate optional enum fields (only if non-empty)
-        if (!empty($data['behavior_start'])) {
-            $validator->inArray('behavior_start', Session::BEHAVIORS_START);
-        }
-        if (!empty($data['proposal_origin'])) {
-            $validator->inArray('proposal_origin', Session::PROPOSAL_ORIGINS);
-        }
-        if (!empty($data['attitude_start'])) {
-            $validator->inArray('attitude_start', Session::ATTITUDES_START);
-        }
-        if (!empty($data['position'])) {
-            $validator->inArray('position', Session::POSITIONS);
-        }
-        if (!empty($data['session_end'])) {
-            $validator->inArray('session_end', Session::SESSION_ENDS);
-        }
-        if (!empty($data['behavior_end'])) {
-            $validator->inArray('behavior_end', Session::BEHAVIORS_END);
+        // Validate optional enum fields (only if non-empty and not a group session)
+        if (!$isGroupSession) {
+            if (!empty($data['behavior_start'])) {
+                $validator->inArray('behavior_start', Session::BEHAVIORS_START);
+            }
+            if (!empty($data['proposal_origin'])) {
+                $validator->inArray('proposal_origin', Session::PROPOSAL_ORIGINS);
+            }
+            if (!empty($data['attitude_start'])) {
+                $validator->inArray('attitude_start', Session::ATTITUDES_START);
+            }
+            if (!empty($data['position'])) {
+                $validator->inArray('position', Session::POSITIONS);
+            }
+            if (!empty($data['session_end'])) {
+                $validator->inArray('session_end', Session::SESSION_ENDS);
+            }
+            if (!empty($data['behavior_end'])) {
+                $validator->inArray('behavior_end', Session::BEHAVIORS_END);
+            }
         }
         if (!empty($data['sessions_per_month'])) {
             $validator->integer('sessions_per_month');
@@ -127,8 +140,8 @@ class SessionController
 
         $validator->validate();
 
-        // Validate communication array
-        if (isset($data['communication']) && is_array($data['communication'])) {
+        // Validate communication array (only for non-group sessions)
+        if (!$isGroupSession && isset($data['communication']) && is_array($data['communication'])) {
             foreach ($data['communication'] as $comm) {
                 if (!in_array($comm, Session::COMMUNICATIONS, true)) {
                     Response::validationError(['communication' => 'Valeur de communication invalide: ' . $comm]);
@@ -136,14 +149,17 @@ class SessionController
             }
         }
 
-        // Check person exists and access
-        $person = Person::findById($data['person_id']);
-        if (!$person) {
-            Response::notFound('Personne non trouvée');
-        }
+        // Check person exists and access (only if person_id is provided)
+        $person = null;
+        if (!empty($data['person_id'])) {
+            $person = Person::findById($data['person_id']);
+            if (!$person) {
+                Response::notFound('Personne non trouvée');
+            }
 
-        if (!$isAdmin && !Person::isAssignedToUser($data['person_id'], $currentUser['id'])) {
-            Response::forbidden('Vous n\'êtes pas autorisé à créer une séance pour cette personne');
+            if (!$isAdmin && !Person::isAssignedToUser($data['person_id'], $currentUser['id'])) {
+                Response::forbidden('Vous n\'êtes pas autorisé à créer une séance pour cette personne');
+            }
         }
 
         // Validate proposals if provided
@@ -178,21 +194,26 @@ class SessionController
         }
 
         // Vérifier la carte de fidélité des utilisateurs assignés à cette personne
+        // (uniquement pour les séances individuelles avec une personne)
         $loyaltyWarning = null;
-        $assignedUsers = Person::getAssignedUsers($data['person_id']);
+        $assignedUsers = [];
         $sessionsRequired = Setting::getInteger('loyalty_sessions_required', 9);
 
-        foreach ($assignedUsers as $assignedUser) {
-            // Seuls les particuliers sont éligibles
-            if (User::isPersonalClient($assignedUser['id'])) {
-                $loyaltyInfo = LoyaltyCard::getWithProgress($assignedUser['id'], $sessionsRequired);
-                if ($loyaltyInfo['eligible'] && $loyaltyInfo['free_session_available']) {
-                    $loyaltyWarning = [
-                        'user_id' => $assignedUser['id'],
-                        'user_name' => $assignedUser['first_name'] . ' ' . $assignedUser['last_name'],
-                        'message' => 'Ce client a une séance gratuite disponible sur sa carte de fidélité!'
-                    ];
-                    break;
+        if (!$isGroupSession && !empty($data['person_id'])) {
+            $assignedUsers = Person::getAssignedUsers($data['person_id']);
+
+            foreach ($assignedUsers as $assignedUser) {
+                // Seuls les particuliers sont éligibles
+                if (User::isPersonalClient($assignedUser['id'])) {
+                    $loyaltyInfo = LoyaltyCard::getWithProgress($assignedUser['id'], $sessionsRequired);
+                    if ($loyaltyInfo['eligible'] && $loyaltyInfo['free_session_available']) {
+                        $loyaltyWarning = [
+                            'user_id' => $assignedUser['id'],
+                            'user_name' => $assignedUser['first_name'] . ' ' . $assignedUser['last_name'],
+                            'message' => 'Ce client a une séance gratuite disponible sur sa carte de fidélité!'
+                        ];
+                        break;
+                    }
                 }
             }
         }
@@ -220,41 +241,44 @@ class SessionController
         }
 
         // Mettre à jour la carte de fidélité si ce n'est pas une séance gratuite
+        // (uniquement pour les séances individuelles avec une personne)
         // Une séance est gratuite si is_free_session=true OU si le code promo est de type free_session
         $isFreeSession = ($data['is_free_session'] ?? false) ||
                          ($promoCodeId && PromoCode::isFreeSession($promoCodeId));
         $loyaltyPromoGenerated = null;
 
-        foreach ($assignedUsers as $assignedUser) {
-            if (User::isPersonalClient($assignedUser['id'])) {
-                if ($isFreeSession) {
-                    // Marquer la séance gratuite comme utilisée
-                    LoyaltyCard::markFreeSessionUsed($assignedUser['id']);
-                } else {
-                    // Incrémenter le compteur de séances
-                    $loyaltyResult = LoyaltyCard::incrementSessions($assignedUser['id'], $sessionsRequired);
+        if (!$isGroupSession && !empty($assignedUsers)) {
+            foreach ($assignedUsers as $assignedUser) {
+                if (User::isPersonalClient($assignedUser['id'])) {
+                    if ($isFreeSession) {
+                        // Marquer la séance gratuite comme utilisée
+                        LoyaltyCard::markFreeSessionUsed($assignedUser['id']);
+                    } else {
+                        // Incrémenter le compteur de séances
+                        $loyaltyResult = LoyaltyCard::incrementSessions($assignedUser['id'], $sessionsRequired);
 
-                    // Si la carte vient d'être complétée, générer un code promo
-                    if ($loyaltyResult['just_completed']) {
-                        $userName = $assignedUser['first_name'] . ' ' . $assignedUser['last_name'];
-                        $promoData = PromoCode::generateLoyaltyCode($assignedUser['id'], $userName);
+                        // Si la carte vient d'être complétée, générer un code promo
+                        if ($loyaltyResult['just_completed']) {
+                            $userName = $assignedUser['first_name'] . ' ' . $assignedUser['last_name'];
+                            $promoData = PromoCode::generateLoyaltyCode($assignedUser['id'], $userName);
 
-                        // Envoyer l'email avec le code promo
-                        if (!empty($assignedUser['email'])) {
-                            $mailService = new MailService();
-                            $mailService->sendLoyaltyPromoCode(
-                                $assignedUser['email'],
-                                $assignedUser['first_name'],
-                                $promoData['code']
-                            );
+                            // Envoyer l'email avec le code promo
+                            if (!empty($assignedUser['email'])) {
+                                $mailService = new MailService();
+                                $mailService->sendLoyaltyPromoCode(
+                                    $assignedUser['email'],
+                                    $assignedUser['first_name'],
+                                    $promoData['code']
+                                );
+                            }
+
+                            $loyaltyPromoGenerated = [
+                                'user_id' => $assignedUser['id'],
+                                'user_name' => $userName,
+                                'promo_code' => $promoData['code'],
+                                'message' => "Code promo fidélité généré et envoyé par email : {$promoData['code']}"
+                            ];
                         }
-
-                        $loyaltyPromoGenerated = [
-                            'user_id' => $assignedUser['id'],
-                            'user_name' => $userName,
-                            'promo_code' => $promoData['code'],
-                            'message' => "Code promo fidélité généré et envoyé par email : {$promoData['code']}"
-                        ];
                     }
                 }
             }

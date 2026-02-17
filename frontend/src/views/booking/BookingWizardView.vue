@@ -99,14 +99,22 @@ const gdprError = ref(false)
 const cgrError = ref(false)
 const cameBackFromConfirmation = ref(false)
 
-// Afficher le bouton retour sauf à l'étape 1, à l'étape 5, et à l'étape 2 pour les utilisateurs connectés
+// Afficher le bouton retour sauf à l'étape 1, à l'étape 5, et à l'étape 2 pour les utilisateurs connectés (sauf associations en sous-étape)
 const showBackButton = computed(() => {
   if (bookingStore.currentStep <= 1 || bookingStore.currentStep >= 5) {
     return false
   }
-  // Pour les utilisateurs connectés, pas de retour à l'étape 2 (ils commencent là)
+  // Pour les utilisateurs connectés à l'étape 2
   if (authStore.isAuthenticated && bookingStore.currentStep === 2) {
+    // Afficher le retour si association en sous-étape (privatization config ou person selection)
+    if (bookingStore.currentClientType === 'association' && bookingStore.associationSessionCategory) {
+      return true
+    }
     return false
+  }
+  // Pour les non-authentifiés à l'étape 2, afficher si association en sous-étape
+  if (bookingStore.currentStep === 2 && bookingStore.currentClientType === 'association' && bookingStore.associationSessionCategory) {
+    return true
   }
   return true
 })
@@ -200,6 +208,12 @@ async function handleNewBooking() {
 }
 
 function handlePrev() {
+  // Pour les associations à l'étape 2 avec une catégorie choisie, revenir au choix de catégorie
+  if (bookingStore.currentStep === 2 && bookingStore.currentClientType === 'association' && bookingStore.associationSessionCategory) {
+    bookingStore.resetAssociationSessionCategory()
+    return
+  }
+
   // Pour les utilisateurs connectés à l'étape 2, ne pas revenir à l'étape 1
   if (authStore.isAuthenticated && bookingStore.currentStep === 2) {
     return

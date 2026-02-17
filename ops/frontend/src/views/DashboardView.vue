@@ -2,18 +2,19 @@
 import { onMounted, ref, watch, computed } from 'vue'
 import { useOpsStore } from '@/stores/ops'
 import KpiCard from '@/components/ui/KpiCard.vue'
-import { Bar } from 'vue-chartjs'
+import { Bar, Doughnut } from 'vue-chartjs'
 import {
   Chart as ChartJS,
   CategoryScale,
   LinearScale,
   BarElement,
+  ArcElement,
   Title,
   Tooltip,
   Legend
 } from 'chart.js'
 
-ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend)
+ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Title, Tooltip, Legend)
 
 const opsStore = useOpsStore()
 const loading = ref(true)
@@ -79,9 +80,15 @@ const yearChartData = computed(() => {
     labels: monthLabels,
     datasets: [
       {
-        label: 'Séances',
-        data: Object.values(months).map(m => m.sessions || 0),
+        label: 'Séances individuelles',
+        data: Object.values(months).map(m => m.individual || 0),
         backgroundColor: '#10B981', // Emerald-500
+        stack: 'main'
+      },
+      {
+        label: 'Privatisations',
+        data: Object.values(months).map(m => m.privatization || 0),
+        backgroundColor: '#F59E0B', // Amber-500
         stack: 'main'
       },
       {
@@ -118,9 +125,15 @@ const dailyChartData = computed(() => {
     labels: dayLabels,
     datasets: [
       {
-        label: 'Séances',
-        data: dayValues.map(d => d.sessions || 0),
+        label: 'Séances individuelles',
+        data: dayValues.map(d => d.individual || 0),
         backgroundColor: '#10B981', // Emerald-500
+        stack: 'main'
+      },
+      {
+        label: 'Privatisations',
+        data: dayValues.map(d => d.privatization || 0),
+        backgroundColor: '#F59E0B', // Amber-500
         stack: 'main'
       },
       {
@@ -192,47 +205,156 @@ function formatCurrency(value) {
   }).format(value)
 }
 
-// Revenue subtitles showing breakdown (sessions + prepaid packs by type)
-const yearRevenueSubtitle = computed(() => {
+// Donut chart options
+const donutOptions = {
+  responsive: true,
+  maintainAspectRatio: false,
+  cutout: '65%',
+  plugins: {
+    legend: {
+      display: false
+    },
+    tooltip: {
+      callbacks: {
+        label: (context) => {
+          const value = context.parsed || 0
+          const total = context.dataset.data.reduce((a, b) => a + b, 0)
+          const percent = total > 0 ? Math.round((value / total) * 100) : 0
+          return `${context.label}: ${value.toLocaleString('fr-FR')} € (${percent}%)`
+        }
+      }
+    }
+  }
+}
+
+// Helper to build donut chart data
+function buildDonutData(data) {
+  return {
+    labels: data.map(d => d.label),
+    datasets: [{
+      data: data.map(d => d.value),
+      backgroundColor: data.map(d => d.color),
+      borderWidth: 0,
+      hoverOffset: 4
+    }]
+  }
+}
+
+// Year donut charts
+const yearClientTypeChart = computed(() => {
   const totals = opsStore.yearData?.totals
-  if (!totals) return ''
-  const parts = []
-  if (totals.sessions > 0) {
-    parts.push(`Séances: ${formatCurrency(totals.sessions)}`)
-  }
-  if (totals.pack_2 > 0) {
-    parts.push(`Pack 2 séances: ${formatCurrency(totals.pack_2)}`)
-  }
-  if (totals.pack_4 > 0) {
-    parts.push(`Pack 4 séances: ${formatCurrency(totals.pack_4)}`)
-  }
-  return parts.join(' | ')
+  if (!totals) return null
+  return buildDonutData([
+    { label: 'Particuliers', value: totals.individual || 0, color: '#10B981' },
+    { label: 'Associations', value: totals.privatization || 0, color: '#F59E0B' }
+  ])
 })
 
-const monthRevenueSubtitle = computed(() => {
+const yearRevenueTypeChart = computed(() => {
+  const totals = opsStore.yearData?.totals
+  if (!totals) return null
+  return buildDonutData([
+    { label: 'Séances', value: totals.sessions || 0, color: '#10B981' },
+    { label: 'Packs', value: totals.prepaid_packs || 0, color: '#3B82F6' }
+  ])
+})
+
+const yearRevenueDetailChart = computed(() => {
+  const totals = opsStore.yearData?.totals
+  if (!totals) return null
+  return buildDonutData([
+    { label: 'Individuelles', value: totals.individual || 0, color: '#10B981' },
+    { label: 'Privatisations', value: totals.privatization || 0, color: '#F59E0B' },
+    { label: 'Pack 2', value: totals.pack_2 || 0, color: '#3B82F6' },
+    { label: 'Pack 4', value: totals.pack_4 || 0, color: '#8B5CF6' }
+  ])
+})
+
+// Month donut charts
+const monthClientTypeChart = computed(() => {
   const totals = opsStore.dailyData?.totals
-  const kpis = opsStore.dashboard?.kpis?.revenue
-  if (!totals && !kpis) return ''
-
-  const parts = []
-  const sessionCount = kpis?.session_count || 0
-  const sessions = totals?.sessions || kpis?.sessions || 0
-  const pack2 = totals?.pack_2 || kpis?.pack_2 || 0
-  const pack4 = totals?.pack_4 || kpis?.pack_4 || 0
-
-  if (sessions > 0 || sessionCount > 0) {
-    parts.push(`${sessionCount} séances (${formatCurrency(sessions)})`)
-  }
-  if (pack2 > 0) {
-    const pack2Count = kpis?.pack_2_count || 0
-    parts.push(`${pack2Count} pack 2 séances (${formatCurrency(pack2)})`)
-  }
-  if (pack4 > 0) {
-    const pack4Count = kpis?.pack_4_count || 0
-    parts.push(`${pack4Count} pack 4 séances (${formatCurrency(pack4)})`)
-  }
-  return parts.join(' | ')
+  if (!totals) return null
+  return buildDonutData([
+    { label: 'Particuliers', value: totals.individual || 0, color: '#10B981' },
+    { label: 'Associations', value: totals.privatization || 0, color: '#F59E0B' }
+  ])
 })
+
+const monthRevenueTypeChart = computed(() => {
+  const totals = opsStore.dailyData?.totals
+  if (!totals) return null
+  return buildDonutData([
+    { label: 'Séances', value: totals.sessions || 0, color: '#10B981' },
+    { label: 'Packs', value: totals.prepaid_packs || 0, color: '#3B82F6' }
+  ])
+})
+
+const monthRevenueDetailChart = computed(() => {
+  const totals = opsStore.dailyData?.totals
+  if (!totals) return null
+  return buildDonutData([
+    { label: 'Individuelles', value: totals.individual || 0, color: '#10B981' },
+    { label: 'Privatisations', value: totals.privatization || 0, color: '#F59E0B' },
+    { label: 'Pack 2', value: totals.pack_2 || 0, color: '#3B82F6' },
+    { label: 'Pack 4', value: totals.pack_4 || 0, color: '#8B5CF6' }
+  ])
+})
+
+// Get totals for center display
+const yearTotals = computed(() => opsStore.yearData?.totals || {})
+const monthTotals = computed(() => opsStore.dailyData?.totals || {})
+
+// Expense category colors palette
+const expenseColors = [
+  '#EF4444', '#F97316', '#F59E0B', '#EAB308', '#84CC16',
+  '#22C55E', '#14B8A6', '#06B6D4', '#3B82F6', '#6366F1',
+  '#8B5CF6', '#A855F7', '#D946EF', '#EC4899', '#F43F5E'
+]
+
+// Year expense chart
+const yearExpenseChart = computed(() => {
+  const categories = opsStore.yearData?.expenses_by_category
+  if (!categories || categories.length === 0) return null
+
+  return buildDonutData(categories.map((cat, idx) => ({
+    label: cat.name,
+    value: parseFloat(cat.total) || 0,
+    color: cat.color || expenseColors[idx % expenseColors.length]
+  })))
+})
+
+const topYearExpenseCategories = computed(() => {
+  const categories = opsStore.yearData?.expenses_by_category
+  if (!categories) return []
+  return categories.slice(0, 5).map((cat, idx) => ({
+    name: cat.name,
+    total: parseFloat(cat.total) || 0,
+    color: cat.color || expenseColors[idx % expenseColors.length]
+  }))
+})
+
+// Month expense chart
+const monthExpenseChart = computed(() => {
+  const categories = opsStore.dailyData?.expenses_by_category
+  if (!categories || categories.length === 0) return null
+
+  return buildDonutData(categories.map((cat, idx) => ({
+    label: cat.name,
+    value: parseFloat(cat.total) || 0,
+    color: cat.color || expenseColors[idx % expenseColors.length]
+  })))
+})
+
+const topMonthExpenseCategories = computed(() => {
+  const categories = opsStore.dailyData?.expenses_by_category
+  if (!categories) return []
+  return categories.slice(0, 5).map((cat, idx) => ({
+    name: cat.name,
+    total: parseFloat(cat.total) || 0,
+    color: cat.color || expenseColors[idx % expenseColors.length]
+  }))
+})
+
 </script>
 
 <template>
@@ -311,25 +433,104 @@ const monthRevenueSubtitle = computed(() => {
     <!-- Annual View -->
     <template v-else-if="opsStore.isAnnualView">
       <!-- KPIs -->
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
         <KpiCard
           title="CA annuel HT"
           :value="opsStore.yearData?.totals?.revenue"
-          :subtitle="yearRevenueSubtitle"
           color="green"
         />
         <KpiCard
           title="Depenses annuelles HT"
           :value="opsStore.yearData?.totals?.expenses"
-          subtitle=""
           color="red"
         />
         <KpiCard
           title="Resultat HT"
           :value="opsStore.yearData?.totals?.balance"
-          subtitle=""
           :color="(opsStore.yearData?.totals?.balance || 0) >= 0 ? 'green' : 'red'"
         />
+      </div>
+
+      <!-- Revenue Breakdown - Donut Charts -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <!-- Particuliers vs Associations -->
+        <div class="card" v-if="yearClientTypeChart">
+          <h4 class="text-sm font-medium text-gray-400 mb-2 text-center">Type de client</h4>
+          <div class="h-36 relative">
+            <Doughnut :data="yearClientTypeChart" :options="donutOptions" />
+            <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <div class="text-center">
+                <div class="text-lg font-bold text-white">{{ formatCurrency(yearTotals.sessions || 0) }}</div>
+                <div class="text-xs text-gray-500">séances</div>
+              </div>
+            </div>
+          </div>
+          <div class="flex justify-center gap-4 mt-2 text-xs">
+            <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-500"></span> Particuliers</span>
+            <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-amber-500"></span> Assos</span>
+          </div>
+        </div>
+
+        <!-- Séances vs Packs -->
+        <div class="card" v-if="yearRevenueTypeChart">
+          <h4 class="text-sm font-medium text-gray-400 mb-2 text-center">Mode d'achat</h4>
+          <div class="h-36 relative">
+            <Doughnut :data="yearRevenueTypeChart" :options="donutOptions" />
+            <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <div class="text-center">
+                <div class="text-lg font-bold text-white">{{ formatCurrency(yearTotals.revenue || 0) }}</div>
+                <div class="text-xs text-gray-500">total</div>
+              </div>
+            </div>
+          </div>
+          <div class="flex justify-center gap-4 mt-2 text-xs">
+            <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-500"></span> À l'unité</span>
+            <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-blue-500"></span> Packs</span>
+          </div>
+        </div>
+
+        <!-- Détail revenus -->
+        <div class="card" v-if="yearRevenueDetailChart">
+          <h4 class="text-sm font-medium text-gray-400 mb-2 text-center">Détail revenus</h4>
+          <div class="h-36 relative">
+            <Doughnut :data="yearRevenueDetailChart" :options="donutOptions" />
+            <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <div class="text-center">
+                <div class="text-lg font-bold text-green-400">{{ formatCurrency(yearTotals.revenue || 0) }}</div>
+                <div class="text-xs text-gray-500">CA</div>
+              </div>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-1 mt-2 text-xs">
+            <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-500"></span> Indiv.</span>
+            <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-amber-500"></span> Privat.</span>
+            <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-blue-500"></span> Pack 2</span>
+            <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-violet-500"></span> Pack 4</span>
+          </div>
+        </div>
+
+        <!-- Dépenses par catégorie -->
+        <div class="card" v-if="yearExpenseChart">
+          <h4 class="text-sm font-medium text-gray-400 mb-2 text-center">Dépenses</h4>
+          <div class="h-36 relative">
+            <Doughnut :data="yearExpenseChart" :options="donutOptions" />
+            <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <div class="text-center">
+                <div class="text-lg font-bold text-red-400">{{ formatCurrency(yearTotals.expenses || 0) }}</div>
+                <div class="text-xs text-gray-500">total</div>
+              </div>
+            </div>
+          </div>
+          <div class="mt-2 space-y-0.5 text-xs max-h-16 overflow-y-auto">
+            <div v-for="(cat, idx) in topYearExpenseCategories" :key="idx" class="flex items-center justify-between">
+              <span class="flex items-center gap-1 text-gray-400 truncate">
+                <span class="w-2 h-2 rounded-full flex-shrink-0" :style="{ backgroundColor: cat.color }"></span>
+                {{ cat.name }}
+              </span>
+              <span class="text-gray-300 ml-2">{{ formatCurrency(cat.total) }}</span>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- Yearly Chart -->
@@ -403,25 +604,104 @@ const monthRevenueSubtitle = computed(() => {
       </button>
 
       <!-- KPIs -->
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
         <KpiCard
           title="CA du mois HT"
           :value="opsStore.dailyData?.totals?.revenue"
-          :subtitle="monthRevenueSubtitle"
           color="green"
         />
         <KpiCard
           title="Depenses du mois HT"
           :value="opsStore.dailyData?.totals?.expenses"
-          subtitle=""
           color="red"
         />
         <KpiCard
           title="Resultat du mois"
           :value="opsStore.dailyData?.totals?.balance"
-          subtitle=""
           :color="(opsStore.dailyData?.totals?.balance || 0) >= 0 ? 'green' : 'red'"
         />
+      </div>
+
+      <!-- Revenue Breakdown - Donut Charts -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <!-- Particuliers vs Associations -->
+        <div class="card" v-if="monthClientTypeChart">
+          <h4 class="text-sm font-medium text-gray-400 mb-2 text-center">Type de client</h4>
+          <div class="h-36 relative">
+            <Doughnut :data="monthClientTypeChart" :options="donutOptions" />
+            <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <div class="text-center">
+                <div class="text-lg font-bold text-white">{{ formatCurrency(monthTotals.sessions || 0) }}</div>
+                <div class="text-xs text-gray-500">séances</div>
+              </div>
+            </div>
+          </div>
+          <div class="flex justify-center gap-4 mt-2 text-xs">
+            <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-500"></span> Particuliers</span>
+            <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-amber-500"></span> Assos</span>
+          </div>
+        </div>
+
+        <!-- Séances vs Packs -->
+        <div class="card" v-if="monthRevenueTypeChart">
+          <h4 class="text-sm font-medium text-gray-400 mb-2 text-center">Mode d'achat</h4>
+          <div class="h-36 relative">
+            <Doughnut :data="monthRevenueTypeChart" :options="donutOptions" />
+            <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <div class="text-center">
+                <div class="text-lg font-bold text-white">{{ formatCurrency(monthTotals.revenue || 0) }}</div>
+                <div class="text-xs text-gray-500">total</div>
+              </div>
+            </div>
+          </div>
+          <div class="flex justify-center gap-4 mt-2 text-xs">
+            <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-500"></span> À l'unité</span>
+            <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-blue-500"></span> Packs</span>
+          </div>
+        </div>
+
+        <!-- Détail revenus -->
+        <div class="card" v-if="monthRevenueDetailChart">
+          <h4 class="text-sm font-medium text-gray-400 mb-2 text-center">Détail revenus</h4>
+          <div class="h-36 relative">
+            <Doughnut :data="monthRevenueDetailChart" :options="donutOptions" />
+            <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <div class="text-center">
+                <div class="text-lg font-bold text-green-400">{{ formatCurrency(monthTotals.revenue || 0) }}</div>
+                <div class="text-xs text-gray-500">CA</div>
+              </div>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-1 mt-2 text-xs">
+            <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-500"></span> Indiv.</span>
+            <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-amber-500"></span> Privat.</span>
+            <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-blue-500"></span> Pack 2</span>
+            <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-violet-500"></span> Pack 4</span>
+          </div>
+        </div>
+
+        <!-- Dépenses par catégorie -->
+        <div class="card" v-if="monthExpenseChart">
+          <h4 class="text-sm font-medium text-gray-400 mb-2 text-center">Dépenses</h4>
+          <div class="h-36 relative">
+            <Doughnut :data="monthExpenseChart" :options="donutOptions" />
+            <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <div class="text-center">
+                <div class="text-lg font-bold text-red-400">{{ formatCurrency(monthTotals.expenses || 0) }}</div>
+                <div class="text-xs text-gray-500">total</div>
+              </div>
+            </div>
+          </div>
+          <div class="mt-2 space-y-0.5 text-xs max-h-16 overflow-y-auto">
+            <div v-for="(cat, idx) in topMonthExpenseCategories" :key="idx" class="flex items-center justify-between">
+              <span class="flex items-center gap-1 text-gray-400 truncate">
+                <span class="w-2 h-2 rounded-full flex-shrink-0" :style="{ backgroundColor: cat.color }"></span>
+                {{ cat.name }}
+              </span>
+              <span class="text-gray-300 ml-2">{{ formatCurrency(cat.total) }}</span>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- Daily Chart -->

@@ -181,6 +181,7 @@ async function handleSubmit() {
           <div>
             <div class="font-medium text-gray-100">
               {{ selectedUser.first_name }} {{ selectedUser.last_name }}
+              <span v-if="selectedUser.company_name" class="text-teal-300 ml-1">({{ selectedUser.company_name }})</span>
             </div>
             <div class="text-sm text-gray-400">{{ selectedUser.email }}</div>
           </div>
@@ -200,7 +201,7 @@ async function handleSubmit() {
           <input
             v-model="searchQuery"
             type="text"
-            placeholder="Rechercher un client par nom ou email..."
+            placeholder="Rechercher par nom, email ou association..."
             class="w-full px-4 py-2 bg-gray-700 border border-gray-600 text-gray-100 placeholder-gray-500 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
           />
           <div v-if="loadingUsers" class="absolute right-3 top-2.5">
@@ -221,6 +222,7 @@ async function handleSubmit() {
             >
               <div class="font-medium text-gray-100">
                 {{ user.first_name }} {{ user.last_name }}
+                <span v-if="user.company_name" class="text-teal-300 ml-1">({{ user.company_name }})</span>
               </div>
               <div class="text-sm text-gray-400">{{ user.email }}</div>
             </button>

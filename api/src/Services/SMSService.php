@@ -40,6 +40,26 @@ class SMSService
     }
 
     /**
+     * Vérifie si c'est une privatisation
+     */
+    private static function isPrivatization(array $booking): bool
+    {
+        return in_array($booking['duration_type'] ?? '', ['half_day', 'full_day']);
+    }
+
+    /**
+     * Retourne le libellé pour le SMS (bénéficiaire ou privatisation)
+     */
+    private static function getBookingLabel(array $booking): string
+    {
+        if (self::isPrivatization($booking)) {
+            $durationType = $booking['duration_type'] ?? '';
+            return $durationType === 'half_day' ? 'votre privatisation ½ jour' : 'votre privatisation journée';
+        }
+        return $booking['person_first_name'] ?? 'votre séance';
+    }
+
+    /**
      * Envoie un SMS de rappel pour une réservation
      */
     public static function sendReminder(array $booking): bool
@@ -54,7 +74,10 @@ class SMSService
         }
 
         $dateFormatted = self::parseDate($booking['session_date'])->format('d/m à H:i');
-        $message = "Rappel sensëa: Votre séance pour {$booking['person_first_name']} est prévue demain {$dateFormatted}. A bientôt !";
+        $bookingLabel = self::getBookingLabel($booking);
+        $message = self::isPrivatization($booking)
+            ? "Rappel sensëa: {$bookingLabel} est prévue demain {$dateFormatted}. A bientôt !"
+            : "Rappel sensëa: Votre séance pour {$bookingLabel} est prévue demain {$dateFormatted}. A bientôt !";
 
         return self::send(
             $booking['client_phone'],
@@ -78,7 +101,10 @@ class SMSService
         }
 
         $dateFormatted = self::parseDate($booking['session_date'])->format('d/m/Y à H:i');
-        $message = "sensëa: Votre RDV du {$dateFormatted} pour {$booking['person_first_name']} est confirmé. A bientôt !";
+        $bookingLabel = self::getBookingLabel($booking);
+        $message = self::isPrivatization($booking)
+            ? "sensëa: Votre RDV du {$dateFormatted} ({$bookingLabel}) est confirmé. A bientôt !"
+            : "sensëa: Votre RDV du {$dateFormatted} pour {$bookingLabel} est confirmé. A bientôt !";
 
         return self::send(
             $booking['client_phone'],

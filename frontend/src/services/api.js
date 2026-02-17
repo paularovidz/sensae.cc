@@ -173,13 +173,13 @@ export const statsApi = {
 export const publicBookingApi = {
   // Availability
   getSchedule: () => api.get('/public/availability/schedule'),
-  getAvailableDates: (year, month, type, clientType = 'personal', email = null) => {
-    const params = { year, month, type, client_type: clientType }
+  getAvailableDates: (year, month, type, clientType = 'personal', email = null, withAccompaniment = true) => {
+    const params = { year, month, type, client_type: clientType, with_accompaniment: withAccompaniment }
     if (email) params.email = email
     return api.get('/public/availability/dates', { params })
   },
-  getAvailableSlots: (date, type) =>
-    api.get('/public/availability/slots', { params: { date, type } }),
+  getAvailableSlots: (date, type, withAccompaniment = true) =>
+    api.get('/public/availability/slots', { params: { date, type, with_accompaniment: withAccompaniment } }),
 
   // Client check
   checkEmail: (email) => api.post('/public/bookings/check-email', { email }),

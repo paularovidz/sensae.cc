@@ -99,6 +99,7 @@ class User
                 OR email LIKE :s3
                 OR phone LIKE :s4
                 OR CONCAT(first_name, " ", last_name) LIKE :s5
+                OR company_name LIKE :s6
             )';
         }
 
@@ -112,6 +113,7 @@ class User
             $stmt->bindValue(':s3', $searchPattern);
             $stmt->bindValue(':s4', $searchPattern);
             $stmt->bindValue(':s5', $searchPattern);
+            $stmt->bindValue(':s6', $searchPattern);
         }
         $stmt->bindValue(':limit', $limit, \PDO::PARAM_INT);
         $stmt->bindValue(':offset', $offset, \PDO::PARAM_INT);
@@ -133,6 +135,7 @@ class User
                 OR email LIKE :s3
                 OR phone LIKE :s4
                 OR CONCAT(first_name, " ", last_name) LIKE :s5
+                OR company_name LIKE :s6
             )';
         }
 
@@ -144,6 +147,7 @@ class User
             $stmt->bindValue(':s3', $searchPattern);
             $stmt->bindValue(':s4', $searchPattern);
             $stmt->bindValue(':s5', $searchPattern);
+            $stmt->bindValue(':s6', $searchPattern);
         }
         $stmt->execute();
 

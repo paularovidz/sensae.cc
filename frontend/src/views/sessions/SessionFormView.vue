@@ -4,7 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useSessionsStore } from '@/stores/sessions'
 import { usePersonsStore } from '@/stores/persons'
 import { useProposalsStore } from '@/stores/proposals'
-import { promoCodesApi, prepaidPacksApi } from '@/services/api'
+import { promoCodesApi, prepaidPacksApi, usersApi } from '@/services/api'
 import LoadingSpinner from '@/components/ui/LoadingSpinner.vue'
 import AlertMessage from '@/components/ui/AlertMessage.vue'
 
@@ -24,6 +24,14 @@ const newProposal = ref({ title: '', type: 'tactile', description: '' })
 const proposalCreating = ref(false)
 const proposalError = ref('')
 const personSearch = ref('')
+
+// User/Client selection (for associations)
+const users = ref([])
+const userSearch = ref('')
+const showUserDropdown = ref(false)
+const selectedUser = ref(null)
+const loadingUsers = ref(false)
+let userSearchTimeout = null
 
 // Promo codes
 const availablePromoCodes = ref([])
@@ -54,9 +62,12 @@ function getLocalDateTime() {
 }
 
 const form = ref({
+  user_id: '',
   person_id: route.params.personId || '',
   session_date: getLocalDateTime(),
   duration_minutes: 45,
+  duration_type: 'regular',
+  with_accompaniment: true,
   behavior_start: '',
   proposal_origin: '',
   attitude_start: '',
@@ -76,9 +87,114 @@ const form = ref({
   is_paid: false,
 })
 
+// Session types
+const allDurationTypes = [
+  { value: 'discovery', label: 'Séance découverte', duration: 75 },
+  { value: 'regular', label: 'Séance classique', duration: 45 },
+  { value: 'half_day', label: 'Privatisation demi-journée', duration: 240, isGroup: true },
+  { value: 'full_day', label: 'Privatisation journée', duration: 480, isGroup: true }
+]
+
+const isSelectedUserAssociation = computed(() => {
+  return selectedUser.value?.client_type === 'association'
+})
+
+// For associations: show all types including group sessions
+// For individuals: only show discovery and regular
+const availableDurationTypes = computed(() => {
+  if (isSelectedUserAssociation.value) {
+    return allDurationTypes
+  }
+  return allDurationTypes.filter(t => !t.isGroup)
+})
+
+const isGroupSession = computed(() => {
+  return form.value.duration_type === 'half_day' || form.value.duration_type === 'full_day'
+})
+
+// Update duration_minutes when duration_type changes
+watch(() => form.value.duration_type, (newType) => {
+  const type = allDurationTypes.find(t => t.value === newType)
+  if (type) {
+    form.value.duration_minutes = type.duration
+  }
+  // Clear person_id for group sessions
+  if (newType === 'half_day' || newType === 'full_day') {
+    form.value.person_id = ''
+    personSearch.value = ''
+  }
+})
+
 const loyaltyWarning = ref(null)
 
 const showPersonDropdown = ref(false)
+
+// User search functions
+async function searchUsers() {
+  if (!userSearch.value.trim()) {
+    users.value = []
+    return
+  }
+  loadingUsers.value = true
+  try {
+    const response = await usersApi.getAll({
+      search: userSearch.value,
+      limit: 10,
+      is_active: true
+    })
+    users.value = response.data.data.users
+  } catch (e) {
+    console.error('Error searching users:', e)
+  } finally {
+    loadingUsers.value = false
+  }
+}
+
+watch(userSearch, () => {
+  if (userSearchTimeout) clearTimeout(userSearchTimeout)
+  if (!userSearch.value.trim()) {
+    users.value = []
+    return
+  }
+  userSearchTimeout = setTimeout(searchUsers, 300)
+})
+
+function selectUser(user) {
+  selectedUser.value = user
+  form.value.user_id = user.id
+  sessionUserId.value = user.id
+  userSearch.value = ''
+  users.value = []
+  showUserDropdown.value = false
+
+  // Reset session type when user changes
+  if (user.client_type !== 'association') {
+    // Reset to regular for non-associations
+    if (isGroupSession.value) {
+      form.value.duration_type = 'regular'
+    }
+  }
+
+  // Load prepaid packs for this user
+  fetchAvailablePrepaidPacks()
+}
+
+function clearUser() {
+  selectedUser.value = null
+  form.value.user_id = ''
+  sessionUserId.value = null
+  form.value.person_id = ''
+  // Reset to regular session type
+  form.value.duration_type = 'regular'
+  availablePrepaidPacks.value = []
+  selectedPrepaidPack.value = null
+}
+
+function hideUserDropdown() {
+  setTimeout(() => {
+    showUserDropdown.value = false
+  }, 200)
+}
 
 const filteredPersons = computed(() => {
   if (!personSearch.value) return personsStore.persons
@@ -171,10 +287,26 @@ onMounted(async () => {
     if (isEdit.value) {
       const session = await sessionsStore.fetchSession(route.params.id)
       sessionUserId.value = session.user_id || null
+
+      // Load the user info for display
+      if (session.user_id) {
+        selectedUser.value = {
+          id: session.user_id,
+          first_name: session.user_first_name || session.client_first_name || '',
+          last_name: session.user_last_name || session.client_last_name || '',
+          email: session.user_email || session.client_email || '',
+          company_name: session.company_name || null,
+          client_type: session.client_type || 'personal'
+        }
+      }
+
       form.value = {
-        person_id: session.person_id,
+        user_id: session.user_id || '',
+        person_id: session.person_id || '',
         session_date: session.session_date?.replace(' ', 'T').slice(0, 16) || '',
         duration_minutes: session.duration_minutes || 45,
+        duration_type: session.duration_type || 'regular',
+        with_accompaniment: session.with_accompaniment !== false,
         behavior_start: session.behavior_start || '',
         proposal_origin: session.proposal_origin || '',
         attitude_start: session.attitude_start || '',
@@ -493,8 +625,14 @@ async function handleSubmit() {
   error.value = ''
 
   // Validate required fields
-  if (!form.value.person_id) {
-    error.value = 'Veuillez sélectionner une personne'
+  if (!form.value.user_id) {
+    error.value = 'Veuillez sélectionner un client'
+    return
+  }
+
+  // person_id is required for individual sessions only
+  if (!isGroupSession.value && !form.value.person_id) {
+    error.value = 'Veuillez sélectionner une personne (bénéficiaire)'
     return
   }
 
@@ -506,11 +644,28 @@ async function handleSubmit() {
   const data = {
     ...form.value,
     session_date: sessionDate,
-    proposals: form.value.proposals.map((p, i) => ({
-      sensory_proposal_id: p.sensory_proposal_id,
-      appreciation: p.appreciation || null,
-      order: i
-    }))
+    // For group sessions, clear clinical fields and person_id
+    ...(isGroupSession.value ? {
+      person_id: null,
+      behavior_start: null,
+      proposal_origin: null,
+      attitude_start: null,
+      position: null,
+      communication: [],
+      session_end: null,
+      behavior_end: null,
+      wants_to_return: null,
+      professional_notes: null,
+      person_expression: null,
+      next_session_proposals: null,
+      proposals: []
+    } : {
+      proposals: form.value.proposals.map((p, i) => ({
+        sensory_proposal_id: p.sensory_proposal_id,
+        appreciation: p.appreciation || null,
+        order: i
+      }))
+    })
   }
 
   // Ajouter les infos de prix original si un code promo est appliqué
@@ -575,8 +730,122 @@ function cancel() {
           <h2 class="font-semibold text-white">Informations générales</h2>
         </div>
         <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label for="person_id" class="label">Personne *</label>
+          <!-- Client/User selector -->
+          <div class="md:col-span-2">
+            <label class="label">Client *</label>
+            <div v-if="selectedUser" class="flex items-center justify-between p-3 bg-primary-900/30 border border-primary-700 rounded-lg">
+              <div>
+                <div class="font-medium text-gray-100">
+                  {{ selectedUser.first_name }} {{ selectedUser.last_name }}
+                  <span v-if="selectedUser.company_name" class="text-primary-300 ml-1">({{ selectedUser.company_name }})</span>
+                </div>
+                <div class="text-sm text-gray-400">{{ selectedUser.email }}</div>
+                <span
+                  v-if="selectedUser.client_type === 'association'"
+                  class="inline-block mt-1 px-2 py-0.5 text-xs rounded bg-indigo-500/20 text-indigo-300"
+                >
+                  Association
+                </span>
+              </div>
+              <button
+                v-if="!isEdit"
+                type="button"
+                @click="clearUser"
+                class="text-gray-500 hover:text-red-400 transition-colors"
+              >
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+              </button>
+            </div>
+            <div v-else-if="!isEdit" class="relative">
+              <input
+                v-model="userSearch"
+                type="text"
+                class="input"
+                placeholder="Rechercher un client par nom, email ou association..."
+                @focus="showUserDropdown = true"
+                @blur="hideUserDropdown"
+              />
+              <div v-if="loadingUsers" class="absolute right-3 top-2.5">
+                <LoadingSpinner size="sm" />
+              </div>
+              <div
+                v-if="showUserDropdown && users.length > 0"
+                class="absolute z-20 w-full mt-1 bg-gray-700 border border-gray-600 rounded-lg shadow-lg max-h-60 overflow-auto"
+              >
+                <button
+                  v-for="user in users"
+                  :key="user.id"
+                  type="button"
+                  @mousedown.prevent="selectUser(user)"
+                  class="w-full px-4 py-3 text-left hover:bg-gray-600 border-b border-gray-600 last:border-0 transition-colors"
+                >
+                  <div class="font-medium text-gray-100">
+                    {{ user.first_name }} {{ user.last_name }}
+                    <span v-if="user.company_name" class="text-primary-300 ml-1">({{ user.company_name }})</span>
+                  </div>
+                  <div class="text-sm text-gray-400">{{ user.email }}</div>
+                </button>
+              </div>
+            </div>
+            <div v-else class="px-3 py-2 bg-gray-700 rounded-lg text-gray-300">
+              {{ selectedUser?.first_name }} {{ selectedUser?.last_name }}
+              <span v-if="selectedUser?.company_name" class="text-primary-300 ml-1">({{ selectedUser?.company_name }})</span>
+            </div>
+          </div>
+
+          <!-- Session type selector (only after user selected, shows group options for associations) -->
+          <div v-if="selectedUser" class="md:col-span-2">
+            <label class="label">Type de séance *</label>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <button
+                v-for="dtype in availableDurationTypes"
+                :key="dtype.value"
+                type="button"
+                @click="form.duration_type = dtype.value"
+                :class="[
+                  'p-3 border-2 rounded-lg text-left transition',
+                  form.duration_type === dtype.value
+                    ? 'border-primary-500 bg-primary-900/30'
+                    : 'border-gray-600 hover:border-gray-500 bg-gray-700/50'
+                ]"
+              >
+                <div class="font-medium text-gray-100 text-sm">{{ dtype.label }}</div>
+                <div class="text-xs text-gray-400">{{ dtype.duration }} min</div>
+                <span v-if="dtype.isGroup" class="inline-block mt-1 px-1.5 py-0.5 text-xs rounded bg-purple-500/20 text-purple-300">Privatisation</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Accompaniment toggle (for group sessions) -->
+          <div v-if="selectedUser && isGroupSession" class="md:col-span-2">
+            <label class="label">Accompagnement</label>
+            <div class="flex gap-4 mt-2">
+              <label class="flex items-center cursor-pointer">
+                <input
+                  type="radio"
+                  :value="true"
+                  v-model="form.with_accompaniment"
+                  class="w-4 h-4 text-primary-600 border-gray-600 bg-gray-700 focus:ring-primary-500"
+                />
+                <span class="ml-2 text-sm text-gray-300">Avec accompagnement (présence de Céline)</span>
+              </label>
+              <label class="flex items-center cursor-pointer">
+                <input
+                  type="radio"
+                  :value="false"
+                  v-model="form.with_accompaniment"
+                  class="w-4 h-4 text-primary-600 border-gray-600 bg-gray-700 focus:ring-primary-500"
+                />
+                <span class="ml-2 text-sm text-gray-300">Sans accompagnement (accès libre)</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Person selector (hidden for group sessions) -->
+          <div v-if="selectedUser && !isGroupSession">
+            <label for="person_id" class="label">Personne (bénéficiaire) *</label>
             <div v-if="!isEdit" class="relative">
               <input
                 v-model="personSearch"
@@ -616,20 +885,20 @@ function cancel() {
             </div>
           </div>
 
-          <div>
+          <div v-if="selectedUser">
             <label for="session_date" class="label">Date et heure *</label>
             <input id="session_date" v-model="form.session_date" type="datetime-local" class="input" required />
           </div>
 
-          <div>
-            <label for="duration_minutes" class="label">Durée (minutes) *</label>
+          <div v-if="selectedUser">
+            <label for="duration_minutes" class="label">Durée (minutes)</label>
             <input id="duration_minutes" v-model.number="form.duration_minutes" type="number" min="1" class="input" required @wheel.prevent />
           </div>
         </div>
       </div>
 
-      <!-- Début de séance -->
-      <div class="bg-gray-800 rounded-xl border border-gray-700">
+      <!-- Début de séance (hidden for group sessions) -->
+      <div v-if="!isGroupSession" class="bg-gray-800 rounded-xl border border-gray-700">
         <div class="px-6 py-4 border-b border-gray-700">
           <h2 class="font-semibold text-white">Début de séance</h2>
         </div>
@@ -660,8 +929,8 @@ function cancel() {
         </div>
       </div>
 
-      <!-- Pendant la séance -->
-      <div class="bg-gray-800 rounded-xl border border-gray-700">
+      <!-- Pendant la séance (hidden for group sessions) -->
+      <div v-if="!isGroupSession" class="bg-gray-800 rounded-xl border border-gray-700">
         <div class="px-6 py-4 border-b border-gray-700">
           <h2 class="font-semibold text-white">Pendant la séance</h2>
         </div>
@@ -765,8 +1034,8 @@ function cancel() {
         </div>
       </div>
 
-      <!-- Fin de séance -->
-      <div class="bg-gray-800 rounded-xl border border-gray-700">
+      <!-- Fin de séance (hidden for group sessions) -->
+      <div v-if="!isGroupSession" class="bg-gray-800 rounded-xl border border-gray-700">
         <div class="px-6 py-4 border-b border-gray-700">
           <h2 class="font-semibold text-white">Fin de séance</h2>
         </div>
@@ -998,8 +1267,8 @@ function cancel() {
         </div>
       </div>
 
-      <!-- Notes privées -->
-      <div class="bg-gray-800 rounded-xl border border-gray-700">
+      <!-- Notes privées (hidden for group sessions) -->
+      <div v-if="!isGroupSession" class="bg-gray-800 rounded-xl border border-gray-700">
         <div class="px-6 py-4 border-b border-gray-700">
           <h2 class="font-semibold text-white">Notes privées</h2>
           <p class="text-sm text-gray-400">Ces notes sont chiffrées et confidentielles.</p>

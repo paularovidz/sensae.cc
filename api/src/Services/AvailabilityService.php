@@ -18,6 +18,14 @@ class AvailabilityService
     // Types de durée
     public const TYPE_DISCOVERY = 'discovery';
     public const TYPE_REGULAR = 'regular';
+    public const TYPE_HALF_DAY = 'half_day';
+    public const TYPE_FULL_DAY = 'full_day';
+
+    // Types de séances groupe (demi-journée, journée) - réservés aux associations
+    public const GROUP_TYPES = [self::TYPE_HALF_DAY, self::TYPE_FULL_DAY];
+
+    // Types de séances individuelles
+    public const INDIVIDUAL_TYPES = [self::TYPE_DISCOVERY, self::TYPE_REGULAR];
 
     // Valeurs par défaut (utilisées si Settings non disponibles)
     private const DEFAULT_BUSINESS_HOURS = [
@@ -34,6 +42,10 @@ class AvailabilityService
     private const DEFAULT_DISCOVERY_PAUSE = 15;
     private const DEFAULT_REGULAR_DISPLAY = 45;
     private const DEFAULT_REGULAR_PAUSE = 20;
+    private const DEFAULT_HALF_DAY_DISPLAY = 240; // 4 heures
+    private const DEFAULT_HALF_DAY_PAUSE = 0;
+    private const DEFAULT_FULL_DAY_DISPLAY = 480; // 8 heures
+    private const DEFAULT_FULL_DAY_PAUSE = 0;
     private const DEFAULT_LUNCH_START = '12:30';
     private const DEFAULT_LUNCH_END = '13:30';
     private const DEFAULT_FIRST_SLOT = '09:00';
@@ -68,12 +80,25 @@ class AvailabilityService
      */
     public static function getDurations(string $type): array
     {
-        if ($type === self::TYPE_DISCOVERY) {
-            $display = Setting::getInteger('session_discovery_display_minutes', self::DEFAULT_DISCOVERY_DISPLAY);
-            $pause = Setting::getInteger('session_discovery_pause_minutes', self::DEFAULT_DISCOVERY_PAUSE);
-        } else {
-            $display = Setting::getInteger('session_regular_display_minutes', self::DEFAULT_REGULAR_DISPLAY);
-            $pause = Setting::getInteger('session_regular_pause_minutes', self::DEFAULT_REGULAR_PAUSE);
+        switch ($type) {
+            case self::TYPE_DISCOVERY:
+                $display = Setting::getInteger('session_discovery_display_minutes', self::DEFAULT_DISCOVERY_DISPLAY);
+                $pause = Setting::getInteger('session_discovery_pause_minutes', self::DEFAULT_DISCOVERY_PAUSE);
+                break;
+
+            case self::TYPE_HALF_DAY:
+                $display = Setting::getInteger('session_half_day_display_minutes', self::DEFAULT_HALF_DAY_DISPLAY);
+                $pause = Setting::getInteger('session_half_day_pause_minutes', self::DEFAULT_HALF_DAY_PAUSE);
+                break;
+
+            case self::TYPE_FULL_DAY:
+                $display = Setting::getInteger('session_full_day_display_minutes', self::DEFAULT_FULL_DAY_DISPLAY);
+                $pause = Setting::getInteger('session_full_day_pause_minutes', self::DEFAULT_FULL_DAY_PAUSE);
+                break;
+
+            default: // TYPE_REGULAR
+                $display = Setting::getInteger('session_regular_display_minutes', self::DEFAULT_REGULAR_DISPLAY);
+                $pause = Setting::getInteger('session_regular_pause_minutes', self::DEFAULT_REGULAR_PAUSE);
         }
 
         return [
@@ -81,6 +106,22 @@ class AvailabilityService
             'pause' => $pause,
             'blocked' => $display + $pause
         ];
+    }
+
+    /**
+     * Vérifie si un type de séance est un type groupe (demi-journée ou journée)
+     */
+    public static function isGroupType(string $type): bool
+    {
+        return in_array($type, self::GROUP_TYPES, true);
+    }
+
+    /**
+     * Récupère les types de séances groupe disponibles
+     */
+    public static function getGroupSessionTypes(): array
+    {
+        return self::GROUP_TYPES;
     }
 
     /**
@@ -148,12 +189,31 @@ class AvailabilityService
      * Note: Pour la vérification de la fin de journée et la pause déjeuner,
      * on utilise uniquement la durée de la séance (display), pas la pause inter-séance.
      * Ce n'est pas grave si la pause déborde légèrement sur ces périodes.
+     *
+     * Pour les séances groupe (demi-journée, journée), des créneaux fixes sont proposés.
      */
-    private static function generatePossibleSlots(\DateTime $date, string $durationType): array
+    private static function generatePossibleSlots(\DateTime $date, string $durationType, bool $withAccompaniment = true): array
     {
         $businessHours = self::getBusinessHours($date);
+        $isPrivatization = self::isGroupType($durationType);
+        $isFlexiblePrivatization = $isPrivatization && !$withAccompaniment;
+
+        // Gestion des jours fermés
         if (!$businessHours) {
-            return [];
+            if ($isFlexiblePrivatization) {
+                // Sans accompagnement : horaires par défaut (9h-18h)
+                $businessHours = ['open' => '09:00', 'close' => '18:00'];
+            } else {
+                return [];
+            }
+        } else if ($isPrivatization) {
+            // Privatisations sur jours ouverts : utiliser des horaires flexibles (9h-18h)
+            $businessHours = ['open' => '09:00', 'close' => '18:00'];
+        }
+
+        // Pour les privatisations (demi-journée, journée), utiliser des créneaux fixes
+        if ($isPrivatization) {
+            return self::generateGroupSlots($date, $durationType, $businessHours);
         }
 
         $timezone = new \DateTimeZone(self::env('APP_TIMEZONE', 'Europe/Paris'));
@@ -236,6 +296,75 @@ class AvailabilityService
     }
 
     /**
+     * Génère les créneaux pour les privatisations (demi-journée, journée complète)
+     *
+     * Pour les privatisations, on propose des créneaux fixes :
+     * - Demi-journée matin : 09:00 - 13:00
+     * - Demi-journée après-midi : 14:00 - 18:00
+     * - Journée complète : 09:00 - 17:00 (un seul créneau, 8h)
+     *
+     * La pause déjeuner ne s'applique PAS aux privatisations.
+     */
+    private static function generateGroupSlots(\DateTime $date, string $durationType, array $businessHours): array
+    {
+        $timezone = new \DateTimeZone(self::env('APP_TIMEZONE', 'Europe/Paris'));
+        $dateStr = $date->format('Y-m-d');
+        $durations = self::getDurations($durationType);
+        $displayDuration = $durations['display'];
+
+        // Horaires fixes pour les privatisations : 9h - 18h
+        $openTime = $businessHours['open'];
+        $closeTime = $businessHours['close'];
+
+        // Récupérer les événements bloquants (sessions existantes)
+        $blockedSlots = self::getBlockedSlotsForDate($date, $timezone);
+
+        $slots = [];
+
+        if ($durationType === self::TYPE_FULL_DAY) {
+            // Journée complète : un seul créneau à 9h
+            // Durée = 8h (480 min), de 9h à 17h
+            $slotStart = new \DateTime("$dateStr $openTime", $timezone);
+            $slotEnd = (clone $slotStart)->modify("+{$displayDuration} minutes");
+            $close = new \DateTime("$dateStr $closeTime", $timezone);
+
+            // Vérifier que la journée peut contenir 8h
+            if ($slotEnd <= $close) {
+                // Vérifier qu'il n'y a pas de conflit avec des sessions existantes
+                if (self::findConflictEnd($slotStart, $slotEnd, $blockedSlots) === null) {
+                    $slots[] = $slotStart->format('H:i');
+                }
+            }
+        } else {
+            // Demi-journée : créneaux matin (9h-13h) et après-midi (14h-18h)
+            // Pas de vérification de pause déjeuner pour les privatisations
+
+            // Créneau matin : 9h - 13h (4h)
+            $morningStart = new \DateTime("$dateStr $openTime", $timezone);
+            $morningEnd = (clone $morningStart)->modify("+{$displayDuration} minutes");
+
+            // Vérifier qu'il n'y a pas de conflit avec des sessions existantes
+            if (self::findConflictEnd($morningStart, $morningEnd, $blockedSlots) === null) {
+                $slots[] = $morningStart->format('H:i');
+            }
+
+            // Créneau après-midi : 14h - 18h (4h)
+            $afternoonStart = new \DateTime("$dateStr 14:00", $timezone);
+            $afternoonEnd = (clone $afternoonStart)->modify("+{$displayDuration} minutes");
+            $close = new \DateTime("$dateStr $closeTime", $timezone);
+
+            // Vérifier que le créneau après-midi ne dépasse pas la fermeture
+            if ($afternoonEnd <= $close) {
+                if (self::findConflictEnd($afternoonStart, $afternoonEnd, $blockedSlots) === null) {
+                    $slots[] = $afternoonStart->format('H:i');
+                }
+            }
+        }
+
+        return $slots;
+    }
+
+    /**
      * Récupère tous les événements bloquants pour une date donnée
      * (sessions et événements Google Calendar)
      *
@@ -302,7 +431,7 @@ class AvailabilityService
      * @param string $durationType Type de séance
      * @param int|null $maxAdvanceDays Nombre de jours max à l'avance (null = pas de limite)
      */
-    public static function getAvailableDates(int $year, int $month, string $durationType = self::TYPE_REGULAR, ?int $maxAdvanceDays = null): array
+    public static function getAvailableDates(int $year, int $month, string $durationType = self::TYPE_REGULAR, ?int $maxAdvanceDays = null, bool $withAccompaniment = true): array
     {
         $timezone = new \DateTimeZone(self::env('APP_TIMEZONE', 'Europe/Paris'));
         $startDate = new \DateTime("$year-$month-01", $timezone);
@@ -324,10 +453,31 @@ class AvailabilityService
 
         $availableDates = [];
 
+        // PRIVATISATIONS :
+        // - SANS accompagnement : disponible tous les jours SAUF dimanche
+        // - AVEC accompagnement : disponible les jours normalement ouverts (mais horaires flexibles)
+        $isPrivatization = self::isGroupType($durationType);
+        $isFlexiblePrivatization = $isPrivatization && !$withAccompaniment;
+
         $current = clone $startDate;
         while ($current <= $endDate) {
+            $dayOfWeek = (int) $current->format('w');
+
+            // Dimanche (0) : toujours fermé pour tout le monde
+            if ($dayOfWeek === 0) {
+                $current->modify('+1 day');
+                continue;
+            }
+
             // Ne pas proposer les dates passées
-            if ($current >= $today && self::isDayOpen($current)) {
+            if ($current >= $today) {
+                // Séances individuelles ou privatisations avec accompagnement : vérifier si le jour est ouvert
+                // Privatisations sans accompagnement : tous les jours sont possibles (sauf dimanche)
+                if (!$isFlexiblePrivatization && !self::isDayOpen($current)) {
+                    $current->modify('+1 day');
+                    continue;
+                }
+
                 // Ne pas proposer les dates au-delà de la limite
                 if ($maxDate !== null && $current > $maxDate) {
                     $current->modify('+1 day');
@@ -335,7 +485,7 @@ class AvailabilityService
                 }
 
                 // Vérifier s'il reste au moins un créneau disponible
-                $slots = self::getAvailableSlots($current, $durationType);
+                $slots = self::getAvailableSlots($current, $durationType, $withAccompaniment);
                 if (!empty($slots)) {
                     $availableDates[] = $current->format('Y-m-d');
                 }
@@ -350,16 +500,44 @@ class AvailabilityService
      * Récupère les créneaux disponibles pour une date donnée
      * Ne retourne QUE les créneaux disponibles (pas les créneaux barrés)
      */
-    public static function getAvailableSlots(\DateTime $date, string $durationType = self::TYPE_REGULAR): array
+    public static function getAvailableSlots(\DateTime $date, string $durationType = self::TYPE_REGULAR, bool $withAccompaniment = true): array
     {
+        // PRIVATISATIONS :
+        // - SANS accompagnement : disponible tous les jours SAUF dimanche (même jeudi, même off days)
+        // - AVEC accompagnement : disponible les jours normalement ouverts (pas jeudi, pas off days)
+        //   mais avec horaires flexibles (9h-18h par défaut)
+        $isPrivatization = self::isGroupType($durationType);
+        $isFlexiblePrivatization = $isPrivatization && !$withAccompaniment;
+        $dayOfWeek = (int) $date->format('w');
+
+        // Dimanche (0) : toujours fermé pour tout le monde
+        if ($dayOfWeek === 0) {
+            return [];
+        }
+
         // Check if it's an off day first
-        if (OffDay::isOffDay($date)) {
+        // Sans accompagnement : ignore les off days
+        // Avec accompagnement ou séances individuelles : respecte les off days
+        if (!$isFlexiblePrivatization && OffDay::isOffDay($date)) {
             return [];
         }
 
         $businessHours = self::getBusinessHours($date);
+
+        // Pour les privatisations sur jours fermés
         if (!$businessHours) {
-            return [];
+            if ($isFlexiblePrivatization) {
+                // Sans accompagnement : utiliser des horaires par défaut
+                $businessHours = ['open' => '09:00', 'close' => '18:00'];
+            } else if ($isPrivatization && $withAccompaniment) {
+                // Avec accompagnement : pas disponible le jeudi ou jours fermés
+                return [];
+            } else {
+                return [];
+            }
+        } else if ($isPrivatization) {
+            // Pour les privatisations sur jours ouverts, utiliser des horaires flexibles (9h-18h)
+            $businessHours = ['open' => '09:00', 'close' => '18:00'];
         }
 
         $timezone = new \DateTimeZone(self::env('APP_TIMEZONE', 'Europe/Paris'));
@@ -375,7 +553,7 @@ class AvailabilityService
         $calendarEvents = CalendarService::getEventsForDate($date);
 
         // Générer les créneaux possibles dynamiquement
-        $possibleSlots = self::generatePossibleSlots($date, $durationType);
+        $possibleSlots = self::generatePossibleSlots($date, $durationType, $withAccompaniment);
 
         $availableSlots = [];
 
@@ -488,11 +666,14 @@ class AvailabilityService
      * Note: Pour la vérification de fin de journée, on utilise la durée de la séance seule,
      * pas la pause inter-séance. La pause peut déborder légèrement.
      */
-    public static function validateSlot(\DateTime $requestedDateTime, string $durationType): array
+    public static function validateSlot(\DateTime $requestedDateTime, string $durationType, bool $withAccompaniment = true): array
     {
         $errors = [];
         $timezone = new \DateTimeZone(self::env('APP_TIMEZONE', 'Europe/Paris'));
         $now = new \DateTime('now', $timezone);
+        $isPrivatization = self::isGroupType($durationType);
+        $isFlexiblePrivatization = $isPrivatization && !$withAccompaniment;
+        $dayOfWeek = (int) $requestedDateTime->format('w');
 
         // 1. Vérifier que la date n'est pas dans le passé
         if ($requestedDateTime <= $now) {
@@ -500,14 +681,37 @@ class AvailabilityService
             return $errors;
         }
 
-        // 2. Vérifier que le jour est ouvert
-        if (!self::isDayOpen($requestedDateTime)) {
+        // 2. Dimanche (0) : toujours fermé pour tout le monde
+        if ($dayOfWeek === 0) {
             $errors[] = 'Ce jour est fermé';
             return $errors;
         }
 
-        // 3. Vérifier les horaires d'ouverture
+        // 3. Vérifier que le jour est ouvert
+        // Séances individuelles ou privatisations avec accompagnement : respecter les jours d'ouverture
+        // Privatisations sans accompagnement : tous les jours sauf dimanche
+        if (!$isFlexiblePrivatization && !self::isDayOpen($requestedDateTime)) {
+            $errors[] = 'Ce jour est fermé';
+            return $errors;
+        }
+
+        // 4. Vérifier les horaires
         $businessHours = self::getBusinessHours($requestedDateTime);
+
+        // Gestion des jours fermés et horaires flexibles pour privatisations
+        if (!$businessHours) {
+            if ($isFlexiblePrivatization) {
+                // Sans accompagnement : horaires par défaut
+                $businessHours = ['open' => '09:00', 'close' => '18:00'];
+            } else {
+                $errors[] = 'Ce jour est fermé';
+                return $errors;
+            }
+        } else if ($isPrivatization) {
+            // Privatisations : horaires flexibles (9h-18h)
+            $businessHours = ['open' => '09:00', 'close' => '18:00'];
+        }
+
         $dateStr = $requestedDateTime->format('Y-m-d');
         $openTime = new \DateTime("$dateStr {$businessHours['open']}", $timezone);
         $closeTime = new \DateTime("$dateStr {$businessHours['close']}", $timezone);
@@ -528,7 +732,7 @@ class AvailabilityService
         }
 
         // 5. Vérifier que le créneau est dans la liste des créneaux possibles
-        $possibleSlots = self::generatePossibleSlots($requestedDateTime, $durationType);
+        $possibleSlots = self::generatePossibleSlots($requestedDateTime, $durationType, $withAccompaniment);
         $requestedTime = $requestedDateTime->format('H:i');
 
         if (!in_array($requestedTime, $possibleSlots, true)) {
@@ -553,19 +757,39 @@ class AvailabilityService
     {
         $discoveryDurations = self::getDurations(self::TYPE_DISCOVERY);
         $regularDurations = self::getDurations(self::TYPE_REGULAR);
+        $halfDayDurations = self::getDurations(self::TYPE_HALF_DAY);
+        $fullDayDurations = self::getDurations(self::TYPE_FULL_DAY);
 
         return [
             self::TYPE_DISCOVERY => [
                 'label' => 'Séance découverte',
                 'description' => "Première séance - {$discoveryDurations['display']}min",
                 'display_minutes' => $discoveryDurations['display'],
-                'blocked_minutes' => $discoveryDurations['blocked']
+                'blocked_minutes' => $discoveryDurations['blocked'],
+                'is_group' => false
             ],
             self::TYPE_REGULAR => [
                 'label' => 'Séance classique',
                 'description' => "Séance habituelle - {$regularDurations['display']}min",
                 'display_minutes' => $regularDurations['display'],
-                'blocked_minutes' => $regularDurations['blocked']
+                'blocked_minutes' => $regularDurations['blocked'],
+                'is_group' => false
+            ],
+            self::TYPE_HALF_DAY => [
+                'label' => 'Privatisation demi-journée',
+                'description' => "Privatisation de l'espace - 4h",
+                'display_minutes' => $halfDayDurations['display'],
+                'blocked_minutes' => $halfDayDurations['blocked'],
+                'is_group' => true,
+                'association_only' => true
+            ],
+            self::TYPE_FULL_DAY => [
+                'label' => 'Privatisation journée',
+                'description' => "Privatisation de l'espace - 8h",
+                'display_minutes' => $fullDayDurations['display'],
+                'blocked_minutes' => $fullDayDurations['blocked'],
+                'is_group' => true,
+                'association_only' => true
             ]
         ];
     }
@@ -605,8 +829,11 @@ class AvailabilityService
             'first_slot' => self::getFirstSlotTime(),
             'durations' => [
                 self::TYPE_DISCOVERY => self::getDurations(self::TYPE_DISCOVERY),
-                self::TYPE_REGULAR => self::getDurations(self::TYPE_REGULAR)
-            ]
+                self::TYPE_REGULAR => self::getDurations(self::TYPE_REGULAR),
+                self::TYPE_HALF_DAY => self::getDurations(self::TYPE_HALF_DAY),
+                self::TYPE_FULL_DAY => self::getDurations(self::TYPE_FULL_DAY)
+            ],
+            'group_types' => self::GROUP_TYPES
         ];
     }
 }

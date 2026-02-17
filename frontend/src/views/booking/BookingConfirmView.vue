@@ -51,7 +51,8 @@
         </h3>
 
         <dl class="space-y-3">
-          <div class="flex justify-between">
+          <!-- Bénéficiaire uniquement pour séances individuelles -->
+          <div v-if="!isPrivatization" class="flex justify-between">
             <dt class="text-sm text-gray-500">Bénéficiaire</dt>
             <dd class="text-sm font-medium text-gray-900">
               {{ booking.person_first_name }} {{ booking.person_last_name }}
@@ -153,6 +154,11 @@ const alreadyConfirmed = ref(false)
 
 const apiUrl = import.meta.env.VITE_API_URL || '/api'
 const icsDownloadUrl = computed(() => `${apiUrl}/public/bookings/${token.value}/ics`)
+
+const isPrivatization = computed(() => {
+  const durationType = booking.value?.duration_type
+  return durationType === 'half_day' || durationType === 'full_day'
+})
 
 const formattedDateTime = computed(() => {
   if (!booking.value?.session_date) return '-'

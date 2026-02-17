@@ -176,6 +176,28 @@ class Expense
         return $stmt->fetchAll();
     }
 
+    public static function getByCategoryYear(int $year): array
+    {
+        $db = Database::getInstance();
+        $stmt = $db->prepare('
+            SELECT
+                c.id,
+                c.name,
+                c.color,
+                c.slug,
+                COALESCE(SUM(e.amount), 0) as total
+            FROM expense_categories c
+            LEFT JOIN expenses e ON e.category_id = c.id
+                AND YEAR(e.expense_date) = :year
+            WHERE c.is_active = 1
+            GROUP BY c.id
+            HAVING total > 0
+            ORDER BY total DESC
+        ');
+        $stmt->execute(['year' => $year]);
+        return $stmt->fetchAll();
+    }
+
     public static function getMonthlyTotals(int $year): array
     {
         $db = Database::getInstance();

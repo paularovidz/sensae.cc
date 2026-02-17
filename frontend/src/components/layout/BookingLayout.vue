@@ -53,5 +53,6 @@ const isEmbed = computed(() => {
   position: absolute;
   inset: 0;
   overflow: hidden;
+  pointer-events: none;
 }
 </style>

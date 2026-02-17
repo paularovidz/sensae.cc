@@ -41,7 +41,12 @@ class OpsRevenueController
                 COUNT(*) as count,
                 SUM(CASE WHEN is_paid = 1 THEN 1 ELSE 0 END) as paid_count,
                 COALESCE(SUM(CASE WHEN is_paid = 1 AND is_free_session = 0 AND price IS NOT NULL AND prepaid_pack_id IS NULL THEN price ELSE 0 END), 0) as paid_total,
-                SUM(CASE WHEN prepaid_pack_id IS NOT NULL THEN 1 ELSE 0 END) as prepaid_count
+                SUM(CASE WHEN prepaid_pack_id IS NOT NULL THEN 1 ELSE 0 END) as prepaid_count,
+                -- Breakdown par type de séance
+                COALESCE(SUM(CASE WHEN duration_type IN ('discovery', 'regular') AND is_free_session = 0 AND price IS NOT NULL AND prepaid_pack_id IS NULL THEN price ELSE 0 END), 0) as individual_total,
+                SUM(CASE WHEN duration_type IN ('discovery', 'regular') THEN 1 ELSE 0 END) as individual_count,
+                COALESCE(SUM(CASE WHEN duration_type IN ('half_day', 'full_day') AND is_free_session = 0 AND price IS NOT NULL AND prepaid_pack_id IS NULL THEN price ELSE 0 END), 0) as privatization_total,
+                SUM(CASE WHEN duration_type IN ('half_day', 'full_day') THEN 1 ELSE 0 END) as privatization_count
             FROM sessions
             WHERE YEAR(session_date) = :year
             AND MONTH(session_date) = :month
@@ -57,7 +62,17 @@ class OpsRevenueController
             'count' => (int) $result['count'],
             'paid_count' => (int) $result['paid_count'],
             'paid_total' => (float) $result['paid_total'],
-            'prepaid_count' => (int) $result['prepaid_count']
+            'prepaid_count' => (int) $result['prepaid_count'],
+            'by_type' => [
+                'individual' => [
+                    'total' => (float) $result['individual_total'],
+                    'count' => (int) $result['individual_count']
+                ],
+                'privatization' => [
+                    'total' => (float) $result['privatization_total'],
+                    'count' => (int) $result['privatization_count']
+                ]
+            ]
         ]);
     }
 
@@ -79,7 +94,12 @@ class OpsRevenueController
                 COUNT(*) as count,
                 SUM(CASE WHEN is_paid = 1 THEN 1 ELSE 0 END) as paid_count,
                 COALESCE(SUM(CASE WHEN is_paid = 1 AND is_free_session = 0 AND price IS NOT NULL AND prepaid_pack_id IS NULL THEN price ELSE 0 END), 0) as paid_total,
-                SUM(CASE WHEN prepaid_pack_id IS NOT NULL THEN 1 ELSE 0 END) as prepaid_count
+                SUM(CASE WHEN prepaid_pack_id IS NOT NULL THEN 1 ELSE 0 END) as prepaid_count,
+                -- Breakdown par type de séance
+                COALESCE(SUM(CASE WHEN duration_type IN ('discovery', 'regular') AND is_free_session = 0 AND price IS NOT NULL AND prepaid_pack_id IS NULL THEN price ELSE 0 END), 0) as individual_total,
+                SUM(CASE WHEN duration_type IN ('discovery', 'regular') THEN 1 ELSE 0 END) as individual_count,
+                COALESCE(SUM(CASE WHEN duration_type IN ('half_day', 'full_day') AND is_free_session = 0 AND price IS NOT NULL AND prepaid_pack_id IS NULL THEN price ELSE 0 END), 0) as privatization_total,
+                SUM(CASE WHEN duration_type IN ('half_day', 'full_day') THEN 1 ELSE 0 END) as privatization_count
             FROM sessions
             WHERE YEAR(session_date) = :year
             AND status IN ('completed', 'confirmed')
@@ -95,7 +115,17 @@ class OpsRevenueController
                 'count' => (int) $row['count'],
                 'paid_count' => (int) $row['paid_count'],
                 'paid_total' => (float) $row['paid_total'],
-                'prepaid_count' => (int) $row['prepaid_count']
+                'prepaid_count' => (int) $row['prepaid_count'],
+                'by_type' => [
+                    'individual' => [
+                        'total' => (float) $row['individual_total'],
+                        'count' => (int) $row['individual_count']
+                    ],
+                    'privatization' => [
+                        'total' => (float) $row['privatization_total'],
+                        'count' => (int) $row['privatization_count']
+                    ]
+                ]
             ];
         }
 
@@ -107,7 +137,11 @@ class OpsRevenueController
                     'count' => 0,
                     'paid_count' => 0,
                     'paid_total' => 0,
-                    'prepaid_count' => 0
+                    'prepaid_count' => 0,
+                    'by_type' => [
+                        'individual' => ['total' => 0, 'count' => 0],
+                        'privatization' => ['total' => 0, 'count' => 0]
+                    ]
                 ];
             }
         }
@@ -137,7 +171,12 @@ class OpsRevenueController
             SELECT
                 DAY(session_date) as day,
                 COALESCE(SUM(CASE WHEN is_free_session = 0 AND price IS NOT NULL AND prepaid_pack_id IS NULL THEN price ELSE 0 END), 0) as total,
-                COUNT(*) as count
+                COUNT(*) as count,
+                -- Breakdown par type de séance
+                COALESCE(SUM(CASE WHEN duration_type IN ('discovery', 'regular') AND is_free_session = 0 AND price IS NOT NULL AND prepaid_pack_id IS NULL THEN price ELSE 0 END), 0) as individual_total,
+                SUM(CASE WHEN duration_type IN ('discovery', 'regular') THEN 1 ELSE 0 END) as individual_count,
+                COALESCE(SUM(CASE WHEN duration_type IN ('half_day', 'full_day') AND is_free_session = 0 AND price IS NOT NULL AND prepaid_pack_id IS NULL THEN price ELSE 0 END), 0) as privatization_total,
+                SUM(CASE WHEN duration_type IN ('half_day', 'full_day') THEN 1 ELSE 0 END) as privatization_count
             FROM sessions
             WHERE YEAR(session_date) = :year
             AND MONTH(session_date) = :month
@@ -149,7 +188,11 @@ class OpsRevenueController
 
         $days = [];
         foreach ($stmt->fetchAll() as $row) {
-            $days[(int) $row['day']] = (float) $row['total'];
+            $days[(int) $row['day']] = [
+                'total' => (float) $row['total'],
+                'individual' => (float) $row['individual_total'],
+                'privatization' => (float) $row['privatization_total']
+            ];
         }
 
         Response::success($days);

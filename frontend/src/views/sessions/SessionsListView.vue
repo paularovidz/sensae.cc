@@ -19,6 +19,27 @@ const hasSearched = ref(false)
 const searchQuery = ref('')
 const searchDateFrom = ref('')
 const searchDateTo = ref('')
+const searchDurationType = ref('')
+
+// Duration types
+const durationTypes = [
+  { value: '', label: 'Tous les types' },
+  { value: 'discovery', label: 'Découverte' },
+  { value: 'regular', label: 'Classique' },
+  { value: 'half_day', label: 'Privatisation demi-journée' },
+  { value: 'full_day', label: 'Privatisation journée' }
+]
+
+const durationTypeLabels = {
+  discovery: 'Découverte',
+  regular: 'Classique',
+  half_day: 'Demi-journée',
+  full_day: 'Journée'
+}
+
+function isPrivatization(session) {
+  return session.duration_type === 'half_day' || session.duration_type === 'full_day'
+}
 
 // Jours fermés : jeudi (4) et dimanche (0)
 const closedDays = [0, 4]
@@ -103,6 +124,10 @@ async function search(page = 1) {
       params.search = searchQuery.value.trim()
     }
 
+    if (searchDurationType.value) {
+      params.duration_type = searchDurationType.value
+    }
+
     // Gestion des dates
     if (searchDateFrom.value && searchDateTo.value) {
       // Plage de dates
@@ -130,6 +155,7 @@ function clearSearch() {
   searchQuery.value = ''
   searchDateFrom.value = ''
   searchDateTo.value = ''
+  searchDurationType.value = ''
   searchResults.value = []
   hasSearched.value = false
 }
@@ -249,11 +275,23 @@ function goToSession(sessionId) {
             >
               <td class="px-4 py-3 text-gray-100 font-medium">{{ formatTime(session.session_date) }}</td>
               <td class="px-4 py-3 text-gray-100">
-                <RouterLink :to="`/app/persons/${session.person_id}`" class="hover:text-primary-400" @click.stop>
+                <template v-if="isPrivatization(session)">
+                  <span class="inline-flex items-center gap-1.5">
+                    <span class="badge-purple">🔒</span>
+                    {{ session.company_name || 'Privatisation' }}
+                  </span>
+                </template>
+                <RouterLink v-else :to="`/app/persons/${session.person_id}`" class="hover:text-primary-400" @click.stop>
                   {{ session.person_first_name }} {{ session.person_last_name }}
                 </RouterLink>
               </td>
-              <td class="px-4 py-3 text-gray-300">{{ session.duration_minutes }} min</td>
+              <td class="px-4 py-3 text-gray-300">
+                <span v-if="isPrivatization(session)" class="inline-flex items-center gap-1.5">
+                  <span class="badge-purple">Privatisation</span>
+                  {{ durationTypeLabels[session.duration_type] || session.duration_minutes + ' min' }}
+                </span>
+                <span v-else>{{ session.duration_minutes }} min</span>
+              </td>
               <td class="px-4 py-3">
                 <span :class="getStatusBadgeClass(session.status)">
                   {{ statusLabels[session.status] || session.status }}
@@ -304,11 +342,23 @@ function goToSession(sessionId) {
             >
               <td class="px-4 py-3 text-gray-100 font-medium">{{ formatTime(session.session_date) }}</td>
               <td class="px-4 py-3 text-gray-100">
-                <RouterLink :to="`/app/persons/${session.person_id}`" class="hover:text-primary-400" @click.stop>
+                <template v-if="isPrivatization(session)">
+                  <span class="inline-flex items-center gap-1.5">
+                    <span class="badge-purple">🔒</span>
+                    {{ session.company_name || 'Privatisation' }}
+                  </span>
+                </template>
+                <RouterLink v-else :to="`/app/persons/${session.person_id}`" class="hover:text-primary-400" @click.stop>
                   {{ session.person_first_name }} {{ session.person_last_name }}
                 </RouterLink>
               </td>
-              <td class="px-4 py-3 text-gray-300">{{ session.duration_minutes }} min</td>
+              <td class="px-4 py-3 text-gray-300">
+                <span v-if="isPrivatization(session)" class="inline-flex items-center gap-1.5">
+                  <span class="badge-purple">Privatisation</span>
+                  {{ durationTypeLabels[session.duration_type] || session.duration_minutes + ' min' }}
+                </span>
+                <span v-else>{{ session.duration_minutes }} min</span>
+              </td>
               <td class="px-4 py-3">
                 <span :class="getStatusBadgeClass(session.status)">
                   {{ statusLabels[session.status] || session.status }}
@@ -363,6 +413,14 @@ function goToSession(sessionId) {
                   class="input w-full"
                 />
               </div>
+              <div class="w-full sm:w-40">
+                <label class="block text-sm text-gray-400 mb-1">Type</label>
+                <select v-model="searchDurationType" class="input w-full">
+                  <option v-for="type in durationTypes" :key="type.value" :value="type.value">
+                    {{ type.label }}
+                  </option>
+                </select>
+              </div>
               <div class="flex items-end gap-2">
                 <button type="submit" class="btn-primary" :disabled="isSearching">
                   <LoadingSpinner v-if="isSearching" size="sm" class="mr-2" />
@@ -406,15 +464,28 @@ function goToSession(sessionId) {
                   >
                     <td class="px-4 py-3 text-gray-100">{{ formatDateTime(session.session_date) }}</td>
                     <td class="px-4 py-3 text-gray-100">
-                      <RouterLink :to="`/app/persons/${session.person_id}`" class="font-medium hover:text-primary-400" @click.stop>
+                      <template v-if="isPrivatization(session)">
+                        <span class="inline-flex items-center gap-1.5">
+                          <span class="badge-purple">🔒</span>
+                          {{ session.company_name || 'Privatisation' }}
+                        </span>
+                      </template>
+                      <RouterLink v-else :to="`/app/persons/${session.person_id}`" class="font-medium hover:text-primary-400" @click.stop>
                         {{ session.person_first_name }} {{ session.person_last_name }}
                       </RouterLink>
                     </td>
-                    <td class="px-4 py-3 text-gray-300">{{ session.duration_minutes }} min</td>
+                    <td class="px-4 py-3 text-gray-300">
+                      <span v-if="isPrivatization(session)" class="inline-flex items-center gap-1.5">
+                        <span class="badge-purple">Privatisation</span>
+                        {{ durationTypeLabels[session.duration_type] || session.duration_minutes + ' min' }}
+                      </span>
+                      <span v-else>{{ session.duration_minutes }} min</span>
+                    </td>
                     <td class="px-4 py-3">
                       <span v-if="session.behavior_end" :class="getBehaviorBadgeClass(session.behavior_end)">
                         {{ behaviorLabels[session.behavior_end] }}
                       </span>
+                      <span v-else-if="isPrivatization(session)" class="text-gray-500">N/A</span>
                       <span v-else class="text-gray-500">-</span>
                     </td>
                     <td class="px-4 py-3 text-right">

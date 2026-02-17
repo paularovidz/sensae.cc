@@ -83,7 +83,11 @@ class PublicBookingController
 
         $pricesAssociation = [
             'discovery' => Setting::getInteger('session_discovery_price_association', 50),
-            'regular' => Setting::getInteger('session_regular_price_association', 40)
+            'regular' => Setting::getInteger('session_regular_price_association', 40),
+            'half_day_with' => Setting::getInteger('session_half_day_price_with', 200),
+            'half_day_without' => Setting::getInteger('session_half_day_price_without', 120),
+            'full_day_with' => Setting::getInteger('session_full_day_price_with', 350),
+            'full_day_without' => Setting::getInteger('session_full_day_price_without', 200)
         ];
 
         // Délais de réservation
@@ -116,14 +120,29 @@ class PublicBookingController
         $type = $_GET['type'] ?? AvailabilityService::TYPE_REGULAR;
         $clientType = $_GET['client_type'] ?? User::CLIENT_TYPE_PERSONAL;
         $email = isset($_GET['email']) ? strtolower(trim($_GET['email'])) : null;
+        $withAccompaniment = isset($_GET['with_accompaniment'])
+            ? filter_var($_GET['with_accompaniment'], FILTER_VALIDATE_BOOLEAN)
+            : true;
 
         // Validation
         if ($month < 1 || $month > 12) {
             Response::validationError(['month' => 'Mois invalide']);
         }
 
-        if (!in_array($type, [AvailabilityService::TYPE_DISCOVERY, AvailabilityService::TYPE_REGULAR])) {
+        // Valider le type de séance
+        $validTypes = [
+            AvailabilityService::TYPE_DISCOVERY,
+            AvailabilityService::TYPE_REGULAR,
+            AvailabilityService::TYPE_HALF_DAY,
+            AvailabilityService::TYPE_FULL_DAY
+        ];
+        if (!in_array($type, $validTypes)) {
             Response::validationError(['type' => 'Type de séance invalide']);
+        }
+
+        // Les types groupe (half_day, full_day) sont réservés aux associations
+        if (AvailabilityService::isGroupType($type) && $clientType !== User::CLIENT_TYPE_ASSOCIATION) {
+            Response::validationError(['type' => 'Les séances groupe sont réservées aux associations']);
         }
 
         // Valider le client_type
@@ -179,12 +198,13 @@ class PublicBookingController
             return;
         }
 
-        $availableDates = AvailabilityService::getAvailableDates($year, $month, $type, $maxAdvanceDays);
+        $availableDates = AvailabilityService::getAvailableDates($year, $month, $type, $maxAdvanceDays, $withAccompaniment);
 
         Response::success([
             'year' => $year,
             'month' => $month,
             'type' => $type,
+            'with_accompaniment' => $withAccompaniment,
             'available_dates' => $availableDates
         ]);
     }
@@ -197,6 +217,9 @@ class PublicBookingController
     {
         $dateStr = $_GET['date'] ?? '';
         $type = $_GET['type'] ?? AvailabilityService::TYPE_REGULAR;
+        $withAccompaniment = isset($_GET['with_accompaniment'])
+            ? filter_var($_GET['with_accompaniment'], FILTER_VALIDATE_BOOLEAN)
+            : true;
 
         // Validation
         if (empty($dateStr)) {
@@ -207,7 +230,14 @@ class PublicBookingController
             Response::validationError(['date' => 'Format de date invalide (YYYY-MM-DD attendu)']);
         }
 
-        if (!in_array($type, [AvailabilityService::TYPE_DISCOVERY, AvailabilityService::TYPE_REGULAR])) {
+        // Valider le type de séance
+        $validTypes = [
+            AvailabilityService::TYPE_DISCOVERY,
+            AvailabilityService::TYPE_REGULAR,
+            AvailabilityService::TYPE_HALF_DAY,
+            AvailabilityService::TYPE_FULL_DAY
+        ];
+        if (!in_array($type, $validTypes)) {
             Response::validationError(['type' => 'Type de séance invalide']);
         }
 
@@ -231,11 +261,12 @@ class PublicBookingController
         }
 
         $durations = AvailabilityService::getDurations($type);
-        $slots = AvailabilityService::getAvailableSlots($date, $type);
+        $slots = AvailabilityService::getAvailableSlots($date, $type, $withAccompaniment);
 
         Response::success([
             'date' => $dateStr,
             'type' => $type,
+            'with_accompaniment' => $withAccompaniment,
             'duration_display_minutes' => $durations['display'],
             'duration_blocked_minutes' => $durations['blocked'],
             'slots' => $slots
@@ -391,11 +422,19 @@ class PublicBookingController
             ->minLength('client_first_name', 2, 'Le prénom doit contenir au moins 2 caractères')
             ->required('client_last_name')
             ->minLength('client_last_name', 2, 'Le nom doit contenir au moins 2 caractères')
-            ->required('person_first_name')
-            ->minLength('person_first_name', 2, 'Le prénom du bénéficiaire doit contenir au moins 2 caractères')
-            ->required('person_last_name')
-            ->minLength('person_last_name', 2, 'Le nom du bénéficiaire doit contenir au moins 2 caractères')
             ->required('gdpr_consent');
+
+        // Person info is only required for individual sessions (not group sessions)
+        $durationType = $data['duration_type'] ?? 'regular';
+        $isGroupSession = Session::isGroupSession($durationType);
+
+        if (!$isGroupSession) {
+            $validator
+                ->required('person_first_name')
+                ->minLength('person_first_name', 2, 'Le prénom du bénéficiaire doit contenir au moins 2 caractères')
+                ->required('person_last_name')
+                ->minLength('person_last_name', 2, 'Le nom du bénéficiaire doit contenir au moins 2 caractères');
+        }
 
         $errors = $validator->validate();
 
@@ -406,6 +445,17 @@ class PublicBookingController
         // Vérifier le consentement RGPD
         if (!$data['gdpr_consent']) {
             Response::validationError(['gdpr_consent' => 'Le consentement RGPD est obligatoire']);
+        }
+
+        // Déterminer le type de client (avant validation des types groupe)
+        $clientType = $data['client_type'] ?? User::CLIENT_TYPE_PERSONAL;
+        if (!in_array($clientType, User::CLIENT_TYPES)) {
+            $clientType = User::CLIENT_TYPE_PERSONAL;
+        }
+
+        // Les types groupe (half_day, full_day) sont réservés aux associations
+        if ($isGroupSession && $clientType !== User::CLIENT_TYPE_ASSOCIATION) {
+            Response::validationError(['duration_type' => 'Les séances groupe (demi-journée, journée) sont réservées aux associations']);
         }
 
         // Vérifier le captcha si activé
@@ -463,7 +513,13 @@ class PublicBookingController
             Response::validationError(['session_date' => "Les réservations sont limitées à {$maxAdvanceDays} jours à l'avance"]);
         }
 
-        $slotErrors = AvailabilityService::validateSlot($sessionDate, $data['duration_type']);
+        // Récupérer le paramètre d'accompagnement pour la validation du créneau
+        $withAccompaniment = $data['with_accompaniment'] ?? true;
+        if (is_string($withAccompaniment)) {
+            $withAccompaniment = filter_var($withAccompaniment, FILTER_VALIDATE_BOOLEAN);
+        }
+
+        $slotErrors = AvailabilityService::validateSlot($sessionDate, $durationType, $withAccompaniment);
         if (!empty($slotErrors)) {
             Response::validationError(['session_date' => implode(', ', $slotErrors)]);
         }
@@ -525,34 +581,42 @@ class PublicBookingController
             }
         }
 
-        // Gestion de la personne: chercher ou créer
+        // Gestion de la personne: chercher ou créer (uniquement pour les séances individuelles)
         $personId = null;
 
-        if (!empty($data['person_id'])) {
-            // Personne existante sélectionnée
-            $personId = $data['person_id'];
-        } else {
-            // Créer une nouvelle personne
-            $personId = Person::create([
-                'first_name' => trim($data['person_first_name']),
-                'last_name' => trim($data['person_last_name'])
-            ]);
+        // Les séances de groupe n'ont pas de personne associée
+        if (!$isGroupSession) {
+            if (!empty($data['person_id'])) {
+                // Personne existante sélectionnée
+                $personId = $data['person_id'];
+            } else {
+                // Créer une nouvelle personne
+                $personId = Person::create([
+                    'first_name' => trim($data['person_first_name']),
+                    'last_name' => trim($data['person_last_name'])
+                ]);
 
-            // Lier la personne à l'utilisateur
-            Person::assignToUser($personId, $userId);
-        }
+                // Lier la personne à l'utilisateur
+                Person::assignToUser($personId, $userId);
+            }
 
-        // Vérifier la limite de séances par personne (4 max en parallèle) - pas de limite pour admins
-        if (!$isAdmin) {
-            $maxPerPerson = Setting::getInteger('booking_max_per_person', 4);
-            $bookingsByPerson = Session::countUpcomingByPerson($personId);
-            if ($bookingsByPerson >= $maxPerPerson) {
-                Response::error("Cette personne a déjà {$maxPerPerson} séance(s) à venir. Veuillez annuler une réservation existante ou attendre qu'une séance soit passée.", 429);
+            // Vérifier la limite de séances par personne (4 max en parallèle) - pas de limite pour admins
+            if (!$isAdmin) {
+                $maxPerPerson = Setting::getInteger('booking_max_per_person', 4);
+                $bookingsByPerson = Session::countUpcomingByPerson($personId);
+                if ($bookingsByPerson >= $maxPerPerson) {
+                    Response::error("Cette personne a déjà {$maxPerPerson} séance(s) à venir. Veuillez annuler une réservation existante ou attendre qu'une séance soit passée.", 429);
+                }
             }
         }
 
         // Récupérer le prix de la séance selon le type de client
-        $originalPrice = Session::getPriceForType($data['duration_type'], $clientType);
+        // Pour les séances groupe, le prix dépend aussi de l'accompagnement
+        $withAccompaniment = $data['with_accompaniment'] ?? true;
+        if (is_string($withAccompaniment)) {
+            $withAccompaniment = filter_var($withAccompaniment, FILTER_VALIDATE_BOOLEAN);
+        }
+        $originalPrice = Session::getPriceForType($data['duration_type'], $clientType, $withAccompaniment);
         $price = $originalPrice;
         $promoCodeId = null;
         $discountAmount = null;
@@ -672,6 +736,7 @@ class PublicBookingController
         $bookingData = [
             'session_date' => $sessionDate->format('Y-m-d H:i:s'),
             'duration_type' => $data['duration_type'],
+            'with_accompaniment' => $withAccompaniment,
             'price' => $price,
             'user_id' => $userId,
             'person_id' => $personId,
@@ -781,7 +846,8 @@ class PublicBookingController
         // Vérifier que le créneau est toujours disponible
         $timezone = new \DateTimeZone($_ENV['APP_TIMEZONE'] ?? 'Europe/Paris');
         $sessionDate = new \DateTime($booking['session_date'], $timezone);
-        $slotErrors = AvailabilityService::validateSlot($sessionDate, $booking['duration_type']);
+        $withAccompaniment = (bool) ($booking['with_accompaniment'] ?? true);
+        $slotErrors = AvailabilityService::validateSlot($sessionDate, $booking['duration_type'], $withAccompaniment);
 
         if (!empty($slotErrors)) {
             Response::error('Ce créneau n\'est plus disponible. Veuillez effectuer une nouvelle réservation.', 409);

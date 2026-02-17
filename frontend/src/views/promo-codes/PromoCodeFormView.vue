@@ -186,7 +186,8 @@ const filteredUsers = computed(() => {
     u.first_name.toLowerCase().includes(search) ||
     u.last_name.toLowerCase().includes(search) ||
     u.email.toLowerCase().includes(search) ||
-    `${u.first_name} ${u.last_name}`.toLowerCase().includes(search)
+    `${u.first_name} ${u.last_name}`.toLowerCase().includes(search) ||
+    (u.company_name && u.company_name.toLowerCase().includes(search))
   )
 })
 
@@ -459,7 +460,10 @@ function handleUserSearchBlur() {
                   {{ selectedUser.first_name.charAt(0) }}{{ selectedUser.last_name.charAt(0) }}
                 </div>
                 <div>
-                  <div class="text-white font-medium">{{ selectedUser.first_name }} {{ selectedUser.last_name }}</div>
+                  <div class="text-white font-medium">
+                    {{ selectedUser.first_name }} {{ selectedUser.last_name }}
+                    <span v-if="selectedUser.company_name" class="text-indigo-300 ml-1">({{ selectedUser.company_name }})</span>
+                  </div>
                   <div class="text-xs text-gray-400">{{ selectedUser.email }}</div>
                 </div>
               </div>
@@ -512,7 +516,10 @@ function handleUserSearchBlur() {
                     {{ user.first_name.charAt(0) }}{{ user.last_name.charAt(0) }}
                   </div>
                   <div class="flex-1 min-w-0">
-                    <div class="text-white font-medium truncate">{{ user.first_name }} {{ user.last_name }}</div>
+                    <div class="text-white font-medium truncate">
+                      {{ user.first_name }} {{ user.last_name }}
+                      <span v-if="user.company_name" class="text-indigo-300 ml-1">({{ user.company_name }})</span>
+                    </div>
                     <div class="text-xs text-gray-400 truncate">{{ user.email }}</div>
                   </div>
                   <span

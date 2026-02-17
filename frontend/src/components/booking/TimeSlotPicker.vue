@@ -43,43 +43,74 @@
 
     <!-- Slots grid -->
     <div v-else class="p-4">
-      <!-- Morning -->
-      <div v-if="morningSlots.length > 0" class="mb-4">
-        <h4 class="text-xs font-medium text-gray-400 uppercase tracking-wider mb-2">Matin</h4>
-        <div class="grid grid-cols-3 sm:grid-cols-4 gap-2">
+      <!-- Group session slots (larger buttons with labels) -->
+      <template v-if="isGroupSession">
+        <div class="space-y-3">
           <button
-            v-for="slot in morningSlots"
+            v-for="slot in availableSlots"
             :key="slot.time"
             @click="selectSlot(slot)"
             :disabled="!slot.available"
             :class="[
-              'py-2.5 px-4 rounded-lg text-sm font-medium transition-all duration-200',
+              'w-full p-4 rounded-lg text-left transition-all duration-200',
               getSlotClasses(slot)
             ]"
           >
-            {{ slot.time }}
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="font-medium">{{ getGroupSlotLabel(slot) }}</p>
+                <p class="text-sm opacity-75">Début à {{ slot.time }}</p>
+              </div>
+              <div v-if="selectedTime === slot.time" class="text-indigo-400">
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                </svg>
+              </div>
+            </div>
           </button>
         </div>
-      </div>
+      </template>
 
-      <!-- Afternoon -->
-      <div v-if="afternoonSlots.length > 0">
-        <h4 class="text-xs font-medium text-gray-400 uppercase tracking-wider mb-2">Après-midi</h4>
-        <div class="grid grid-cols-3 sm:grid-cols-4 gap-2">
-          <button
-            v-for="slot in afternoonSlots"
-            :key="slot.time"
-            @click="selectSlot(slot)"
-            :disabled="!slot.available"
-            :class="[
-              'py-2.5 px-4 rounded-lg text-sm font-medium transition-all duration-200',
-              getSlotClasses(slot)
-            ]"
-          >
-            {{ slot.time }}
-          </button>
+      <!-- Individual session slots (time grid) -->
+      <template v-else>
+        <!-- Morning -->
+        <div v-if="morningSlots.length > 0" class="mb-4">
+          <h4 class="text-xs font-medium text-gray-400 uppercase tracking-wider mb-2">Matin</h4>
+          <div class="grid grid-cols-3 sm:grid-cols-4 gap-2">
+            <button
+              v-for="slot in morningSlots"
+              :key="slot.time"
+              @click="selectSlot(slot)"
+              :disabled="!slot.available"
+              :class="[
+                'py-2.5 px-4 rounded-lg text-sm font-medium transition-all duration-200',
+                getSlotClasses(slot)
+              ]"
+            >
+              {{ slot.time }}
+            </button>
+          </div>
         </div>
-      </div>
+
+        <!-- Afternoon -->
+        <div v-if="afternoonSlots.length > 0">
+          <h4 class="text-xs font-medium text-gray-400 uppercase tracking-wider mb-2">Après-midi</h4>
+          <div class="grid grid-cols-3 sm:grid-cols-4 gap-2">
+            <button
+              v-for="slot in afternoonSlots"
+              :key="slot.time"
+              @click="selectSlot(slot)"
+              :disabled="!slot.available"
+              :class="[
+                'py-2.5 px-4 rounded-lg text-sm font-medium transition-all duration-200',
+                getSlotClasses(slot)
+              ]"
+            >
+              {{ slot.time }}
+            </button>
+          </div>
+        </div>
+      </template>
     </div>
 
     <!-- Duration info -->
@@ -112,6 +143,10 @@ const props = defineProps({
     default: 45
   },
   loading: {
+    type: Boolean,
+    default: false
+  },
+  isGroupSession: {
     type: Boolean,
     default: false
   }
@@ -177,5 +212,18 @@ function selectSlot(slot) {
   if (slot.available) {
     emit('update:selectedTime', slot.time)
   }
+}
+
+function getGroupSlotLabel(slot) {
+  const hour = parseInt(slot.time.split(':')[0])
+  // For full day sessions, there's only one slot at opening
+  if (props.durationMinutes >= 480) {
+    return 'Journée complète'
+  }
+  // For half day sessions, morning or afternoon
+  if (hour < 13) {
+    return 'Matin'
+  }
+  return 'Après-midi'
 }
 </script>

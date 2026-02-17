@@ -162,6 +162,7 @@
             :selected-time="bookingStore.selectedTime"
             :slots="bookingStore.availableSlots"
             :duration-minutes="bookingStore.durationInfo.display"
+            :is-group-session="bookingStore.isGroupSession"
             :loading="loadingSlots"
             @update:selected-time="selectTime"
           />
@@ -224,22 +225,41 @@ watch(() => bookingStore.hasPromoApplied, (hasPromo, wasApplied) => {
   }
 })
 
+const durationLabels = {
+  discovery: 'séance découverte (1h15)',
+  regular: 'séance classique (45 min)',
+  half_day: 'privatisation demi-journée (4h)',
+  full_day: 'privatisation journée complète (8h)'
+}
+
 const durationLabel = computed(() => {
-  return bookingStore.durationType === 'discovery'
-    ? 'séance découverte (1h15)'
-    : 'séance classique (45 min)'
+  return durationLabels[bookingStore.durationType] || durationLabels.regular
 })
+
+const sessionTypeLabels = {
+  discovery: 'Séance découverte',
+  regular: 'Séance classique',
+  half_day: 'Privatisation demi-journée',
+  full_day: 'Privatisation journée complète'
+}
 
 const sessionTypeLabel = computed(() => {
-  return bookingStore.durationType === 'discovery'
-    ? 'Séance découverte'
-    : 'Séance classique'
+  const baseLabel = sessionTypeLabels[bookingStore.durationType] || sessionTypeLabels.regular
+  if (bookingStore.isGroupSession) {
+    return baseLabel + (bookingStore.withAccompaniment ? ' avec accompagnement' : ' sans accompagnement')
+  }
+  return baseLabel
 })
 
+const sessionTypeDescriptions = {
+  discovery: 'Durée : 1h15 - Première séance pour découvrir l\'approche Snoezelen',
+  regular: 'Durée : 45 min - Séance de suivi régulier',
+  half_day: 'Durée : 4h - Privatisation de l\'espace (matin ou après-midi)',
+  full_day: 'Durée : 8h - Privatisation de l\'espace pour la journée'
+}
+
 const sessionTypeDescription = computed(() => {
-  return bookingStore.durationType === 'discovery'
-    ? 'Durée : 1h15 - Première séance pour découvrir l\'approche Snoezelen'
-    : 'Durée : 45 min - Séance de suivi régulier'
+  return sessionTypeDescriptions[bookingStore.durationType] || sessionTypeDescriptions.regular
 })
 
 const maxAdvanceDays = computed(() => {
@@ -262,16 +282,23 @@ const formattedSelection = computed(() => {
 })
 
 onMounted(async () => {
-  // Déterminer le type de séance basé sur le type de CLIENT (pas la personne) :
-  // - Nouveau client (isNewClient=true) = découverte
-  // - Client existant (isNewClient=false) = classique
-  // Note: Un client existant qui ajoute une nouvelle personne reste en "regular"
-  // car il connaît déjà l'approche Snoezelen
-  const newType = bookingStore.isNewClient ? 'discovery' : 'regular'
+  // Pour les séances de groupe (associations), le type est déjà défini à l'étape 2
+  // Ne pas écraser le durationType pour les séances de groupe
+  if (!bookingStore.isGroupSession) {
+    // Déterminer le type de séance basé sur le type de CLIENT (pas la personne) :
+    // - Nouveau client (isNewClient=true) = découverte
+    // - Client existant (isNewClient=false) = classique
+    // Note: Un client existant qui ajoute une nouvelle personne reste en "regular"
+    // car il connaît déjà l'approche Snoezelen
+    const newType = bookingStore.isNewClient ? 'discovery' : 'regular'
 
-  if (bookingStore.durationType !== newType) {
-    // Utiliser setDurationType pour reset correctement toutes les données
-    bookingStore.setDurationType(newType)
+    if (bookingStore.durationType !== newType) {
+      // Utiliser setDurationType pour reset correctement toutes les données
+      bookingStore.setDurationType(newType)
+    }
+
+    // Reset accompaniment for individual sessions
+    bookingStore.setWithAccompaniment(true)
   }
 
   initialLoading.value = true

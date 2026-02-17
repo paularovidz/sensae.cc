@@ -27,7 +27,9 @@ export const useBookingStore = defineStore('booking', () => {
   // Step 3: Date/Time
   const selectedDate = ref(null)
   const selectedTime = ref(null)
-  const durationType = ref('regular') // 'discovery' or 'regular'
+  const durationType = ref('regular') // 'discovery', 'regular', 'half_day', 'full_day'
+  const withAccompaniment = ref(true) // For group sessions (half_day, full_day)
+  const associationSessionCategory = ref(null) // 'individual' or 'privatization' - for step 2 sub-navigation
   const availableDates = ref([])
   const availableSlots = ref([])
   const currentMonth = ref(new Date().getMonth() + 1)
@@ -59,8 +61,18 @@ export const useBookingStore = defineStore('booking', () => {
   const prices = ref({ discovery: 55, regular: 45 }) // default prices for personal
   const pricesByClientType = ref({
     personal: { discovery: 55, regular: 45 },
-    association: { discovery: 50, regular: 40 }
+    association: {
+      discovery: 50,
+      regular: 40,
+      half_day_with: 200,
+      half_day_without: 120,
+      full_day_with: 350,
+      full_day_without: 200
+    }
   })
+
+  // Group session types (half_day, full_day) - associations only
+  const groupTypes = ref(['half_day', 'full_day'])
   const bookingDelays = ref({ personal: 60, association: 90 })
   const emailConfirmationRequired = ref(false)
 
@@ -90,6 +102,10 @@ export const useBookingStore = defineStore('booking', () => {
       case 1:
         return isNewClient.value !== null
       case 2:
+        // Group sessions (half_day, full_day) don't require person selection
+        if (isGroupSession.value) {
+          return true
+        }
         if (isNewClient.value) {
           return newPerson.value.firstName.trim() && newPerson.value.lastName.trim()
         }
@@ -135,19 +151,24 @@ export const useBookingStore = defineStore('booking', () => {
         ? `${selectedDate.value} ${selectedTime.value}:00`
         : null,
       duration_type: durationType.value,
+      with_accompaniment: withAccompaniment.value,
       client_email: clientInfo.value.email.trim().toLowerCase(),
       client_phone: clientInfo.value.phone.trim() || null,
       client_first_name: clientInfo.value.firstName.trim(),
       client_last_name: clientInfo.value.lastName.trim(),
-      person_first_name: personInfo.value.firstName,
-      person_last_name: personInfo.value.lastName,
-      person_id: personInfo.value.id,
       gdpr_consent: gdprConsent.value,
       client_type: clientInfo.value.clientType || 'personal'
     }
 
-    // Add professional info if professional client
-    if (clientInfo.value.clientType === 'professional') {
+    // Person info only for individual sessions
+    if (!isGroupSession.value) {
+      data.person_first_name = personInfo.value.firstName
+      data.person_last_name = personInfo.value.lastName
+      data.person_id = personInfo.value.id
+    }
+
+    // Add professional info if association client
+    if (clientInfo.value.clientType === 'association') {
       data.company_name = clientInfo.value.companyName.trim() || null
       data.siret = clientInfo.value.siret.replace(/\s/g, '').trim() || null
     }
@@ -175,34 +196,34 @@ export const useBookingStore = defineStore('booking', () => {
 
   const durationInfo = computed(() => {
     const type = durationType.value
-    const clientPrices = pricesForCurrentClient.value
-    const price = clientPrices[type] || (type === 'discovery' ? 55 : 45)
+    const price = currentPrice.value
 
     // Use dynamic values from scheduleInfo if available
     if (scheduleInfo.value?.durations?.[type]) {
       const info = scheduleInfo.value.durations[type]
+      const labels = {
+        discovery: 'Séance découverte (1h15)',
+        regular: 'Séance classique (45min)',
+        half_day: 'Privatisation demi-journée (4h)',
+        full_day: 'Privatisation journée (8h)'
+      }
       return {
         display: info.display,
         blocked: info.blocked,
-        label: type === 'discovery' ? 'Séance découverte (1h15)' : 'Séance classique (45min)',
-        price
+        label: labels[type] || type,
+        price,
+        isGroup: info.is_group || false
       }
     }
     // Fallback defaults
-    if (type === 'discovery') {
-      return {
-        display: 75,
-        blocked: 90,
-        label: 'Séance découverte (1h15)',
-        price
-      }
+    const defaults = {
+      discovery: { display: 75, blocked: 90, label: 'Séance découverte (1h15)' },
+      regular: { display: 45, blocked: 65, label: 'Séance classique (45min)' },
+      half_day: { display: 240, blocked: 240, label: 'Demi-journée (4h)', isGroup: true },
+      full_day: { display: 480, blocked: 480, label: 'Journée complète (8h)', isGroup: true }
     }
-    return {
-      display: 45,
-      blocked: 65,
-      label: 'Séance classique (45min)',
-      price
-    }
+    const d = defaults[type] || defaults.regular
+    return { ...d, price }
   })
 
   // Get the current client type (from existingClientInfo or clientInfo)
@@ -228,6 +249,32 @@ export const useBookingStore = defineStore('booking', () => {
     return pricesByClientType.value[clientType] || prices.value
   })
 
+  // Check if current duration type is a group session
+  const isGroupSession = computed(() => {
+    return groupTypes.value.includes(durationType.value)
+  })
+
+  // Get available session types for the current client type
+  const availableSessionTypes = computed(() => {
+    const isAssociation = currentClientType.value === 'association'
+
+    // Individual types are always available
+    const types = [
+      { value: 'discovery', label: 'Séance découverte (1h15)', description: 'Première séance pour découvrir Snoezelen' },
+      { value: 'regular', label: 'Séance classique (45min)', description: 'Séance de suivi régulier' }
+    ]
+
+    // Privatization types only for associations
+    if (isAssociation) {
+      types.push(
+        { value: 'half_day', label: 'Privatisation demi-journée (4h)', description: 'Privatisation de l\'espace - demi-journée', isGroup: true },
+        { value: 'full_day', label: 'Privatisation journée (8h)', description: 'Privatisation de l\'espace - journée entière', isGroup: true }
+      )
+    }
+
+    return types
+  })
+
   const currentPrice = computed(() => {
     // Priority: 1. Free session promo, 2. Prepaid credit, 3. Other promos
     // If free session promo is applied, it has priority
@@ -242,12 +289,30 @@ export const useBookingStore = defineStore('booking', () => {
     if (promoPricing.value) {
       return promoPricing.value.final_price
     }
+
+    // Calculate price based on duration type and accompaniment (for group sessions)
     const clientPrices = pricesForCurrentClient.value
+
+    // For group sessions, price depends on accompaniment
+    if (isGroupSession.value) {
+      const suffix = withAccompaniment.value ? '_with' : '_without'
+      const priceKey = `${durationType.value}${suffix}`
+      return clientPrices[priceKey] || 0
+    }
+
     return clientPrices[durationType.value] || (durationType.value === 'discovery' ? 55 : 45)
   })
 
   const originalPrice = computed(() => {
     const clientPrices = pricesForCurrentClient.value
+
+    // For group sessions, price depends on accompaniment
+    if (isGroupSession.value) {
+      const suffix = withAccompaniment.value ? '_with' : '_without'
+      const priceKey = `${durationType.value}${suffix}`
+      return clientPrices[priceKey] || 0
+    }
+
     return clientPrices[durationType.value] || (durationType.value === 'discovery' ? 55 : 45)
   })
 
@@ -285,10 +350,21 @@ export const useBookingStore = defineStore('booking', () => {
       prices.value = response.data.data.prices || { discovery: 55, regular: 45 }
       pricesByClientType.value = response.data.data.prices_by_client_type || {
         personal: { discovery: 55, regular: 45 },
-        association: { discovery: 50, regular: 40 }
+        association: {
+          discovery: 50,
+          regular: 40,
+          half_day_with: 200,
+          half_day_without: 120,
+          full_day_with: 350,
+          full_day_without: 200
+        }
       }
       bookingDelays.value = response.data.data.booking_delays || { personal: 60, association: 90 }
       emailConfirmationRequired.value = response.data.data.email_confirmation_required || false
+      // Update group types from server if provided
+      if (response.data.data.group_types) {
+        groupTypes.value = response.data.data.group_types
+      }
     } catch (err) {
       console.error('Failed to fetch schedule:', err)
     }
@@ -475,7 +551,7 @@ export const useBookingStore = defineStore('booking', () => {
     try {
       const clientType = currentClientType.value
       const email = clientInfo.value.email?.trim() || null
-      const response = await publicBookingApi.getAvailableDates(year, month, durationType.value, clientType, email)
+      const response = await publicBookingApi.getAvailableDates(year, month, durationType.value, clientType, email, withAccompaniment.value)
       availableDates.value = response.data.data.available_dates || []
       currentYear.value = year
       currentMonth.value = month
@@ -494,7 +570,7 @@ export const useBookingStore = defineStore('booking', () => {
     error.value = null
 
     try {
-      const response = await publicBookingApi.getAvailableSlots(date, durationType.value)
+      const response = await publicBookingApi.getAvailableSlots(date, durationType.value, withAccompaniment.value)
       availableSlots.value = response.data.data.slots || []
       return availableSlots.value
     } catch (err) {
@@ -662,6 +738,8 @@ export const useBookingStore = defineStore('booking', () => {
     selectedDate.value = null
     selectedTime.value = null
     durationType.value = 'regular'
+    withAccompaniment.value = true
+    associationSessionCategory.value = null
     availableDates.value = []
     availableSlots.value = []
     clientInfo.value = { email: '', phone: '', firstName: '', lastName: '', clientType: 'personal', companyName: '', siret: '' }
@@ -690,7 +768,14 @@ export const useBookingStore = defineStore('booking', () => {
   // Set duration type (changes availability)
   function setDurationType(type) {
     if (type !== durationType.value) {
+      const wasGroupSession = groupTypes.value.includes(durationType.value)
+      const isGroupSession = groupTypes.value.includes(type)
       durationType.value = type
+      // Reset accompaniment to true only when switching FROM individual TO group session
+      // Keep the choice when switching between group types (half_day <-> full_day)
+      if (isGroupSession && !wasGroupSession) {
+        withAccompaniment.value = true
+      }
       // Reset date/time selection as slots change
       selectedDate.value = null
       selectedTime.value = null
@@ -699,6 +784,33 @@ export const useBookingStore = defineStore('booking', () => {
       // Clear promo as it might be specific to duration type
       clearPromoCode()
     }
+  }
+
+  // Set accompaniment (for group sessions)
+  function setWithAccompaniment(value) {
+    withAccompaniment.value = value
+  }
+
+  // Set association session category (for step 2 sub-navigation)
+  function setAssociationSessionCategory(category) {
+    associationSessionCategory.value = category
+    if (category === 'privatization') {
+      // Default to half_day for privatization
+      setDurationType('half_day')
+      setWithAccompaniment(true)
+      // Clear person selection for privatization
+      selectedPersonId.value = null
+      newPerson.value = { firstName: '', lastName: '' }
+    } else if (category === 'individual') {
+      // Reset to regular for individual sessions
+      setDurationType('regular')
+    }
+  }
+
+  // Reset association session category (back to category selection)
+  function resetAssociationSessionCategory() {
+    associationSessionCategory.value = null
+    setDurationType('regular')
   }
 
   // Reset date/time selection (step 3)
@@ -743,6 +855,9 @@ export const useBookingStore = defineStore('booking', () => {
     selectedDate,
     selectedTime,
     durationType,
+    withAccompaniment,
+    associationSessionCategory,
+    groupTypes,
     availableDates,
     availableSlots,
     currentMonth,
@@ -765,6 +880,8 @@ export const useBookingStore = defineStore('booking', () => {
     maxAdvanceDays,
     pricesForCurrentClient,
     emailConfirmationRequired,
+    isGroupSession,
+    availableSessionTypes,
     loading,
     error,
 
@@ -810,6 +927,9 @@ export const useBookingStore = defineStore('booking', () => {
     clearStorage,
     resetWizard,
     setDurationType,
+    setWithAccompaniment,
+    setAssociationSessionCategory,
+    resetAssociationSessionCategory,
     setCaptchaToken,
     resetDateTimeSelection,
     resetContactInfo,

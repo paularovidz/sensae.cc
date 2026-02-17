@@ -42,6 +42,12 @@ class DashboardController
         $pack4Revenue = $prepaidRevenue['pack_4']['total'] ?? 0;
         $totalRevenue = $sessionRevenue + $packRevenue;
 
+        // Get breakdown by session type (individual vs privatization)
+        $byType = $revenue['by_type'] ?? [
+            'individual' => ['total' => $sessionRevenue, 'count' => $revenue['count'] ?? 0],
+            'privatization' => ['total' => 0, 'count' => 0]
+        ];
+
         // Calculate balance
         $balance = $totalRevenue - $expenseTotal;
 
@@ -53,6 +59,10 @@ class DashboardController
                     'total' => $totalRevenue,
                     'session_count' => $revenue['count'] ?? 0,
                     'sessions' => $sessionRevenue,
+                    'individual' => $byType['individual']['total'] ?? 0,
+                    'individual_count' => $byType['individual']['count'] ?? 0,
+                    'privatization' => $byType['privatization']['total'] ?? 0,
+                    'privatization_count' => $byType['privatization']['count'] ?? 0,
                     'prepaid_packs' => $packRevenue,
                     'prepaid_count' => $prepaidRevenue['count'] ?? 0,
                     'pack_2' => $pack2Revenue,
@@ -90,12 +100,20 @@ class DashboardController
         $totalRevenue = 0;
         $totalExpenses = 0;
         $totalSessionRevenue = 0;
+        $totalIndividualRevenue = 0;
+        $totalPrivatizationRevenue = 0;
         $totalPrepaidRevenue = 0;
         $totalPack2Revenue = 0;
         $totalPack4Revenue = 0;
 
         for ($m = 1; $m <= 12; $m++) {
             $sessionRevenue = $revenueByMonth[$m]['total'] ?? 0;
+            $byType = $revenueByMonth[$m]['by_type'] ?? [
+                'individual' => ['total' => $sessionRevenue, 'count' => 0],
+                'privatization' => ['total' => 0, 'count' => 0]
+            ];
+            $individualRevenue = $byType['individual']['total'] ?? 0;
+            $privatizationRevenue = $byType['privatization']['total'] ?? 0;
             $prepaidRevenue = $prepaidByMonth[$m]['total'] ?? 0;
             $pack2Revenue = $prepaidByMonth[$m]['pack_2']['total'] ?? 0;
             $pack4Revenue = $prepaidByMonth[$m]['pack_4']['total'] ?? 0;
@@ -106,6 +124,8 @@ class DashboardController
                 'month' => $m,
                 'revenue' => $revenue,
                 'sessions' => $sessionRevenue,
+                'individual' => $individualRevenue,
+                'privatization' => $privatizationRevenue,
                 'prepaid_packs' => $prepaidRevenue,
                 'pack_2' => $pack2Revenue,
                 'pack_4' => $pack4Revenue,
@@ -115,11 +135,16 @@ class DashboardController
 
             $totalRevenue += $revenue;
             $totalSessionRevenue += $sessionRevenue;
+            $totalIndividualRevenue += $individualRevenue;
+            $totalPrivatizationRevenue += $privatizationRevenue;
             $totalPrepaidRevenue += $prepaidRevenue;
             $totalPack2Revenue += $pack2Revenue;
             $totalPack4Revenue += $pack4Revenue;
             $totalExpenses += $expenses;
         }
+
+        // Get expenses by category for the year
+        $expensesByCategory = Expense::getByCategoryYear($year);
 
         Response::success([
             'year' => $year,
@@ -127,12 +152,15 @@ class DashboardController
             'totals' => [
                 'revenue' => $totalRevenue,
                 'sessions' => $totalSessionRevenue,
+                'individual' => $totalIndividualRevenue,
+                'privatization' => $totalPrivatizationRevenue,
                 'prepaid_packs' => $totalPrepaidRevenue,
                 'pack_2' => $totalPack2Revenue,
                 'pack_4' => $totalPack4Revenue,
                 'expenses' => $totalExpenses,
                 'balance' => $totalRevenue - $totalExpenses
-            ]
+            ],
+            'expenses_by_category' => $expensesByCategory
         ]);
     }
 
@@ -169,12 +197,19 @@ class DashboardController
         // Build daily data
         $days = [];
         $totalSessionRevenue = 0;
+        $totalIndividualRevenue = 0;
+        $totalPrivatizationRevenue = 0;
         $totalPrepaidRevenue = 0;
         $totalPack2Revenue = 0;
         $totalPack4Revenue = 0;
 
         for ($day = 1; $day <= $daysInMonth; $day++) {
-            $sessionRevenue = $dailyRevenue[$day] ?? 0;
+            // Daily revenue now returns an array with total, individual, privatization
+            $dayRevenue = $dailyRevenue[$day] ?? ['total' => 0, 'individual' => 0, 'privatization' => 0];
+            $sessionRevenue = is_array($dayRevenue) ? ($dayRevenue['total'] ?? 0) : $dayRevenue;
+            $individualRevenue = is_array($dayRevenue) ? ($dayRevenue['individual'] ?? $sessionRevenue) : $sessionRevenue;
+            $privatizationRevenue = is_array($dayRevenue) ? ($dayRevenue['privatization'] ?? 0) : 0;
+
             $prepaidData = $dailyPrepaid[$day] ?? ['total' => 0, 'pack_2' => ['total' => 0], 'pack_4' => ['total' => 0]];
             $prepaidRevenue = is_array($prepaidData) ? ($prepaidData['total'] ?? 0) : $prepaidData;
             $pack2Revenue = is_array($prepaidData) ? ($prepaidData['pack_2']['total'] ?? 0) : 0;
@@ -186,6 +221,8 @@ class DashboardController
                 'day' => $day,
                 'revenue' => $revenue,
                 'sessions' => $sessionRevenue,
+                'individual' => $individualRevenue,
+                'privatization' => $privatizationRevenue,
                 'prepaid_packs' => $prepaidRevenue,
                 'pack_2' => $pack2Revenue,
                 'pack_4' => $pack4Revenue,
@@ -194,6 +231,8 @@ class DashboardController
             ];
 
             $totalSessionRevenue += $sessionRevenue;
+            $totalIndividualRevenue += $individualRevenue;
+            $totalPrivatizationRevenue += $privatizationRevenue;
             $totalPrepaidRevenue += $prepaidRevenue;
             $totalPack2Revenue += $pack2Revenue;
             $totalPack4Revenue += $pack4Revenue;
@@ -203,6 +242,9 @@ class DashboardController
         $totalRevenue = $totalSessionRevenue + $totalPrepaidRevenue;
         $totalExpenses = array_sum(array_column($days, 'expenses'));
 
+        // Get expenses by category for the month
+        $expensesByCategory = Expense::getByCategory($year, $month);
+
         Response::success([
             'year' => $year,
             'month' => $month,
@@ -210,12 +252,15 @@ class DashboardController
             'totals' => [
                 'revenue' => $totalRevenue,
                 'sessions' => $totalSessionRevenue,
+                'individual' => $totalIndividualRevenue,
+                'privatization' => $totalPrivatizationRevenue,
                 'prepaid_packs' => $totalPrepaidRevenue,
                 'pack_2' => $totalPack2Revenue,
                 'pack_4' => $totalPack4Revenue,
                 'expenses' => $totalExpenses,
                 'balance' => $totalRevenue - $totalExpenses
-            ]
+            ],
+            'expenses_by_category' => $expensesByCategory
         ]);
     }
 }

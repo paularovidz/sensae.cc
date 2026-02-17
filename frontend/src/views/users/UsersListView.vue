@@ -80,7 +80,7 @@ function goToUser(userId) {
         <input
           v-model="searchQuery"
           type="text"
-          placeholder="Rechercher par nom, email, téléphone..."
+          placeholder="Rechercher par nom, email, téléphone, association..."
           class="w-full pl-10 pr-4 py-2 bg-gray-700/50 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
         />
         <svg class="absolute left-3 top-2.5 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -133,6 +133,7 @@ function goToUser(userId) {
                   </div>
                   <div>
                     <div class="font-medium text-gray-100">{{ user.first_name }} {{ user.last_name }}</div>
+                    <div v-if="user.company_name" class="text-xs text-indigo-400">{{ user.company_name }}</div>
                   </div>
                 </div>
               </td>

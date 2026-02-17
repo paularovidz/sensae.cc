@@ -1,15 +1,152 @@
 <template>
   <div class="p-6">
-    <h2 class="text-xl font-semibold text-white mb-2">Pour qui est cette séance ?</h2>
-    <p class="text-gray-400 mb-6">
-      {{ bookingStore.isNewClient
-        ? 'Indiquez les informations de la personne qui profitera de la séance Snoezelen.'
-        : 'Sélectionnez la personne qui profitera de la séance Snoezelen.'
-      }}
-    </p>
+    <!-- ASSOCIATIONS: Session type selector first -->
+    <template v-if="isAssociation && !bookingStore.associationSessionCategory">
+      <h2 class="text-xl font-semibold text-white mb-2">Quel type de réservation souhaitez-vous ?</h2>
+      <p class="text-gray-400 mb-6">
+        Choisissez entre une séance individuelle ou une privatisation de l'espace.
+      </p>
 
-    <!-- New client: just enter person info -->
-    <template v-if="bookingStore.isNewClient">
+      <div class="space-y-3">
+        <!-- Individual session option -->
+        <button
+          @click="selectSessionCategory('individual')"
+          class="w-full p-4 rounded-lg border-2 text-left transition-all duration-200 flex items-center border-gray-600 hover:border-indigo-400"
+        >
+          <div class="w-12 h-12 rounded-full bg-gray-700 flex items-center justify-center flex-shrink-0 mr-4">
+            <svg class="w-6 h-6 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+          </div>
+          <div>
+            <p class="font-medium text-white">Séance individuelle</p>
+            <p class="text-sm text-gray-400">Séance classique (45 min) ou découverte (1h15) pour une personne</p>
+          </div>
+        </button>
+
+        <!-- Privatization option -->
+        <button
+          @click="selectSessionCategory('privatization')"
+          class="w-full p-4 rounded-lg border-2 text-left transition-all duration-200 flex items-center border-gray-600 hover:border-indigo-400"
+        >
+          <div class="w-12 h-12 rounded-full bg-gray-700 flex items-center justify-center flex-shrink-0 mr-4">
+            <svg class="w-6 h-6 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+            </svg>
+          </div>
+          <div>
+            <p class="font-medium text-white">Privatisation</p>
+            <p class="text-sm text-gray-400">Réservez l'espace Snoezelen à la demi-journée ou journée complète</p>
+          </div>
+        </button>
+      </div>
+    </template>
+
+    <!-- ASSOCIATIONS: Privatization configuration -->
+    <template v-else-if="isAssociation && bookingStore.associationSessionCategory === 'privatization'">
+      <h2 class="text-xl font-semibold text-white mb-2">Configuration de la privatisation</h2>
+      <p class="text-gray-400 mb-6">
+        Choisissez la durée et le type d'accompagnement souhaité.
+      </p>
+
+      <!-- Duration type selector -->
+      <div class="mb-6">
+        <label class="block text-sm font-medium text-gray-300 mb-3">Durée de la privatisation</label>
+        <div class="grid grid-cols-2 gap-3">
+          <button
+            @click="bookingStore.setDurationType('half_day')"
+            :class="[
+              'p-4 rounded-lg border-2 text-center transition-all duration-200',
+              bookingStore.durationType === 'half_day'
+                ? 'border-indigo-500 bg-indigo-500/20'
+                : 'border-gray-600 hover:border-indigo-400'
+            ]"
+          >
+            <p class="font-medium text-white">Demi-journée</p>
+            <p class="text-sm text-gray-400">4 heures</p>
+          </button>
+          <button
+            @click="bookingStore.setDurationType('full_day')"
+            :class="[
+              'p-4 rounded-lg border-2 text-center transition-all duration-200',
+              bookingStore.durationType === 'full_day'
+                ? 'border-indigo-500 bg-indigo-500/20'
+                : 'border-gray-600 hover:border-indigo-400'
+            ]"
+          >
+            <p class="font-medium text-white">Journée complète</p>
+            <p class="text-sm text-gray-400">10 heures</p>
+          </button>
+        </div>
+      </div>
+
+      <!-- Accompaniment toggle -->
+      <div class="mb-6">
+        <label class="block text-sm font-medium text-gray-300 mb-3">Accompagnement</label>
+        <div class="grid grid-cols-2 gap-3">
+          <button
+            @click="bookingStore.setWithAccompaniment(true)"
+            :class="[
+              'p-4 rounded-lg border-2 text-center transition-all duration-200',
+              bookingStore.withAccompaniment
+                ? 'border-indigo-500 bg-indigo-500/20'
+                : 'border-gray-600 hover:border-indigo-400'
+            ]"
+          >
+            <p class="font-medium text-white">Avec accompagnement</p>
+            <p class="text-sm text-gray-400">Séances animées par sensëa</p>
+          </button>
+          <button
+            @click="bookingStore.setWithAccompaniment(false)"
+            :class="[
+              'p-4 rounded-lg border-2 text-center transition-all duration-200',
+              !bookingStore.withAccompaniment
+                ? 'border-indigo-500 bg-indigo-500/20'
+                : 'border-gray-600 hover:border-indigo-400'
+            ]"
+          >
+            <p class="font-medium text-white">Sans accompagnement</p>
+            <p class="text-sm text-gray-400">Gérez les séances par vous-même*</p>
+          </button>
+        </div>
+        <!-- Note about Thursday availability -->
+        <p :class="[
+          'mt-3 text-sm flex items-start gap-2',
+          bookingStore.withAccompaniment ? 'text-blue-400' : 'text-emerald-400'
+        ]">
+          <svg class="w-4 h-4 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+          </svg>
+          <span v-if="bookingStore.withAccompaniment">Sans accompagnement, la réservation est également possible le jeudi (jour normalement fermé au public).</span>
+          <span v-else>Le jeudi est également disponible pour les privatisations sans accompagnement.</span>
+        </p>
+      </div>
+
+      <!-- Price indicator -->
+      <div class="p-4 bg-gray-700/50 rounded-lg mb-6">
+        <div class="flex items-center justify-between">
+          <span class="text-gray-300">Tarif</span>
+          <span class="text-xl font-bold text-indigo-400">{{ bookingStore.currentPrice }} €</span>
+        </div>
+      </div>
+
+      <p class="text-gray-300 text-xs">
+        * Il est recommandé d'avoir suivi une formation Snoezelen pour maximiser les effets bénéfiques des séances.
+      </p>
+    </template>
+
+    <!-- INDIVIDUAL SESSION FLOW (associations or non-associations) -->
+    <template v-else>
+      <h2 class="text-xl font-semibold text-white mb-2">Pour qui est cette séance ?</h2>
+      <p class="text-gray-400 mb-6">
+        {{ bookingStore.isNewClient
+          ? 'Indiquez les informations de la personne qui profitera de la séance Snoezelen.'
+          : 'Sélectionnez la personne qui profitera de la séance Snoezelen.'
+        }}
+      </p>
+
+      <!-- New client: just enter person info -->
+      <template v-if="bookingStore.isNewClient">
       <div class="space-y-4">
         <div>
           <label for="person-firstname" class="block text-sm font-medium text-gray-300 mb-1">
@@ -150,17 +287,24 @@
           </div>
         </div>
       </div>
+      </template>
+
     </template>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, nextTick } from 'vue'
+import { ref, computed, onMounted, nextTick } from 'vue'
 import { useBookingStore } from '@/stores/booking'
 
 const bookingStore = useBookingStore()
 
 const showNewPersonForm = ref(false)
+
+// Check if user is an association
+const isAssociation = computed(() => {
+  return bookingStore.currentClientType === 'association'
+})
 
 // Template refs for inputs
 const firstnameInput = ref(null)
@@ -173,7 +317,24 @@ onMounted(() => {
   if (!bookingStore.isNewClient && bookingStore.existingPersons.length === 0) {
     showNewPersonForm.value = true
   }
+
+  // Reset session category when entering step (only if coming from step 1, not from step 3)
+  // The wizard handles the reset when going back from step 3
+
+  // For non-associations, ensure duration type is individual
+  if (!isAssociation.value && bookingStore.isGroupSession) {
+    bookingStore.setDurationType('regular')
+  }
 })
+
+function selectSessionCategory(category) {
+  bookingStore.setAssociationSessionCategory(category)
+}
+
+function continueToCalendar() {
+  // For group sessions, skip person selection and go directly to calendar (step 3)
+  bookingStore.nextStep()
+}
 
 function selectPerson(person) {
   // Reset date/time if selecting a different person
