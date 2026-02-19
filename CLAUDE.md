@@ -464,10 +464,10 @@ MAIL_HOST=
 MAIL_PORT=587
 MAIL_USER=
 MAIL_PASS=
-MAIL_FROM=noreply@sensea.cc
+MAIL_FROMFROM:nepasrepondre@sensae.cc
 
-APP_URL=https://suivi.sensea.cc
-FRONTEND_URL=https://suivi.sensea.cc
+APP_URL=https://suivi.sensae.cc
+FRONTEND_URL=https://suivi.sensae.cc
 
 ENV=production
 DEBUG=false
@@ -491,7 +491,7 @@ OPS_API_KEY=xxx
 
 ### Frontend (.env)
 ```
-VITE_API_URL=https://suivi.sensea.cc/api
+VITE_API_URL=https://suivi.sensae.cc/api
 ```
 
 ## Commandes utiles
@@ -688,7 +688,7 @@ Exemple pour séances classiques (45min + 20min pause) : 9h00, 10h05, 11h10, 13h
 | Clé | Type | Défaut | Description |
 |-----|------|--------|-------------|
 | sms_reminders_enabled | boolean | true | Envoi rappels SMS |
-| sms_sender_name | string | sensëa | Nom expéditeur SMS |
+| sms_sender_name | string | sensaë | Nom expéditeur SMS |
 
 ### Cron jobs
 ```bash
@@ -715,7 +715,7 @@ Exemple pour séances classiques (45min + 20min pause) : 9h00, 10h05, 11h10, 13h
 10. **Système de fidélité** - Carte de fidélité pour particuliers uniquement. Après 9 séances (configurable), séance gratuite offerte. Visible dans l'espace membre et dans la page admin utilisateur
 11. **Documents** - Upload images/PDF pour utilisateurs et personnes (admin only). Stockés dans `api/uploads/documents/`
 12. **Modèle Session unifié** - Une seule table `sessions` gère tout le cycle : réservation (pending/confirmed) → séance effectuée (completed) → annulation (cancelled/no_show). Plus de table `bookings` séparée.
-13. **OPS (Cockpit Financier)** - Application séparée avec sa propre BDD (`ops_db`), auth, et frontend. Communique avec l'API principale via clé API pour récupérer les revenus des séances. Login par défaut : `bonjour@sensea.cc`
+13. **OPS (Cockpit Financier)** - Application séparée avec sa propre BDD (`ops_db`), auth, et frontend. Communique avec l'API principale via clé API pour récupérer les revenus des séances. Login par défaut : `nepasrepondre@sensae.cc`
 
 ## Services Backend
 
@@ -749,9 +749,9 @@ Application séparée pour le suivi financier (dépenses, revenus, prévisions).
 - **Dépenses récurrentes** : Génération automatique mensuelle ou annuelle
 - **Catégories** : Catégorisation des dépenses avec couleurs
 - **Fournisseurs (Vendor Mappings)** : Auto-catégorisation basée sur patterns
-- **Revenus** : Récupérés depuis l'API principale Sensea (séances completed/confirmed)
+- **Revenus** : Récupérés depuis l'API principale sensae (séances completed/confirmed)
 
-### Communication OPS ↔ Sensea
+### Communication OPS ↔ sensae
 
 OPS récupère les données de revenus depuis l'API principale via une clé API partagée :
 - **Endpoint** : `GET /ops/revenue` et `GET /ops/revenue/daily` sur l'API principale
@@ -823,8 +823,8 @@ OPS_JWT_SECRET=xxx
 OPS_JWT_REFRESH_SECRET=xxx
 
 # Communication avec API principale
-SENSEA_API_URL=http://api  # ou https://suivi.sensea.cc/api en prod
-SENSEA_API_KEY=xxx         # Doit matcher OPS_API_KEY de l'API principale
+sensae_API_URL=http://api  # ou https://suivi.sensae.cc/api en prod
+sensae_API_KEY=xxx         # Doit matcher OPS_API_KEY de l'API principale
 ```
 
 Sur l'API principale, ajouter :
@@ -849,22 +849,22 @@ docker exec ops_api php -r "require 'vendor/autoload.php'; App\Models\RecurringE
 
 ### Déploiement OPS
 
-**URL Production** : https://ops.sensea.cc
+**URL Production** : https://ops.sensae.cc
 
 **Nginx** (avec certificat Cloudflare) :
 ```nginx
 server {
     listen 80;
-    server_name ops.sensea.cc;
+    server_name ops.sensae.cc;
     return 301 https://$host$request_uri;
 }
 
 server {
     listen 443 ssl;
-    server_name ops.sensea.cc;
+    server_name ops.sensae.cc;
 
-    ssl_certificate /etc/ssl/cloudflare/sensea.cc.pem;
-    ssl_certificate_key /etc/ssl/cloudflare/sensea.cc.key;
+    ssl_certificate /etc/ssl/cloudflare/sensae.cc.pem;
+    ssl_certificate_key /etc/ssl/cloudflare/sensae.cc.key;
 
     root /home/deploy/apps/snoezelen/ops/frontend/dist;
     index index.html;
@@ -888,11 +888,11 @@ server {
 ### URLs de production
 | Service | URL |
 |---------|-----|
-| Site vitrine | https://sensea.cc |
-| Dashboard admin | https://suivi.sensea.cc |
-| API | https://suivi.sensea.cc/api |
-| OPS (Cockpit Financier) | https://ops.sensea.cc |
-| OPS API | https://ops.sensea.cc/api |
+| Site vitrine | https://sensae.cc |
+| Dashboard admin | https://suivi.sensae.cc |
+| API | https://suivi.sensae.cc/api |
+| OPS (Cockpit Financier) | https://ops.sensae.cc |
+| OPS API | https://ops.sensae.cc/api |
 
 ### Site vitrine (www/)
 
