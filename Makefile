@@ -34,9 +34,16 @@ help:
 	@echo "  make clean      - Supprimer les conteneurs et volumes"
 	@echo "  make rebuild    - Rebuild complet des images"
 	@echo ""
+	@echo "  make site-migrate  - Migrations site vitrine"
+	@echo "  make site-seed     - Seed site vitrine"
+	@echo "  make site-shell    - Shell dans le conteneur site"
+	@echo "  make logs-site     - Voir les logs du site vitrine"
+	@echo ""
 	@echo "URLs:"
 	@echo "  Frontend:    http://localhost:5173"
 	@echo "  API:         http://localhost:8080"
+	@echo "  Site:        http://localhost:8000"
+	@echo "  Site admin:  http://localhost:8000/admin"
 	@echo "  MailHog:     http://localhost:8025"
 	@echo "  phpMyAdmin:  http://localhost:8081"
 
@@ -139,6 +146,25 @@ cron-calendar:
 
 cron-cleanup:
 	@docker exec snoezelen_api php /var/www/html/cron/booking-tasks.php cleanup-expired
+
+# Site vitrine Laravel
+site-migrate:
+	@docker exec snoezelen_site php artisan migrate --force
+	@echo "✓ Migrations site exécutées"
+
+site-seed:
+	@docker exec snoezelen_site php artisan db:seed --force
+	@echo "✓ Seed site exécuté"
+
+site-shell:
+	@docker exec -it snoezelen_site bash
+
+logs-site:
+	@docker compose logs -f site
+
+site-setup: site-migrate site-seed
+	@docker exec snoezelen_site php artisan storage:link 2>/dev/null || true
+	@echo "✓ Site vitrine configuré"
 
 # Tests
 test: test-back test-front

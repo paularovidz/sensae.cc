@@ -74,6 +74,39 @@ services:
       - snoezelen_network
 
   # ============================================
+  # Site vitrine Laravel
+  # ============================================
+  site:
+    image: ghcr.io/${GITHUB_REPO}-site:latest
+    container_name: snoezelen_site
+    restart: unless-stopped
+    environment:
+      APP_NAME: sensea
+      APP_ENV: production
+      APP_DEBUG: "false"
+      APP_KEY: ${SITE_APP_KEY}
+      APP_URL: ${SITE_URL:-https://sensae.cc}
+      APP_TIMEZONE: Europe/Paris
+      APP_LOCALE: fr
+      DB_CONNECTION: mysql
+      DB_HOST: db
+      DB_DATABASE: site_db
+      DB_USERNAME: ${DB_USER}
+      DB_PASSWORD: ${DB_PASS}
+      SENSAE_API_URL: http://api
+      SESSION_DRIVER: database
+      CACHE_STORE: database
+    volumes:
+      - ./site/storage/app/public:/var/www/html/storage/app/public
+    ports:
+      - "127.0.0.1:8000:80"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - snoezelen_network
+
+  # ============================================
   # OPS - Cockpit Financier
   # ============================================
   ops-api:

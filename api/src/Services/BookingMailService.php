@@ -56,8 +56,8 @@ class BookingMailService
 
         $this->mailer->CharSet = 'UTF-8';
         $this->mailer->setFrom(
-            self::env('MAIL_FROM', 'noreply@sensea.cc'),
-            self::env('MAIL_FROM_NAME', 'sensëa Snoezelen')
+            self::env('MAIL_FROM', 'nepasrepondre@sensae.cc'),
+            self::env('MAIL_FROM_NAME', 'sensaë Snoezelen')
         );
     }
 
@@ -179,7 +179,7 @@ HTML;
             $this->mailer->addAddress($booking['client_email'], "{$booking['client_first_name']} {$booking['client_last_name']}");
 
             $this->mailer->isHTML(true);
-            $this->mailer->Subject = 'Confirmez votre rendez-vous - sensëa Snoezelen';
+            $this->mailer->Subject = 'Confirmez votre rendez-vous - sensaë Snoezelen';
 
             $confirmLink = self::env('FRONTEND_URL', 'http://localhost:5173') . '/booking/confirm/' . $booking['confirmation_token'];
             $cancelLink = self::env('FRONTEND_URL', 'http://localhost:5173') . '/booking/cancel/' . $booking['confirmation_token'];
@@ -278,7 +278,7 @@ HTML;
             $this->mailer->addAddress($booking['client_email'], "{$booking['client_first_name']} {$booking['client_last_name']}");
 
             $this->mailer->isHTML(true);
-            $this->mailer->Subject = 'Annulation de votre rendez-vous - sensëa Snoezelen';
+            $this->mailer->Subject = 'Annulation de votre rendez-vous - sensaë Snoezelen';
 
             $this->mailer->Body = $this->getCancellationHtml($booking);
             $this->mailer->AltBody = $this->getCancellationText($booking);
@@ -312,7 +312,7 @@ HTML;
             $this->mailer->Ical = $icsContent;
 
             $this->mailer->isHTML(true);
-            $this->mailer->Subject = 'Rendez-vous confirmé - sensëa Snoezelen';
+            $this->mailer->Subject = 'Rendez-vous confirmé - sensaë Snoezelen';
 
             $this->mailer->Body = $this->getBookingConfirmedHtml($booking);
             $this->mailer->AltBody = $this->getBookingConfirmedText($booking);
@@ -349,7 +349,7 @@ HTML;
                 <table role="presentation" style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
                     <tr>
                         <td style="padding: 40px 40px 20px; text-align: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px 12px 0 0;">
-                            <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 600;">sensëa Snoezelen</h1>
+                            <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 600;">sensaë Snoezelen</h1>
                         </td>
                     </tr>
                     <tr>
@@ -410,7 +410,7 @@ HTML;
                     <tr>
                         <td style="padding: 20px 40px; background-color: #f8f9fa; border-radius: 0 0 12px 12px; text-align: center;">
                             <p style="margin: 0; font-size: 12px; color: #999;">
-                                sensëa Snoezelen<br>
+                                sensaë Snoezelen<br>
                                 Cet email a été envoyé suite à votre demande de rendez-vous.
                             </p>
                         </td>
@@ -452,7 +452,7 @@ Pour annuler :
 Ce lien est valable 24 heures.
 
 ---
-sensëa Snoezelen
+sensaë Snoezelen
 TEXT;
     }
 
@@ -565,7 +565,7 @@ HTML;
                                 </p>
                             </div>
                             <p style="margin: 0; font-size: 14px; color: #888;">
-                                À demain !<br>L'équipe sensëa Snoezelen
+                                À demain !<br>L'équipe sensaë Snoezelen
                             </p>
                         </td>
                     </tr>
@@ -593,7 +593,7 @@ Date : {$dateFormatted}
 RAPPEL : Pensez à vous habiller confortablement, idéalement une tenue de sport ou des vêtements souples.
 
 À demain !
-L'équipe sensëa Snoezelen
+L'équipe sensaë Snoezelen
 TEXT;
     }
 
@@ -625,7 +625,7 @@ TEXT;
                             </p>
                             <p style="margin: 0; font-size: 14px; color: #888;">
                                 N'hésitez pas à reprendre rendez-vous quand vous le souhaitez.<br>
-                                L'équipe sensëa Snoezelen
+                                L'équipe sensaë Snoezelen
                             </p>
                         </td>
                     </tr>
@@ -651,7 +651,7 @@ Votre rendez-vous du {$dateFormatted}{$forBeneficiary} a bien été annulé.
 
 N'hésitez pas à reprendre rendez-vous quand vous le souhaitez.
 
-L'équipe sensëa Snoezelen
+L'équipe sensaë Snoezelen
 TEXT;
     }
 
@@ -710,7 +710,7 @@ TEXT;
                             <p style="margin: 0; font-size: 14px; color: #888;">
                                 Cet email contient une invitation calendrier. Vous pouvez l'accepter directement depuis Gmail, Outlook ou votre application mail.<br><br>
                                 À bientôt !<br>
-                                L'équipe sensëa Snoezelen
+                                L'équipe sensaë Snoezelen
                             </p>
                         </td>
                     </tr>
@@ -744,7 +744,7 @@ CONSEIL : Pensez à vous habiller confortablement pour la séance, idéalement u
 Cet email contient une invitation calendrier que vous pouvez accepter depuis votre application mail.
 
 À bientôt !
-L'équipe sensëa Snoezelen
+L'équipe sensaë Snoezelen
 TEXT;
     }
 }

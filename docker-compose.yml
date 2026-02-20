@@ -14,6 +14,7 @@ services:
       - ./api/migrations/001_initial_schema.sql:/docker-entrypoint-initdb.d/001_schema.sql:ro
       - ./api/migrations/002_seed_admin.sql:/docker-entrypoint-initdb.d/002_seed.sql:ro
       - ./ops/api/database/000_create_database.sql:/docker-entrypoint-initdb.d/010_ops_create_db.sql:ro
+      - ./site/database/000_create_database.sql:/docker-entrypoint-initdb.d/020_site_db.sql:ro
     ports:
       - "3306:3306"
     healthcheck:
@@ -106,6 +107,41 @@ services:
       - /app/node_modules
     ports:
       - "4321:4321"
+    networks:
+      - snoezelen_network
+
+  # Site vitrine Laravel
+  site:
+    build:
+      context: ./site
+      dockerfile: Dockerfile
+    container_name: snoezelen_site
+    restart: unless-stopped
+    environment:
+      APP_NAME: sensea
+      APP_ENV: local
+      APP_DEBUG: "true"
+      APP_KEY: ${SITE_APP_KEY:-base64:3gv7cXYD+c/E9LWqneoqdLu2KtXqzj/ks4ouF6GFMCc=}
+      APP_URL: http://localhost:8000
+      APP_TIMEZONE: Europe/Paris
+      APP_LOCALE: fr
+      DB_CONNECTION: mysql
+      DB_HOST: db
+      DB_DATABASE: site_db
+      DB_USERNAME: ${DB_USER:-snoezelen}
+      DB_PASSWORD: ${DB_PASS:-snoezelen_secret}
+      SENSAE_API_URL: http://api
+      SESSION_DRIVER: database
+      CACHE_STORE: database
+    volumes:
+      - ./site:/var/www/html
+      - /var/www/html/vendor
+      - /var/www/html/node_modules
+    ports:
+      - "8000:80"
+    depends_on:
+      db:
+        condition: service_healthy
     networks:
       - snoezelen_network
 

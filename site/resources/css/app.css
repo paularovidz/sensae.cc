@@ -1,0 +1,20 @@
+@import 'tailwindcss';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source '../**/*.blade.php';
+@source '../**/*.js';
+
+@theme {
+    --color-primary: var(--color-primary-override, #721ad6);
+    --color-secondary: var(--color-secondary-override, #D299FF);
+    --color-accent: var(--color-accent-override, #1f122e);
+    --color-body: var(--color-body-override, #0e0c0c);
+    --color-border: var(--color-border-override, #242222);
+    --color-text-default: var(--color-text-default-override, #C8C1C1);
+    --color-text-light: var(--color-text-light-override, #fff6f6);
+
+    --font-primary: 'Satoshi', sans-serif;
+    --font-secondary: 'Syne', sans-serif;
+    --font-tertiary: 'Amandine', sans-serif;
+}

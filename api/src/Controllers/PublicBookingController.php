@@ -67,6 +67,29 @@ class PublicBookingController
     }
 
     /**
+     * GET /public/pricing
+     * Récupère tous les tarifs : séances unitaires + packs prépayés
+     */
+    public function getPricing(): void
+    {
+        $schedule = AvailabilityService::getScheduleInfo();
+
+        Response::success([
+            'sessions' => [
+                'discovery' => [
+                    'price' => Setting::getInteger('session_discovery_price', 55),
+                    'duration' => (int) ($schedule['durations']['discovery']['display'] ?? 75),
+                ],
+                'regular' => [
+                    'price' => Setting::getInteger('session_regular_price', 45),
+                    'duration' => (int) ($schedule['durations']['regular']['display'] ?? 45),
+                ],
+            ],
+            'packs' => PrepaidPack::getPackTypes(),
+        ]);
+    }
+
+    /**
      * GET /public/availability/schedule
      * Récupère les informations générales sur les horaires
      */
