@@ -10,6 +10,8 @@ class EditFaq extends EditRecord
 {
     protected static string $resource = FaqResource::class;
 
+    public static bool $formActionsAreSticky = true;
+
     protected function getHeaderActions(): array
     {
         return [

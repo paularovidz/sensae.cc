@@ -51,7 +51,7 @@ class ReviewResource extends Resource
                     ->default(0),
                 Toggle::make('is_published')
                     ->label('Publié')
-                    ->default(false),
+                    ->default(true),
             ]);
     }
 

@@ -7,25 +7,25 @@
     <section class="py-20">
         <div class="max-w-6xl mx-auto px-4 sm:px-6">
             @if($page->big_title)
-                <p class="text-primary font-medium mb-2">{{ $page->big_title }}</p>
+                <p data-animate="fade-in" class="text-primary font-medium mb-2">{{ $page->big_title }}</p>
             @endif
 
-            <h1 class="text-3xl md:text-5xl font-bold text-text-light font-secondary leading-tight">
+            <h1 data-animate="fade-up" class="text-3xl md:text-5xl font-bold text-text-light font-secondary leading-tight">
                 {{ $page->h1 ?? $page->title }}
             </h1>
 
             @if($page->image)
-                <div class="mt-10 rounded-2xl overflow-hidden">
-                    <img src="{{ asset('storage/' . $page->image) }}" alt="{{ $page->title }}" class="w-full">
+                <div data-animate="fade-up" data-animate-delay="0.1" class="mt-10 rounded-2xl overflow-hidden">
+                    <x-image :slug="$page->image" :alt="$page->title" class="w-full" />
                 </div>
             @endif
 
-            <div class="mt-10 prose prose-invert max-w-none text-text-default">
+            <div data-animate="fade-up" data-animate-delay="0.2" class="mt-10 prose prose-invert max-w-none text-text-default">
                 {!! $page->content !!}
             </div>
 
-            <div class="mt-12 text-center">
-                <a href="https://sensae.cc/booking" target="_blank" class="inline-block px-8 py-3 bg-primary text-text-light rounded-xl font-medium hover:opacity-90 transition">
+            <div data-animate="fade-up" data-animate-delay="0.3" class="mt-12 text-center">
+                <a href="https://sensae.cc/booking" target="_blank" data-magnetic="0.3" class="inline-block px-8 py-3 bg-primary text-text-light rounded-xl font-medium hover:opacity-90 transition">
                     Réserver une séance
                 </a>
             </div>

@@ -44,6 +44,9 @@ class MediaResource extends Resource
                     ->helperText('Identifiant utilisé dans les templates Blade : <x-image slug="..." />'),
                 TextInput::make('alt')
                     ->label('Texte alternatif'),
+                TextInput::make('folder')
+                    ->label('Dossier')
+                    ->helperText('Organiser les médias par dossier (ex: blog, sens, pages)'),
                 TextInput::make('url')
                     ->label('URL personnalisée')
                     ->url()
@@ -63,8 +66,13 @@ class MediaResource extends Resource
                     ->label('Slug')
                     ->searchable()
                     ->copyable(),
+                TextColumn::make('folder')
+                    ->label('Dossier')
+                    ->badge()
+                    ->placeholder('—'),
                 TextColumn::make('original_name')
-                    ->label('Fichier original'),
+                    ->label('Fichier original')
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('mime_type')
                     ->label('Type')
                     ->badge(),
@@ -87,7 +95,6 @@ class MediaResource extends Resource
     {
         return [
             'index' => Pages\ListMedia::route('/'),
-            'create' => Pages\CreateMedia::route('/create'),
             'edit' => Pages\EditMedia::route('/{record}/edit'),
         ];
     }

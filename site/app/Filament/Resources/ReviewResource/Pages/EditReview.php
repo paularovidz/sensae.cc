@@ -10,6 +10,8 @@ class EditReview extends EditRecord
 {
     protected static string $resource = ReviewResource::class;
 
+    public static bool $formActionsAreSticky = true;
+
     protected function getHeaderActions(): array
     {
         return [

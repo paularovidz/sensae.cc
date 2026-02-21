@@ -12,10 +12,11 @@ RUN apt-get update && apt-get install -y \
     libzip-dev \
     libavif-dev \
     libdav1d-dev \
+    libwebp-dev \
     libicu-dev \
     zip \
     unzip \
-    && docker-php-ext-configure gd --with-freetype --with-jpeg --with-avif \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg --with-avif --with-webp \
     && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip intl \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 

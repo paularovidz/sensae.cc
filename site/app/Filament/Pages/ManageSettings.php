@@ -3,7 +3,6 @@
 namespace App\Filament\Pages;
 
 use App\Models\Setting;
-use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Forms\Components\ColorPicker;
@@ -44,12 +43,4 @@ class ManageSettings extends Page
             ->send();
     }
 
-    protected function getHeaderActions(): array
-    {
-        return [
-            Action::make('save')
-                ->label('Sauvegarder')
-                ->action('save'),
-        ];
-    }
 }

@@ -4,12 +4,12 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\PageResource\Pages;
 use App\Models\Page;
+use App\Filament\Forms\Components\MediaPicker;
 use Filament\Resources\Resource;
 use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
-use Filament\Forms\Components\FileUpload;
 use Filament\Schemas\Schema;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
@@ -52,10 +52,8 @@ class PageResource extends Resource
                     ->label('H1'),
                 TextInput::make('big_title')
                     ->label('Sur-titre'),
-                FileUpload::make('image')
-                    ->image()
-                    ->directory('pages')
-                    ->disk('public'),
+                MediaPicker::make('image')
+                    ->label('Image'),
                 RichEditor::make('content')
                     ->label('Contenu')
                     ->columnSpanFull(),
@@ -66,7 +64,7 @@ class PageResource extends Resource
                     ->maxLength(500),
                 Toggle::make('is_published')
                     ->label('Publié')
-                    ->default(false),
+                    ->default(true),
             ]);
     }
 

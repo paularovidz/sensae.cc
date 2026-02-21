@@ -4,12 +4,12 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\SensResource\Pages;
 use App\Models\Sens;
+use App\Filament\Forms\Components\MediaPicker;
 use Filament\Resources\Resource;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Schema;
 use Filament\Actions\BulkActionGroup;
@@ -52,10 +52,8 @@ class SensResource extends Resource
                         'Auditif' => 'Auditif',
                         'Proprioceptif' => 'Proprioceptif',
                     ]),
-                FileUpload::make('image')
-                    ->image()
-                    ->directory('sens')
-                    ->disk('public'),
+                MediaPicker::make('image')
+                    ->label('Image'),
                 Textarea::make('excerpt')
                     ->label('Extrait')
                     ->rows(3),
@@ -69,7 +67,7 @@ class SensResource extends Resource
                     ->default(0),
                 Toggle::make('is_published')
                     ->label('Publié')
-                    ->default(false),
+                    ->default(true),
             ]);
     }
 

@@ -1,4 +1,4 @@
-<header class="border-b border-border relative z-50" x-data="{ mobileOpen: false }">
+<header data-header class="border-b border-border relative z-50" x-data="{ mobileOpen: false }">
     <nav class="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
         {{-- Logo / Texte --}}
         <a href="{{ route('home') }}" class="flex items-center gap-2 shrink-0">
@@ -61,11 +61,11 @@
             {{-- CTA --}}
             @if(!empty($menu['cta_text']))
                 @if(!empty($menu['cta_action']))
-                    <button onclick="{{ $menu['cta_action'] }}" class="hidden sm:inline-flex items-center px-4 py-2 bg-primary text-text-light text-sm font-semibold rounded-lg hover:bg-primary/90 transition">
+                    <button onclick="{{ $menu['cta_action'] }}" data-magnetic="0.2" class="hidden sm:inline-flex items-center px-4 py-2 bg-primary text-text-light text-sm font-semibold rounded-lg hover:bg-primary/90 transition">
                         {{ $menu['cta_text'] }}
                     </button>
                 @elseif(!empty($menu['cta_url']))
-                    <a href="{{ $menu['cta_url'] }}" class="hidden sm:inline-flex items-center px-4 py-2 bg-primary text-text-light text-sm font-semibold rounded-lg hover:bg-primary/90 transition">
+                    <a href="{{ $menu['cta_url'] }}" data-magnetic="0.2" class="hidden sm:inline-flex items-center px-4 py-2 bg-primary text-text-light text-sm font-semibold rounded-lg hover:bg-primary/90 transition">
                         {{ $menu['cta_text'] }}
                     </a>
                 @endif

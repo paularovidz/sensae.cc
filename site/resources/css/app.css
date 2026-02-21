@@ -18,3 +18,246 @@
     --font-secondary: 'Syne', sans-serif;
     --font-tertiary: 'Amandine', sans-serif;
 }
+
+/* GSAP: prevent FOUC — elements hidden until GSAP reveals them */
+[data-animate],
+[data-animate-grid] > *,
+[data-wheel-container] {
+  opacity: 0;
+}
+
+[data-hero-title] .gsap-word {
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-animate],
+  [data-animate-grid] > *,
+  [data-hero-title] .gsap-word,
+  [data-wheel-container] {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  [data-wheel-container] {
+    display: none !important;
+  }
+  [data-wheel-fallback] {
+    display: block !important;
+  }
+}
+
+/* Header scroll state */
+[data-header] {
+  position: sticky;
+  top: 0;
+  transition: background-color 0.3s ease, backdrop-filter 0.3s ease;
+}
+
+[data-header].header-scrolled {
+  background-color: rgba(14, 12, 12, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* Card tilt 3D context */
+[data-tilt] {
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
+/* Animated section borders */
+[data-animate-border] {
+  border-image: linear-gradient(
+    to right,
+    transparent,
+    var(--color-border) calc(var(--border-scale, 1) * 50%),
+    transparent
+  ) 1;
+}
+
+/* ========================================
+   Wheel of Senses
+   ======================================== */
+
+.wheel-container {
+  --wh-circle-w: 1126px;
+  --wh-circle-h: 352px;
+  --wh-orbit: 641px;
+  --wh-bubble: 68px;
+  --wh-offset: calc(var(--wh-circle-w) / 2 - var(--wh-circle-h));
+  height: calc(var(--wh-orbit) - var(--wh-offset) + var(--wh-bubble));
+  max-width: 1400px;
+}
+
+.wheel-glow {
+  width: calc(var(--wh-circle-w) + 4px);
+  height: calc(var(--wh-circle-w) + 4px);
+  border-radius: 50%;
+  bottom: 0;
+  transform: translateX(-50%) translateY(calc(var(--wh-circle-w) - var(--wh-circle-h) - 2px));
+  background: conic-gradient(
+    from var(--glow-angle, 0deg),
+    rgba(114, 26, 214, 0.8) 0deg,
+    rgba(114, 26, 214, 0.4) 30deg,
+    rgba(114, 26, 214, 0.1) 80deg,
+    transparent 150deg,
+    transparent 360deg
+  );
+  -webkit-mask: radial-gradient(
+    circle closest-side at center,
+    transparent calc(100% - 2px),
+    black calc(100% - 1px),
+    black 100%
+  );
+  mask: radial-gradient(
+    circle closest-side at center,
+    transparent calc(100% - 2px),
+    black calc(100% - 1px),
+    black 100%
+  );
+  opacity: 0;
+}
+
+.wheel-center {
+  width: var(--wh-circle-w);
+  height: var(--wh-circle-w);
+  border-radius: 50%;
+  bottom: 0;
+  transform: translateX(-50%) translateY(calc(var(--wh-circle-w) - var(--wh-circle-h)));
+  border: calc(1vw + 15px) solid var(--color-body, #0e0c0c);
+  background: linear-gradient(to bottom in oklab, var(--color-primary, #721ad6), var(--color-body, #0e0c0c) 30%);
+  z-index: 1;
+}
+
+.wheel-orbit {
+  width: 0;
+  height: 0;
+  bottom: calc(var(--wh-offset) * -1);
+}
+
+.wheel-bubble {
+  width: var(--wh-bubble);
+  height: var(--wh-bubble);
+  left: calc(var(--wh-bubble) / -2);
+  top: calc(var(--wh-bubble) / -2);
+}
+
+.wheel-bubble-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.wheel-bubble-img {
+  width: var(--wh-bubble);
+  height: var(--wh-bubble);
+  flex-shrink: 0;
+  padding: 8px;
+  box-shadow: 0 4px 20px rgba(114, 26, 214, 0.15);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  background: #721ad626;
+}
+
+.wheel-bubble:hover .wheel-bubble-img {
+  transform: scale(1.12);
+  box-shadow: 0 8px 30px rgba(114, 26, 214, 0.3);
+}
+
+.wheel-bubble-label {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+@media (max-width: 1250px) {
+  .wheel-container {
+    --wh-circle-w: 78vw;
+    --wh-circle-h: 24vw;
+    --wh-orbit: 44vw;
+    --wh-bubble: 60px;
+    height: min(80vh, calc(var(--wh-orbit) - var(--wh-offset) + var(--wh-bubble)));
+    max-width: 95vw;
+  }
+}
+
+@media (max-width: 640px) {
+  .wheel-container {
+    --wh-circle-w: 92vw;
+    --wh-circle-h: 29vw;
+    --wh-orbit: 52vw;
+    --wh-bubble: 48px;
+    height: min(80vh, calc(var(--wh-orbit) - var(--wh-offset) + var(--wh-bubble)));
+    max-width: 100vw;
+  }
+  .wheel-bubble-label {
+    font-size: 0.7rem;
+  }
+}
+
+/* Marquee des sens */
+.wheel-marquee {
+  width: 100%;
+  white-space: nowrap;
+  mask: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+  -webkit-mask: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+}
+
+.wheel-marquee-track {
+  display: inline-flex;
+  align-items: center;
+  gap: 1.5rem;
+  animation: wheel-marquee 25s linear infinite;
+}
+
+.wheel-marquee-text {
+  font-family: var(--font-secondary);
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--color-text-light);
+  opacity: 0.6;
+  flex-shrink: 0;
+}
+
+.wheel-marquee-star {
+  flex-shrink: 0;
+  color: var(--color-primary);
+  opacity: 0.5;
+  animation: wheel-star-spin 30s linear infinite;
+}
+
+@keyframes wheel-marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-25%); }
+}
+
+@keyframes wheel-star-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wheel-marquee-track {
+    animation: none;
+  }
+  .wheel-marquee-star {
+    animation: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .wheel-marquee-text {
+    font-size: 0.85rem;
+    letter-spacing: 0.1em;
+  }
+  .wheel-marquee-star {
+    width: 16px;
+    height: 16px;
+  }
+  .wheel-marquee-track {
+    gap: 1rem;
+  }
+}

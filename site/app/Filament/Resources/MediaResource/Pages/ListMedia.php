@@ -3,17 +3,16 @@
 namespace App\Filament\Resources\MediaResource\Pages;
 
 use App\Filament\Resources\MediaResource;
-use Filament\Actions;
-use Filament\Resources\Pages\ListRecords;
+use Filament\Resources\Pages\Page;
 
-class ListMedia extends ListRecords
+class ListMedia extends Page
 {
     protected static string $resource = MediaResource::class;
 
-    protected function getHeaderActions(): array
+    protected string $view = 'filament.pages.media-library';
+
+    public function getTitle(): string
     {
-        return [
-            Actions\CreateAction::make(),
-        ];
+        return 'Médiathèque';
     }
 }

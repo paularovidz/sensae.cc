@@ -22,7 +22,7 @@
 
     {{ $slot }}
 
-    <a href="https://sensae.cc/booking" target="_blank"
+    <a href="https://sensae.cc/booking" target="_blank" data-magnetic="0.2"
        class="mt-auto pt-6 block text-center px-6 py-3 rounded-xl {{ $highlight ? 'bg-primary text-text-light' : 'border border-border text-text-light hover:bg-accent' }} transition font-medium">
         Réserver
     </a>

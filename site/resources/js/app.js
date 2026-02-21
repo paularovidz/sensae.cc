@@ -56,3 +56,12 @@ document.addEventListener('click', (e) => {
         window.location.href = url;
     }
 });
+
+// GSAP Animations
+import { initAnimations } from './animations/index';
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initAnimations);
+} else {
+    initAnimations();
+}

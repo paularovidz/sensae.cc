@@ -3,7 +3,6 @@
 namespace App\Filament\Pages;
 
 use App\Models\Setting;
-use Filament\Actions\Action;
 use Illuminate\Support\Facades\Cache;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Repeater;
@@ -159,15 +158,6 @@ class ManageMenu extends Page
             ->title('Menu sauvegardé')
             ->success()
             ->send();
-    }
-
-    protected function getHeaderActions(): array
-    {
-        return [
-            Action::make('save')
-                ->label('Sauvegarder')
-                ->action('save'),
-        ];
     }
 
     private function getDefaultMenu(): array

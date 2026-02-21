@@ -10,6 +10,8 @@ class EditSens extends EditRecord
 {
     protected static string $resource = SensResource::class;
 
+    public static bool $formActionsAreSticky = true;
+
     protected function getHeaderActions(): array
     {
         return [

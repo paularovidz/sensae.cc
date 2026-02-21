@@ -1,6 +1,6 @@
 @props(['review'])
 
-<div class="border border-border rounded-2xl p-6">
+<div data-tilt class="border border-border rounded-2xl p-6">
     <div class="flex items-center gap-1 mb-3">
         @for($i = 1; $i <= 5; $i++)
             <svg class="w-4 h-4 {{ $i <= $review->rating ? 'text-yellow-400' : 'text-border' }}" fill="currentColor" viewBox="0 0 20 20">

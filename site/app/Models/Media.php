@@ -13,7 +13,7 @@ class Media extends Model
     protected $table = 'media';
 
     protected $fillable = [
-        'slug', 'alt', 'original_name', 'path', 'url',
+        'slug', 'alt', 'folder', 'original_name', 'path', 'url',
         'mime_type', 'width', 'height', 'size',
     ];
 

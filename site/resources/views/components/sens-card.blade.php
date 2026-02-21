@@ -1,9 +1,9 @@
 @props(['sens'])
 
-<a href="{{ route('sens.show', $sens->slug) }}" class="group block border border-border rounded-2xl overflow-hidden hover:border-primary/50 transition">
+<a href="{{ route('sens.show', $sens->slug) }}" data-tilt class="group block border border-border rounded-2xl overflow-hidden hover:border-primary/50 transition">
     @if($sens->image)
         <div class="aspect-video overflow-hidden">
-            <img src="{{ asset('storage/' . $sens->image) }}" alt="{{ $sens->title }}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
+            <x-image :slug="$sens->image" :alt="$sens->title" class="w-full h-full object-cover group-hover:scale-105 transition duration-300" />
         </div>
     @endif
 

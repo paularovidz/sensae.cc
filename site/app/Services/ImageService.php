@@ -30,15 +30,8 @@ class ImageService
             mkdir($dir, 0755, true);
         }
 
-        if (function_exists('imageavif')) {
-            imageavif($image, $absolutePath, 70);
-        } else {
-            // Fallback to WebP if AVIF not available
-            $relativePath = str_replace('.avif', '.webp', $relativePath);
-            $absolutePath = str_replace('.avif', '.webp', $absolutePath);
-            imagewebp($image, $absolutePath, 80);
-        }
-
+        imagesavealpha($image, true);
+        imageavif($image, $absolutePath, 70);
         imagedestroy($image);
 
         $size = filesize($absolutePath);
@@ -47,7 +40,7 @@ class ImageService
             'slug' => $slug,
             'original_name' => $file->getClientOriginalName(),
             'path' => $relativePath,
-            'mime_type' => function_exists('imageavif') ? 'image/avif' : 'image/webp',
+            'mime_type' => 'image/avif',
             'width' => $width,
             'height' => $height,
             'size' => $size,
@@ -64,7 +57,7 @@ class ImageService
             'image/png' => $this->loadPng($path),
             'image/gif' => imagecreatefromgif($path),
             'image/webp' => imagecreatefromwebp($path),
-            'image/avif' => function_exists('imagecreatefromavif') ? imagecreatefromavif($path) : null,
+            'image/avif' => imagecreatefromavif($path),
             default => null,
         };
     }
@@ -72,18 +65,10 @@ class ImageService
     private function loadPng(string $path): \GdImage
     {
         $image = imagecreatefrompng($path);
-        $width = imagesx($image);
-        $height = imagesy($image);
+        imagealphablending($image, false);
+        imagesavealpha($image, true);
 
-        // Flatten alpha onto white background for AVIF
-        $flat = imagecreatetruecolor($width, $height);
-        $white = imagecolorallocate($flat, 255, 255, 255);
-        imagefill($flat, 0, 0, $white);
-        imagealphablending($flat, true);
-        imagecopy($flat, $image, 0, 0, 0, 0, $width, $height);
-        imagedestroy($image);
-
-        return $flat;
+        return $image;
     }
 
     private function uniqueSlug(string $slug): string

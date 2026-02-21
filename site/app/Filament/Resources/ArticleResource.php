@@ -4,9 +4,9 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\ArticleResource\Pages;
 use App\Models\Article;
+use App\Filament\Forms\Components\MediaPicker;
 use Filament\Resources\Resource;
 use Filament\Forms\Components\DateTimePicker;
-use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\TagsInput;
 use Filament\Forms\Components\Textarea;
@@ -42,10 +42,8 @@ class ArticleResource extends Resource
                 TextInput::make('slug')
                     ->required()
                     ->unique(ignoreRecord: true),
-                FileUpload::make('image')
-                    ->image()
-                    ->directory('articles')
-                    ->disk('public'),
+                MediaPicker::make('image')
+                    ->label('Image'),
                 Textarea::make('excerpt')
                     ->label('Extrait')
                     ->rows(3),
@@ -61,7 +59,7 @@ class ArticleResource extends Resource
                     ->label('Date de publication'),
                 Toggle::make('is_published')
                     ->label('Publié')
-                    ->default(false),
+                    ->default(true),
             ]);
     }
 

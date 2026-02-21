@@ -1,14 +1,14 @@
-<footer class="border-t border-border mt-16">
+<footer data-footer class="border-t border-border mt-16">
     <div class="max-w-6xl mx-auto px-4 sm:px-6 py-12">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div>
+            <div data-footer-col>
                 <h3 class="text-lg font-bold text-text-light mb-4 font-secondary">sensëa</h3>
                 <p class="text-sm text-text-default">
                     Salle Snoezelen pour des séances de stimulation multisensorielle.
                 </p>
             </div>
 
-            <div>
+            <div data-footer-col>
                 <h3 class="text-lg font-bold text-text-light mb-4 font-secondary">Contact</h3>
                 @isset($contact)
                     @if(!empty($contact['contact_email']))
@@ -31,7 +31,7 @@
                 @endisset
             </div>
 
-            <div>
+            <div data-footer-col>
                 <h3 class="text-lg font-bold text-text-light mb-4 font-secondary">Suivez-nous</h3>
                 <div class="flex gap-4">
                     @isset($social)
@@ -46,7 +46,7 @@
             </div>
         </div>
 
-        <div class="mt-8 pt-8 border-t border-border text-center text-sm text-text-default">
+        <div data-footer-copyright class="mt-8 pt-8 border-t border-border text-center text-sm text-text-default">
             &copy; {{ date('Y') }} sensëa. Tous droits réservés.
         </div>
     </div>
