@@ -1,6 +1,6 @@
 @props(['faq'])
 
-<details data-faq-item class="group border border-border rounded-xl">
+<details data-faq-item class="group border border-border rounded-full">
     <summary class="flex items-center justify-between p-4 cursor-pointer list-none">
         <span class="font-medium text-text-light">{{ $faq->question }}</span>
         <svg data-faq-chevron class="w-5 h-5 text-text-default" fill="none" stroke="currentColor" viewBox="0 0 24 24">

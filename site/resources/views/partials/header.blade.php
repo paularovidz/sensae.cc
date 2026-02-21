@@ -14,18 +14,18 @@
         <div class="hidden lg:flex items-center gap-1">
             @foreach(($menu['entries'] ?? []) as $entry)
                 @if(($entry['type'] ?? 'link') === 'link')
-                    <a href="{{ $entry['url'] ?? '#' }}" class="px-3 py-2 text-text-default hover:text-primary transition rounded-lg hover:bg-white/5">
+                    <a href="{{ $entry['url'] ?? '#' }}" class="px-3 py-2 text-text-default hover:text-primary transition rounded-full hover:bg-white/5">
                         {{ $entry['label'] }}
                     </a>
                 @else
                     <div x-data="{ open: false }" @mouseenter="open = true" @mouseleave="open = false" class="relative">
-                        <button @click="open = !open" class="px-3 py-2 text-text-default hover:text-primary transition rounded-lg hover:bg-white/5 flex items-center gap-1">
+                        <button @click="open = !open" class="px-3 py-2 text-text-default hover:text-primary transition rounded-full hover:bg-white/5 flex items-center gap-1">
                             {{ $entry['label'] }}
                             <svg class="w-4 h-4 transition-transform" :class="open && 'rotate-180'" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                         </button>
 
                         <div x-show="open" x-transition:enter="transition ease-out duration-150" x-transition:enter-start="opacity-0 -translate-y-1" x-transition:enter-end="opacity-100 translate-y-0" x-transition:leave="transition ease-in duration-100" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" x-cloak
-                            class="absolute top-full left-0 mt-1 bg-accent border border-border rounded-xl shadow-2xl p-4 min-w-[280px]"
+                            class="absolute top-full left-0 mt-1 bg-accent border border-border rounded-full shadow-2xl p-4 min-w-[280px]"
                             :class="{ 'flex gap-6': {{ count($entry['submenus'] ?? []) }} > 1 }">
 
                             @foreach(($entry['submenus'] ?? []) as $submenu)
@@ -35,7 +35,7 @@
                                     @endif
 
                                     @if(!empty($submenu['image_slug']))
-                                        <div class="mb-3 rounded-lg overflow-hidden">
+                                        <div class="mb-3 rounded-full overflow-hidden">
                                             <x-image :slug="$submenu['image_slug']" class="w-full h-28 object-cover" />
                                         </div>
                                     @endif
@@ -61,11 +61,11 @@
             {{-- CTA --}}
             @if(!empty($menu['cta_text']))
                 @if(!empty($menu['cta_action']))
-                    <button onclick="{{ $menu['cta_action'] }}" data-magnetic="0.2" class="hidden sm:inline-flex items-center px-4 py-2 bg-primary text-text-light text-sm font-semibold rounded-lg hover:bg-primary/90 transition">
+                    <button onclick="{{ $menu['cta_action'] }}" class="hidden sm:inline-flex items-center px-4 py-2 bg-primary text-text-light text-sm font-semibold rounded-full hover:bg-primary/90 transition">
                         {{ $menu['cta_text'] }}
                     </button>
                 @elseif(!empty($menu['cta_url']))
-                    <a href="{{ $menu['cta_url'] }}" data-magnetic="0.2" class="hidden sm:inline-flex items-center px-4 py-2 bg-primary text-text-light text-sm font-semibold rounded-lg hover:bg-primary/90 transition">
+                    <a href="{{ $menu['cta_url'] }}" class="hidden sm:inline-flex items-center px-4 py-2 bg-primary text-text-light text-sm font-semibold rounded-full hover:bg-primary/90 transition">
                         {{ $menu['cta_text'] }}
                     </a>
                 @endif
@@ -80,16 +80,16 @@
     </nav>
 
     {{-- Menu mobile --}}
-    <div x-show="mobileOpen" x-transition x-cloak class="lg:hidden border-t border-border bg-accent">
+    <div x-show="mobileOpen" x-transition x-cloak class="lg:hidden border-t border-border bg-accent" style="display:none">
         <div class="max-w-6xl mx-auto px-4 py-4 space-y-1">
             @foreach(($menu['entries'] ?? []) as $entry)
                 @if(($entry['type'] ?? 'link') === 'link')
-                    <a href="{{ $entry['url'] ?? '#' }}" class="block px-3 py-2 text-text-default hover:text-primary transition rounded-lg">
+                    <a href="{{ $entry['url'] ?? '#' }}" class="block px-3 py-2 text-text-default hover:text-primary transition rounded-full">
                         {{ $entry['label'] }}
                     </a>
                 @else
                     <div x-data="{ sub: false }">
-                        <button @click="sub = !sub" class="w-full flex items-center justify-between px-3 py-2 text-text-default hover:text-primary transition rounded-lg">
+                        <button @click="sub = !sub" class="w-full flex items-center justify-between px-3 py-2 text-text-default hover:text-primary transition rounded-full">
                             {{ $entry['label'] }}
                             <svg class="w-4 h-4 transition-transform" :class="sub && 'rotate-180'" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                         </button>
@@ -99,7 +99,7 @@
                                     <div class="text-xs font-semibold text-text-default/60 uppercase tracking-wider px-3 pt-2">{{ $submenu['title'] }}</div>
                                 @endif
                                 @foreach(($submenu['links'] ?? []) as $link)
-                                    <a href="{{ $link['url'] ?? '#' }}" class="block px-3 py-1.5 text-sm text-text-default hover:text-primary transition rounded-lg">
+                                    <a href="{{ $link['url'] ?? '#' }}" class="block px-3 py-1.5 text-sm text-text-default hover:text-primary transition rounded-full">
                                         {{ $link['label'] }}
                                     </a>
                                 @endforeach
@@ -112,11 +112,11 @@
             @if(!empty($menu['cta_text']))
                 <div class="pt-2">
                     @if(!empty($menu['cta_action']))
-                        <button onclick="{{ $menu['cta_action'] }}" class="w-full px-4 py-2 bg-primary text-text-light text-sm font-semibold rounded-lg hover:bg-primary/90 transition text-center">
+                        <button onclick="{{ $menu['cta_action'] }}" class="w-full px-4 py-2 bg-primary text-text-light text-sm font-semibold rounded-full hover:bg-primary/90 transition text-center">
                             {{ $menu['cta_text'] }}
                         </button>
                     @elseif(!empty($menu['cta_url']))
-                        <a href="{{ $menu['cta_url'] }}" class="block w-full px-4 py-2 bg-primary text-text-light text-sm font-semibold rounded-lg hover:bg-primary/90 transition text-center">
+                        <a href="{{ $menu['cta_url'] }}" class="block w-full px-4 py-2 bg-primary text-text-light text-sm font-semibold rounded-full hover:bg-primary/90 transition text-center">
                             {{ $menu['cta_text'] }}
                         </a>
                     @endif

@@ -25,7 +25,7 @@
             </div>
 
             <div data-animate="fade-up" data-animate-delay="0.3" class="mt-12 text-center">
-                <a href="https://sensae.cc/booking" target="_blank" data-magnetic="0.3" class="inline-block px-8 py-3 bg-primary text-text-light rounded-xl font-medium hover:opacity-90 transition">
+                <a href="https://sensae.cc/booking" target="_blank" class="inline-block px-8 py-3 bg-primary text-text-light rounded-full font-medium hover:opacity-90 transition">
                     Réserver une séance
                 </a>
             </div>

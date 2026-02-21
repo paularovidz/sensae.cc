@@ -7,7 +7,7 @@
     }
 @endphp
 
-<div data-wheel-container data-wheel-links="{{ $links ? '1' : '0' }}" data-wheel-max-tablet="28" data-wheel-max-mobile="21" class="relative mx-auto wheel-container overflow-hidden">
+<div data-wheel-container data-wheel-links="{{ $links ? '1' : '0' }}" data-wheel-max-tablet="28" data-wheel-max-mobile="21" class="animated relative mx-auto wheel-container overflow-hidden">
     {{-- Glow ring (thin purple border, slightly larger than center) --}}
     <div data-wheel-glow class="absolute left-1/2 wheel-glow"></div>
 

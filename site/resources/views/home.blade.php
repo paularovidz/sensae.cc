@@ -4,21 +4,22 @@
 
 @section('content')
     {{-- Hero --}}
-    <section data-hero class="py-20 md:py-28">
+    <section data-hero class="hero relative banner-gradient">
         <div class="max-w-6xl mx-auto px-4 sm:px-6 text-center">
-            <h1 data-hero-title class="text-4xl md:text-6xl font-bold text-text-light font-secondary leading-tight">
-                Votre espace <span class="text-primary">Snoezelen</span>
-            </h1>
-            <p data-hero-subtitle class="mt-6 text-lg text-text-default max-w-2xl mx-auto">
-                Découvrez la stimulation multisensorielle dans un environnement adapté et bienveillant.
-            </p>
+            <h1 data-hero-h1 class="animated text-xs uppercase mb-2">sensaë salle snoezelen à Audruicq</h1>
+            <p data-hero-title class="text-4xl md:text-6xl font-bold text-text-light leading-tight">Écouter les besoins, répondre aux sens, <span class="font-secondary">prendre soin autrement</span></p>
+            <p data-hero-subtitle class="mt-6 text-lg text-text-default max-w-2xl mx-auto">Une expérience multisensorielle sur-mesure pour gérer les émotions, réduire l’anxiété et retrouver un équilibre intérieur.</p>
             <div data-hero-cta class="mt-8 flex items-center justify-center gap-4">
-                <a href="https://sensae.cc/booking" target="_blank" data-magnetic="0.3" class="px-8 py-3 bg-primary text-text-light rounded-xl font-medium hover:opacity-90 transition">
-                    Réserver une séance
-                </a>
-                <a href="#comprendre" data-magnetic="0.3" class="px-8 py-3 border border-border text-text-light rounded-xl font-medium hover:bg-accent transition">
-                    En savoir plus
-                </a>
+                <x-cta-contact label="Ouverture en août" :star="true" />
+                <a href="#comprendre" class="px-8 py-3 border border-border text-text-light rounded-full font-medium hover:bg-accent transition">En savoir plus</a>
+            </div>
+            <div data-hero-image class="animated relative mx-4 mt-12 -mb-4 max-w-screen-xl md:m-0 md:mx-auto md:mt-20">
+                <div class="relative">
+                    <div class="overflow-hidden rounded-t-2xl bg-black border-2 border-b-0 border-[#0e0c0c] md:rounded-t-3xl">
+                        <x-image slug="snoezelen-sensea" alt="Salle Snoezelen sensëa" class="w-full h-full object-cover" loading="eager" fetchpriority="high" />
+                    </div>
+                    <div data-hero-image-glow class="hero-image-glow"></div>
+                </div>
             </div>
         </div>
     </section>
@@ -84,7 +85,7 @@
                         <div class="text-center md:text-right shrink-0">
                             <span class="text-4xl font-bold text-text-light">{{ $discoveryPrice }}€</span>
                             <div class="mt-3">
-                                <a href="https://sensae.cc/booking" target="_blank" data-magnetic="0.2" class="inline-block px-6 py-3 bg-primary text-text-light rounded-xl font-medium hover:bg-primary/90 transition">
+                                <a href="https://sensae.cc/booking" target="_blank" class="inline-block px-6 py-3 bg-primary text-text-light rounded-full font-medium hover:bg-primary/90 transition">
                                     Réserver
                                 </a>
                             </div>
@@ -146,7 +147,7 @@
                     @endforeach
                 </div>
                 <div data-animate="fade-up" class="text-center mt-8">
-                    <a href="{{ route('faq') }}" data-magnetic="0.2" class="text-primary hover:underline">Voir toutes les questions</a>
+                    <a href="{{ route('faq') }}" class="text-primary hover:underline">Voir toutes les questions</a>
                 </div>
             </div>
         </section>

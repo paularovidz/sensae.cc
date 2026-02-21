@@ -6,10 +6,6 @@
     <title>@yield('title', $seo['seo_title'] ?? 'sensëa - Snoezelen')</title>
     <meta name="description" content="@yield('meta_description', $seo['seo_description'] ?? '')">
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-
     <style>
         :root {
             @isset($colors)
@@ -24,9 +20,12 @@
         }
     </style>
 
+    <style>[x-cloak] { display: none !important; }</style>
+
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <script src="//embed.typeform.com/next/embed.js" defer></script>
 </head>
-<body class="bg-body text-text-default font-secondary min-h-screen flex flex-col">
+<body class="bg-body text-text-default min-h-screen flex flex-col">
     @include('partials.header')
 
     <main class="flex-1">
