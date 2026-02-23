@@ -5,7 +5,6 @@ import { prefersReducedMotion } from '../utils/reduced-motion';
 
 const WHEEL = {
   orbitDuration: 30,
-  glowDuration: 6,
   entranceDuration: 1.2,
   bubbleStagger: 0.04,
 };
@@ -37,6 +36,10 @@ export function initWheel() {
   let orbitR;
   let activeCount = totalCount;
 
+  // Pre-cache transform writers — avoids gsap.set() overhead per frame
+  const setX = allBubbles.map(b => gsap.quickSetter(b, 'x', 'px'));
+  const setY = allBubbles.map(b => gsap.quickSetter(b, 'y', 'px'));
+
   function readOrbitDimensions() {
     const raw = getComputedStyle(container).getPropertyValue('--wh-orbit').trim();
     if (raw.endsWith('vw')) {
@@ -61,16 +64,16 @@ export function initWheel() {
 
   readOrbitDimensions();
 
-  // Position active bubbles along the circular path
+  // Position active bubbles along the circular path (using quickSetters)
+  const TWO_PI = Math.PI * 2;
   function positionBubbles(progress) {
-    allBubbles.forEach((bubble, i) => {
-      if (i >= activeCount) return;
-      const angle = progress * Math.PI * 2 + (i / activeCount) * Math.PI * 2;
-      gsap.set(bubble, {
-        x: orbitR * Math.cos(angle),
-        y: -orbitR * Math.sin(angle),
-      });
-    });
+    const baseAngle = progress * TWO_PI;
+    const step = TWO_PI / activeCount;
+    for (let i = 0; i < activeCount; i++) {
+      const angle = baseAngle + i * step;
+      setX[i](orbitR * Math.cos(angle));
+      setY[i](-orbitR * Math.sin(angle));
+    }
   }
 
   positionBubbles(0);
@@ -86,21 +89,7 @@ export function initWheel() {
     onUpdate: () => positionBubbles(orbitProgress.value),
   });
 
-  // Glow — animate the conic-gradient starting angle
-  let glowTween;
-  if (glow) {
-    const glowObj = { angle: 0 };
-    glowTween = gsap.to(glowObj, {
-      angle: 360,
-      duration: WHEEL.glowDuration,
-      repeat: -1,
-      ease: 'none',
-      paused: true,
-      onUpdate: () => {
-        glow.style.setProperty('--glow-angle', `${glowObj.angle}deg`);
-      },
-    });
-  }
+  // Glow — animated via pure CSS @keyframes (no JS needed)
 
   // Entrance timeline
   const entranceTl = gsap.timeline({
@@ -111,12 +100,11 @@ export function initWheel() {
     },
     onComplete: () => {
       orbitTween.play();
-      if (glowTween) glowTween.play();
     },
   });
 
-  entranceTl.fromTo(container, { opacity: 0 }, {
-    opacity: 1,
+  entranceTl.fromTo(container, { autoAlpha: 0 }, {
+    autoAlpha: 1,
     duration: DURATION.slow,
     ease: EASE.reveal,
   });
@@ -130,6 +118,9 @@ export function initWheel() {
       onComplete: () => gsap.set(center, { clearProps: 'all' }),
     }, '<');
   }
+
+  // Start CSS rotation immediately so it's already spinning when it fades in
+  if (glow) glow.classList.add('wheel-glow-active');
 
   // Glow fades in after center appears
   if (glow) {
@@ -163,10 +154,8 @@ export function initWheel() {
   const observer = new IntersectionObserver(([entry]) => {
     if (entry.isIntersecting) {
       orbitTween.play();
-      if (glowTween) glowTween.play();
     } else {
       orbitTween.pause();
-      if (glowTween) glowTween.pause();
     }
   }, { threshold: 0.1 });
   observer.observe(section);

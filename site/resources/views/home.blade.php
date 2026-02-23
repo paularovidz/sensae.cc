@@ -6,14 +6,14 @@
     {{-- Hero --}}
     <section data-hero class="hero relative banner-gradient">
         <div class="max-w-6xl mx-auto px-4 sm:px-6 text-center">
-            <h1 data-hero-h1 class="animated text-xs uppercase mb-2">sensaë salle snoezelen à Audruicq</h1>
+            <h1 data-hero-h1 class="text-xs uppercase mb-2">sensaë salle snoezelen à Audruicq</h1>
             <p data-hero-title class="text-4xl md:text-6xl font-bold text-text-light leading-tight">Écouter les besoins, répondre aux sens, <span class="font-secondary">prendre soin autrement</span></p>
             <p data-hero-subtitle class="mt-6 text-lg text-text-default max-w-2xl mx-auto">Une expérience multisensorielle sur-mesure pour gérer les émotions, réduire l’anxiété et retrouver un équilibre intérieur.</p>
             <div data-hero-cta class="mt-8 flex items-center justify-center gap-4">
                 <x-cta-contact label="Ouverture en août" :star="true" />
                 <a href="#comprendre" class="px-8 py-3 border border-border text-text-light rounded-full font-medium hover:bg-accent transition">En savoir plus</a>
             </div>
-            <div data-hero-image class="animated relative mx-4 mt-12 -mb-4 max-w-screen-xl md:m-0 md:mx-auto md:mt-20">
+            <div data-hero-image class="relative mx-4 mt-12 -mb-4 max-w-screen-xl md:m-0 md:mx-auto md:mt-20">
                 <div class="relative">
                     <div class="overflow-hidden rounded-t-2xl bg-black border-2 border-b-0 border-[#0e0c0c] md:rounded-t-3xl">
                         <x-image slug="snoezelen-sensea" alt="Salle Snoezelen sensëa" class="w-full h-full object-cover" loading="eager" fetchpriority="high" />
@@ -23,6 +23,8 @@
             </div>
         </div>
     </section>
+
+    <x-pillars />
 
     {{-- Roue des Sens --}}
     @if($sens->count())

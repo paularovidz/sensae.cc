@@ -1,0 +1,2 @@
+@props(['text' => ''])
+<div class="from-primary/20 to-primary/5 mx-auto mb-2.5 flex w-fit items-center gap-2 rounded-full bg-gradient-to-r from-80% py-1 ps-5 pe-2.5 text-white">{{ $text }}<svg width="20" height="19" viewBox="0 0 20 19" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10 0.5C9.55417 8.76875 9.1875 9.09875 0 9.5C9.1875 9.90125 9.55417 10.2312 10 18.5C10.4458 10.2312 10.8125 9.90125 20 9.5C10.8125 9.09875 10.4458 8.76875 10 0.5Z" fill="currentColor"></path></svg></div>

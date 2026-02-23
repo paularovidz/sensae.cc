@@ -1,45 +1,56 @@
-import './bootstrap';
-import Alpine from 'alpinejs';
+// GSAP Animations — run first, hero is above the fold
+import { initAnimations } from './animations/index';
 
-Alpine.data('availabilityBadge', () => ({
-    loading: true,
-    available: false,
-    label: '',
-    daysUntil: null,
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initAnimations);
+} else {
+    initAnimations();
+}
 
-    async init() {
-        try {
-            const res = await fetch('/api/availability/next');
-            const data = await res.json();
+// Alpine.js — deferred, not needed for initial paint
+requestAnimationFrame(() => {
+    import('alpinejs').then(({ default: Alpine }) => {
+        Alpine.data('availabilityBadge', () => ({
+            loading: true,
+            available: false,
+            label: '',
+            daysUntil: null,
 
-            if (data.available) {
-                this.available = true;
-                this.daysUntil = data.days_until;
-                this.label = this.formatLabel(data.days_until, data.next_date);
+            async init() {
+                try {
+                    const res = await fetch('/api/availability/next');
+                    const data = await res.json();
+
+                    if (data.available) {
+                        this.available = true;
+                        this.daysUntil = data.days_until;
+                        this.label = this.formatLabel(data.days_until, data.next_date);
+                    }
+                } catch (e) {
+                    console.error('Availability fetch failed:', e);
+                } finally {
+                    this.loading = false;
+                }
+            },
+
+            formatLabel(days, nextDate) {
+                if (days === 0) return 'Disponible aujourd\'hui';
+                if (days === 1) return 'Disponible demain';
+
+                const date = new Date(nextDate);
+                const dayNames = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'];
+
+                if (days <= 6) {
+                    return `Disponible ${dayNames[date.getDay()]}`;
+                }
+
+                return `Disponible dans ${days} jours`;
             }
-        } catch (e) {
-            console.error('Availability fetch failed:', e);
-        } finally {
-            this.loading = false;
-        }
-    },
+        }));
 
-    formatLabel(days, nextDate) {
-        if (days === 0) return 'Disponible aujourd\'hui';
-        if (days === 1) return 'Disponible demain';
-
-        const date = new Date(nextDate);
-        const dayNames = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'];
-
-        if (days <= 6) {
-            return `Disponible ${dayNames[date.getDay()]}`;
-        }
-
-        return `Disponible dans ${days} jours`;
-    }
-}));
-
-Alpine.start();
+        Alpine.start();
+    });
+});
 
 // Obfuscated links
 document.addEventListener('click', (e) => {
@@ -56,12 +67,3 @@ document.addEventListener('click', (e) => {
         window.location.href = url;
     }
 });
-
-// GSAP Animations
-import { initAnimations } from './animations/index';
-
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initAnimations);
-} else {
-    initAnimations();
-}

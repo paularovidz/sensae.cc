@@ -14,8 +14,6 @@ export const DURATION = {
 
 export const STAGGER = {
   cards: 0.12,
-  words: 0.06,
-  lines: 0.15,
 };
 
 export const SCROLL = {

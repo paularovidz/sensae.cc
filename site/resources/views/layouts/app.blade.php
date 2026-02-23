@@ -28,7 +28,7 @@
 <body class="bg-body text-text-default min-h-screen flex flex-col">
     @include('partials.header')
 
-    <main class="flex-1">
+    <main class="section-spacing-lg fit-to-screen">
         @yield('content')
     </main>
 

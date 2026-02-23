@@ -1,19 +1,7 @@
 import gsap from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { prefersReducedMotion } from './utils/reduced-motion';
 import { EASE } from './config';
-
-import { initHeader } from './core/header';
-import { initScrollReveals } from './core/scroll-reveal';
-import { initMagnetic } from './core/magnetic';
-
 import { initHero } from './sections/hero';
-import { initCards } from './sections/cards';
-import { initFaq } from './sections/faq';
-import { initFooter } from './sections/footer';
-import { initWheel } from './sections/wheel';
-
-gsap.registerPlugin(ScrollTrigger);
 
 gsap.defaults({
   ease: EASE.reveal,
@@ -22,19 +10,47 @@ gsap.defaults({
 
 export function initAnimations() {
   if (prefersReducedMotion()) {
-    gsap.set('[data-animate], [data-animate-grid] > *, [data-hero-title] .gsap-word, [data-wheel-container]', {
-      opacity: 1, y: 0, x: 0, scale: 1,
+    gsap.set('[data-animate], [data-animate-grid] > *, [data-wheel-container], [data-hero-h1], [data-hero-title], [data-hero-subtitle], [data-hero-cta], [data-hero-image]', {
+      autoAlpha: 1, y: 0, x: 0, scale: 1,
     });
     return;
   }
 
-  initHeader();
-  initScrollReveals();
-  initMagnetic();
-
+  // Hero runs immediately — above the fold, no ScrollTrigger needed
   initHero();
-  initCards();
-  initWheel();
-  initFaq();
-  initFooter();
+
+  // Defer scroll-based animations to free the main thread for the hero entrance
+  const initDeferred = async () => {
+    const { ScrollTrigger } = await import('gsap/ScrollTrigger');
+    gsap.registerPlugin(ScrollTrigger);
+
+    const [
+      { initHeader },
+      { initScrollReveals },
+      { initMagnetic },
+      { initCards },
+      { initWheel },
+      { initFaq },
+      { initFooter },
+    ] = await Promise.all([
+      import('./core/header'),
+      import('./core/scroll-reveal'),
+      import('./core/magnetic'),
+      import('./sections/cards'),
+      import('./sections/wheel'),
+      import('./sections/faq'),
+      import('./sections/footer'),
+    ]);
+
+    initHeader();
+    initScrollReveals();
+    initMagnetic();
+    initCards();
+    initWheel();
+    initFaq();
+    initFooter();
+  };
+
+  // Wait one frame so the hero timeline starts painting, then load the rest
+  requestAnimationFrame(() => initDeferred());
 }
