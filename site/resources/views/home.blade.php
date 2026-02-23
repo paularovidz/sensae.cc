@@ -37,20 +37,6 @@
             </div>
 
             <x-sens-wheel :sens="$sens" :links="true" />
-
-            {{-- Marquee des sens --}}
-            <div class="wheel-marquee overflow-hidden mt-10" data-animate="fade-up" data-animate-delay="0.3">
-                <div class="wheel-marquee-track">
-                    @for($i = 0; $i < 4; $i++)
-                        @foreach($sens as $item)
-                            <span class="wheel-marquee-text">{{ $item->title }}</span>
-                            <svg class="wheel-marquee-star" width="20" height="20" viewBox="0 0 41 41" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M32.2313 0.202637C20.5598 18.3285 19.3858 18.643 0.215088 8.78136C18.3409 20.4529 18.6555 21.6268 8.79381 40.7976C20.4653 22.6717 21.6393 22.3572 40.81 32.2189C22.6842 20.5473 22.3696 19.3734 32.2313 0.202637Z" fill="currentColor" />
-                            </svg>
-                        @endforeach
-                    @endfor
-                </div>
-            </div>
         </section>
     @endif
 

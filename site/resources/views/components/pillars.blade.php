@@ -3,7 +3,7 @@
 
         <div class="mx-auto max-w-2xl text-center">
             <x-pill text="Une approche multisensorielle pour mieux se retrouver" />
-            <h2 class="">Les piliers de l'accompagnement Snoezelen</h2>
+            <h2 class="text-white">Les 3 piliers de l’<span class="font-secondary italic">accompagnement Snoezelen</span></h2>
         </div>
 
         <div class="grid gap-x-12 gap-y-10 md:grid-cols-2 lg:grid-cols-3 aos-init aos-animate" data-aos="fade-up-sm" data-aos-delay="200">
