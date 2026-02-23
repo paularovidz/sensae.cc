@@ -28,7 +28,7 @@
 
     {{-- Roue des Sens --}}
     @if($sens->count())
-        <section id="comprendre" data-wheel data-animate-border class="relative py-16 border-t border-border">
+        <section id="comprendre" data-wheel data-animate-border class="relative py-16">
             <div class="max-w-6xl mx-auto px-4 sm:px-6">
                 <h2 data-animate="fade-up" class="text-3xl font-bold text-text-light font-secondary mb-4 text-center">Comprendre les sens</h2>
                 <p data-animate="fade-up" data-animate-delay="0.1" class="text-text-default text-center max-w-2xl mx-auto mb-12">
@@ -67,7 +67,7 @@
         $pack2PerSession = $pack2Sessions > 0 ? round($pack2Price / $pack2Sessions) : 0;
         $pack4PerSession = $pack4Sessions > 0 ? round($pack4Price / $pack4Sessions) : 0;
     @endphp
-    <section data-animate-border class="py-16 border-t border-border">
+    <section data-animate-border class="py-16">
         <div class="max-w-6xl mx-auto px-4 sm:px-6">
             <h2 data-animate="fade-up" class="text-3xl font-bold text-text-light font-secondary mb-4 text-center">Nos tarifs</h2>
             <p data-animate="fade-up" data-animate-delay="0.1" class="text-text-default text-center max-w-2xl mx-auto mb-12">Choisissez la formule adaptée à vos besoins.</p>
