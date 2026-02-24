@@ -4,7 +4,9 @@ use App\Http\Controllers\ArticleController;
 use App\Http\Controllers\AvailabilityController;
 use App\Http\Controllers\ExperienceController;
 use App\Http\Controllers\FaqController;
+use App\Http\Controllers\PremiereSeanceController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\LandingPageController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\SensController;
 use App\Http\Controllers\Admin\MediaApiController;
@@ -33,6 +35,12 @@ Route::get('/salle-snoezelen-{city}', [PageController::class, 'location'])->name
 Route::get('/api/availability/next', [AvailabilityController::class, 'next']);
 
 Route::get('/voyage-sensoriel', [ExperienceController::class, 'index'])->name('experience');
+Route::get('/premiere-seance', [PremiereSeanceController::class, 'index'])->name('premiere-seance');
+
+Route::get('/cadeau-naissance-sensoriel', [LandingPageController::class, 'cadeauNaissance'])->name('cadeau-naissance');
+Route::get('/cadeau-femme-enceinte-sensoriel', [LandingPageController::class, 'cadeauFemmeEnceinte'])->name('cadeau-femme-enceinte');
+Route::get('/seance-snoezelen-autisme', [LandingPageController::class, 'snoezlenAutisme'])->name('snoezelen-autisme');
+Route::get('/seance-snoezelen-alzheimer', [LandingPageController::class, 'snoezlenAlzheimer'])->name('snoezelen-alzheimer');
 
 // Catch-all for dynamic pages (must be last)
 Route::get('/{slug}', [PageController::class, 'show'])->name('page.show')
