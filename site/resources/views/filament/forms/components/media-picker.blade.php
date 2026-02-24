@@ -23,6 +23,8 @@
             loading: false,
             dragover: false,
             uploading: 0,
+            uploadError: null,
+            maxFileSize: 10 * 1024 * 1024,
             creatingFolder: false,
             newFolderName: '',
 
@@ -71,7 +73,7 @@
             async loadMedia() {
                 this.loading = true;
                 try {
-                    const res = await fetch(this.apiUrl);
+                    const res = await fetch(this.apiUrl, { headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } });
                     const data = await res.json();
                     this.media = data.media;
                     this.folders = data.folders;
@@ -126,24 +128,32 @@
             async uploadFiles(fileList) {
                 const files = Array.from(fileList).filter(f => f.type.startsWith('image/'));
                 if (!files.length) return;
-
+                this.uploadError = null;
+                const tooLarge = files.filter(f => f.size > this.maxFileSize);
+                if (tooLarge.length) {
+                    const names = tooLarge.map(f => f.name + ' (' + (f.size / 1024 / 1024).toFixed(1) + ' Mo)').join(', ');
+                    this.uploadError = 'Fichier(s) trop volumineux (max 10 Mo) : ' + names;
+                    return;
+                }
                 this.uploading = files.length;
                 const csrfToken = document.querySelector('meta[name=csrf-token]')?.content;
-
                 for (const file of files) {
                     try {
                         const formData = new FormData();
                         formData.append('files[]', file);
                         if (this.currentFolder) formData.append('folder', this.currentFolder);
-
                         const res = await fetch(this.uploadUrl, {
                             method: 'POST',
-                            headers: { 'X-CSRF-TOKEN': csrfToken },
+                            headers: { 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
                             body: formData,
                         });
-
-                        if (!res.ok) throw new Error('Upload failed');
-
+                        if (!res.ok) {
+                            const err = await res.json().catch(() => null);
+                            const msg = err?.message || err?.errors?.['files.0']?.[0] || ('Erreur ' + res.status);
+                            this.uploadError = file.name + ' : ' + msg;
+                            this.uploading--;
+                            continue;
+                        }
                         const data = await res.json();
                         if (data.uploaded?.length) {
                             this.media.unshift(...data.uploaded);
@@ -151,10 +161,10 @@
                         }
                     } catch (e) {
                         console.error('Upload error', e);
+                        this.uploadError = file.name + ' : erreur inattendue';
                     }
                     this.uploading--;
                 }
-
                 await this.loadMedia();
             },
         }"
@@ -250,6 +260,15 @@
                         <div style="padding:8px 24px;background:var(--primarybg);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;">
                             <svg style="width:16px;height:16px;animation:spin 1s linear infinite;color:var(--primary);" viewBox="0 0 24 24"><circle style="opacity:0.25;" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path style="opacity:0.75;" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
                             <span style="font-size:13px;color:var(--primary);font-weight:500;">Upload de <span x-text="uploading"></span> image(s)...</span>
+                        </div>
+                    </template>
+
+                    {{-- Upload error --}}
+                    <template x-if="uploadError">
+                        <div style="padding:8px 24px;background:rgba(239,68,68,0.1);border-bottom:1px solid var(--danger);display:flex;align-items:center;gap:8px;">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:14px;height:14px;color:var(--danger);flex-shrink:0;"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" /></svg>
+                            <span style="font-size:13px;color:var(--danger);font-weight:500;flex:1;" x-text="uploadError"></span>
+                            <button type="button" @click="uploadError = null" style="color:var(--danger);background:none;border:none;cursor:pointer;padding:2px;font-size:16px;">&times;</button>
                         </div>
                     </template>
 

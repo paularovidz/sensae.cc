@@ -1,4 +1,4 @@
-<footer data-footer class="border-t border-border mt-16">
+<footer data-footer class="border-t border-border">
     <div class="max-w-6xl mx-auto px-4 sm:px-6 py-12">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div data-footer-col>

@@ -28,12 +28,14 @@
             loading: true,
             dragover: false,
             uploading: 0,
+            uploadError: null,
             creatingFolder: false,
             newFolderName: '',
             editing: null,
             editForm: { slug: '', alt: '', folder: '' },
             renamingFolder: null,
             renameFolderName: '',
+            maxFileSize: 10 * 1024 * 1024,
 
             get displayedMedia() {
                 let items = this.currentFolder
@@ -65,7 +67,7 @@
             async loadMedia() {
                 this.loading = true;
                 try {
-                    const res = await fetch(this.apiUrl);
+                    const res = await fetch(this.apiUrl, { headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } });
                     const data = await res.json();
                     this.media = data.media;
                     this.folders = data.folders;
@@ -96,7 +98,7 @@
                 try {
                     const res = await fetch(this.updateUrl + '/folders/rename', {
                         method: 'PUT',
-                        headers: { 'X-CSRF-TOKEN': csrfToken, 'Content-Type': 'application/json' },
+                        headers: { 'X-CSRF-TOKEN': csrfToken, 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
                         body: JSON.stringify({ old_name: oldName, new_name: newName }),
                     });
                     if (!res.ok) throw new Error('Rename failed');
@@ -112,6 +114,13 @@
             async uploadFiles(fileList) {
                 const files = Array.from(fileList).filter(f => f.type.startsWith('image/'));
                 if (!files.length) return;
+                this.uploadError = null;
+                const tooLarge = files.filter(f => f.size > this.maxFileSize);
+                if (tooLarge.length) {
+                    const names = tooLarge.map(f => f.name + ' (' + (f.size / 1024 / 1024).toFixed(1) + ' Mo)').join(', ');
+                    this.uploadError = 'Fichier(s) trop volumineux (max 10 Mo) : ' + names;
+                    return;
+                }
                 this.uploading = files.length;
                 const csrfToken = document.querySelector('meta[name=csrf-token]')?.content;
                 for (const file of files) {
@@ -119,11 +128,17 @@
                         const fd = new FormData();
                         fd.append('files[]', file);
                         if (this.currentFolder) fd.append('folder', this.currentFolder);
-                        const res = await fetch(this.uploadUrl, { method: 'POST', headers: { 'X-CSRF-TOKEN': csrfToken }, body: fd });
-                        if (!res.ok) throw new Error('Upload failed');
+                        const res = await fetch(this.uploadUrl, { method: 'POST', headers: { 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }, body: fd });
+                        if (!res.ok) {
+                            const err = await res.json().catch(() => null);
+                            const msg = err?.message || err?.errors?.['files.0']?.[0] || ('Erreur ' + res.status);
+                            this.uploadError = file.name + ' : ' + msg;
+                            this.uploading--;
+                            continue;
+                        }
                         const data = await res.json();
                         if (data.uploaded?.length) this.media.unshift(...data.uploaded);
-                    } catch (e) { console.error('Upload error', e); }
+                    } catch (e) { console.error('Upload error', e); this.uploadError = file.name + ' : erreur inattendue'; }
                     this.uploading--;
                 }
                 await this.loadMedia();
@@ -134,7 +149,7 @@
             async saveEdit(item) {
                 const csrfToken = document.querySelector('meta[name=csrf-token]')?.content;
                 try {
-                    const res = await fetch(this.updateUrl + '/' + item.id, { method: 'PUT', headers: { 'X-CSRF-TOKEN': csrfToken, 'Content-Type': 'application/json' }, body: JSON.stringify(this.editForm) });
+                    const res = await fetch(this.updateUrl + '/' + item.id, { method: 'PUT', headers: { 'X-CSRF-TOKEN': csrfToken, 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }, body: JSON.stringify(this.editForm) });
                     if (!res.ok) throw new Error('Update failed');
                     item.slug = this.editForm.slug; item.alt = this.editForm.alt; item.folder = this.editForm.folder || null;
                     this.editing = null; await this.loadMedia();
@@ -145,7 +160,7 @@
                 if (!confirm('Supprimer \u00ab ' + item.slug + ' \u00bb ?')) return;
                 const csrfToken = document.querySelector('meta[name=csrf-token]')?.content;
                 try {
-                    const res = await fetch(this.updateUrl + '/' + item.id, { method: 'DELETE', headers: { 'X-CSRF-TOKEN': csrfToken } });
+                    const res = await fetch(this.updateUrl + '/' + item.id, { method: 'DELETE', headers: { 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } });
                     if (!res.ok) throw new Error('Delete failed');
                     this.media = this.media.filter(m => m.id !== item.id);
                     if (this.editing === item.id) this.editing = null;
@@ -177,6 +192,15 @@
             <div style="padding:10px 16px;background:var(--primarybg);border:1px solid var(--primary);border-radius:8px;margin-bottom:16px;display:flex;align-items:center;gap:8px;">
                 <svg style="width:16px;height:16px;animation:spin 1s linear infinite;color:var(--primary);" viewBox="0 0 24 24"><circle style="opacity:0.25;" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path style="opacity:0.75;" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
                 <span style="font-size:14px;color:var(--primary);font-weight:500;">Upload de <span x-text="uploading"></span> image(s)...</span>
+            </div>
+        </template>
+
+        {{-- Upload error --}}
+        <template x-if="uploadError">
+            <div style="padding:10px 16px;background:rgba(239,68,68,0.1);border:1px solid var(--danger);border-radius:8px;margin-bottom:16px;display:flex;align-items:center;gap:8px;">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:16px;height:16px;color:var(--danger);flex-shrink:0;"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" /></svg>
+                <span style="font-size:14px;color:var(--danger);font-weight:500;flex:1;" x-text="uploadError"></span>
+                <button type="button" @click="uploadError = null" style="color:var(--danger);background:none;border:none;cursor:pointer;padding:2px;font-size:18px;">&times;</button>
             </div>
         </template>
 

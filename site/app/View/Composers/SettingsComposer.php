@@ -23,6 +23,7 @@ class SettingsComposer
             'contact' => Setting::getGroup('contact'),
             'social' => Setting::getGroup('social'),
             'seo' => Setting::getGroup('seo'),
+            'rating' => Setting::getGroup('rating'),
             'menu' => $menu,
         ]);
     }
