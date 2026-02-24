@@ -5,7 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\FaqResource\Pages;
 use App\Models\Faq;
 use Filament\Resources\Resource;
-use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Schema;
@@ -33,10 +33,14 @@ class FaqResource extends Resource
                 TextInput::make('question')
                     ->label('Question')
                     ->required(),
-                Textarea::make('answer')
+                RichEditor::make('answer')
                     ->label('Réponse')
                     ->required()
-                    ->rows(4),
+                    ->toolbarButtons([
+                        'bold', 'italic', 'link',
+                        'bulletList', 'orderedList',
+                        'h3',
+                    ]),
                 TextInput::make('category')
                     ->label('Catégorie'),
                 TextInput::make('order')

@@ -30,7 +30,6 @@ export function initAnimations() {
       { initMagnetic },
       { initCards },
       { initWheel },
-      { initFaq },
       { initFooter },
     ] = await Promise.all([
       import('./core/header'),
@@ -38,7 +37,6 @@ export function initAnimations() {
       import('./core/magnetic'),
       import('./sections/cards'),
       import('./sections/wheel'),
-      import('./sections/faq'),
       import('./sections/footer'),
     ]);
 
@@ -47,7 +45,6 @@ export function initAnimations() {
     initMagnetic();
     initCards();
     initWheel();
-    initFaq();
     initFooter();
   };
 

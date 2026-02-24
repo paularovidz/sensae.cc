@@ -139,6 +139,40 @@
   }
 }
 
+/* FAQ accordion — pure CSS animated */
+.faq-item .faq-content {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.3s ease-out;
+}
+
+.faq-item[open] .faq-content {
+  grid-template-rows: 1fr;
+}
+
+.faq-item .faq-content > div {
+  overflow: hidden;
+}
+
+.faq-item[open] .faq-chevron {
+  transform: rotate(180deg);
+}
+
+/* Header mobile menu */
+.mobile-menu {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.3s ease-out;
+}
+
+.mobile-menu.is-open {
+  grid-template-rows: 1fr;
+}
+
+.mobile-menu > div {
+  overflow: hidden;
+}
+
 html {
   font-size: 16px;
   line-height: 1.8;
@@ -162,6 +196,40 @@ h3, .h3 {
 
 h4, .h4 {
     font-size: 1.82rem;
+}
+
+li {
+  position: relative;
+}
+.prose-styles ul:not(.list-unstyled) li {
+    padding-left: 1.8em;
+    margin-top: 0.5em;
+    margin-bottom: 0.5em;
+}
+ul:not(.list-unstyled) li::before {
+    --tw-content: "";
+    content: var(--tw-content);
+    height: calc(var(--spacing) * 1.5);
+    width: calc(var(--spacing) * 1.5);
+    content: var(--tw-content);
+    background-color: var(--color-white);
+    position: absolute;
+    top: 0.6875rem;
+    left: 0.3125rem;
+    border-radius: 3.40282e+38px;
+}
+
+ul:not(.list-unstyled) li::after {
+    --tw-content: "";
+    content: var(--tw-content);
+    top: 0.35em;
+    left: calc(var(--spacing) * 0);
+    height: calc(var(--spacing) * 4);
+    width: calc(var(--spacing) * 4);
+    content: var(--tw-content);
+    background-color: rgba(255, 255, 255, 0.1);
+    position: absolute;
+    border-radius: 3.40282e+38px;
 }
 
 .header.sticky-header {

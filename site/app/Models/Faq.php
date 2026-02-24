@@ -13,6 +13,16 @@ class Faq extends Model
         'question', 'answer', 'category', 'order', 'is_published',
     ];
 
+    /**
+     * Strip <p> tags wrapped inside <li> (TipTap artifact).
+     */
+    public function getAnswerAttribute(?string $value): ?string
+    {
+        if (!$value) return $value;
+
+        return preg_replace('#<li>\s*<p>(.*?)</p>\s*</li>#s', '<li>$1</li>', $value);
+    }
+
     protected function casts(): array
     {
         return [

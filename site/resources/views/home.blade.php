@@ -126,16 +126,24 @@
 
     {{-- FAQ --}}
     @if($faqs->count())
-        <section data-animate-border class="py-16 border-t border-border">
-            <div class="max-w-6xl mx-auto px-4 sm:px-6">
-                <h2 data-animate="fade-up" class="text-3xl font-bold text-text-light font-secondary mb-8 text-center">Questions fréquentes</h2>
-                <div data-animate-grid class="max-w-3xl mx-auto space-y-3">
-                    @foreach($faqs as $faq)
-                        <x-faq-item :faq="$faq" />
-                    @endforeach
+        <section class="section-gradient relative">
+            <div class="container space-y-12 md:space-y-16">
+                <div class="mx-auto max-w-2xl text-center" data-animate="fade-up">
+                    <x-pill text="FAQ" />
+                    <h2>Foire <strong>Aux Questions</strong></h2>
                 </div>
-                <div data-animate="fade-up" class="text-center mt-8">
-                    <a href="{{ route('faq') }}" class="text-primary hover:underline">Voir toutes les questions</a>
+
+                <div data-animate="fade-up" data-animate-delay="0.2" class="mx-auto max-w-4xl">
+                    <div class="bg-primary/5 rounded-lg border border-border p-6 lg:rounded-3xl lg:p-12">
+                        <div class="space-y-5">
+                            @foreach($faqs as $index => $faq)
+                                <x-faq-item :faq="$faq" :open="$index === 0" />
+                            @endforeach
+                        </div>
+                    </div>
+                    <div class="text-center mt-8">
+                        <a href="{{ route('faq') }}" class="text-primary hover:underline">Voir toutes les questions</a>
+                    </div>
                 </div>
             </div>
         </section>
