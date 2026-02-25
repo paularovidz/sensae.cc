@@ -92,21 +92,15 @@ services:
     networks:
       - snoezelen_network
 
-  # Site vitrine Astro (www)
-  www:
-    build:
-      context: ./www
-      dockerfile: Dockerfile
-    container_name: snoezelen_www
+  # Dev Hub — index de tous les services
+  hub:
+    image: nginx:alpine
+    container_name: snoezelen_hub
     restart: unless-stopped
-    environment:
-      # Hot reload sur macOS/Windows
-      CHOKIDAR_USEPOLLING: "true"
     volumes:
-      - ./www:/app
-      - /app/node_modules
+      - ./hub:/usr/share/nginx/html:ro
     ports:
-      - "4321:4321"
+      - "80:80"
     networks:
       - snoezelen_network
 
