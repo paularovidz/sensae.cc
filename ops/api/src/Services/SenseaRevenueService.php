@@ -7,15 +7,15 @@ namespace App\Services;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
 
-class SenseaRevenueService
+class sensaeRevenueService
 {
     private static ?Client $client = null;
 
     private static function getClient(): Client
     {
         if (self::$client === null) {
-            $baseUrl = $_ENV['SENSEA_API_URL'] ?? getenv('SENSEA_API_URL') ?: 'http://localhost:8080';
-            $apiKey = $_ENV['SENSEA_API_KEY'] ?? getenv('SENSEA_API_KEY') ?: '';
+            $baseUrl = $_ENV['sensae_API_URL'] ?? getenv('sensae_API_URL') ?: 'http://localhost:8080';
+            $apiKey = $_ENV['sensae_API_KEY'] ?? getenv('sensae_API_KEY') ?: '';
 
             self::$client = new Client([
                 'base_uri' => rtrim($baseUrl, '/') . '/',
@@ -48,7 +48,7 @@ class SenseaRevenueService
                 'paid_total' => 0
             ];
         } catch (GuzzleException $e) {
-            error_log('SenseaRevenueService error: ' . $e->getMessage());
+            error_log('sensaeRevenueService error: ' . $e->getMessage());
             return [
                 'total' => 0,
                 'count' => 0,
@@ -70,7 +70,7 @@ class SenseaRevenueService
             $data = json_decode($response->getBody()->getContents(), true);
             return $data['data'] ?? [];
         } catch (GuzzleException $e) {
-            error_log('SenseaRevenueService error: ' . $e->getMessage());
+            error_log('sensaeRevenueService error: ' . $e->getMessage());
             return ['error' => $e->getMessage()];
         }
     }
@@ -88,7 +88,7 @@ class SenseaRevenueService
             $data = json_decode($response->getBody()->getContents(), true);
             return $data['data'] ?? ['count' => 0];
         } catch (GuzzleException $e) {
-            error_log('SenseaRevenueService error: ' . $e->getMessage());
+            error_log('sensaeRevenueService error: ' . $e->getMessage());
             return ['count' => 0, 'error' => $e->getMessage()];
         }
     }
@@ -106,7 +106,7 @@ class SenseaRevenueService
             $data = json_decode($response->getBody()->getContents(), true);
             return $data['data'] ?? [];
         } catch (GuzzleException $e) {
-            error_log('SenseaRevenueService getDailyRevenue error: ' . $e->getMessage());
+            error_log('sensaeRevenueService getDailyRevenue error: ' . $e->getMessage());
             return [];
         }
     }
@@ -129,7 +129,7 @@ class SenseaRevenueService
                 'pack_4' => ['total' => 0, 'count' => 0]
             ];
         } catch (GuzzleException $e) {
-            error_log('SenseaRevenueService prepaid error: ' . $e->getMessage());
+            error_log('sensaeRevenueService prepaid error: ' . $e->getMessage());
             return [
                 'total' => 0,
                 'count' => 0,
@@ -151,7 +151,7 @@ class SenseaRevenueService
             $data = json_decode($response->getBody()->getContents(), true);
             return $data['data'] ?? [];
         } catch (GuzzleException $e) {
-            error_log('SenseaRevenueService prepaid yearly error: ' . $e->getMessage());
+            error_log('sensaeRevenueService prepaid yearly error: ' . $e->getMessage());
             return ['error' => $e->getMessage()];
         }
     }
@@ -169,13 +169,13 @@ class SenseaRevenueService
             $data = json_decode($response->getBody()->getContents(), true);
             return $data['data'] ?? [];
         } catch (GuzzleException $e) {
-            error_log('SenseaRevenueService getPrepaidDailyRevenue error: ' . $e->getMessage());
+            error_log('sensaeRevenueService getPrepaidDailyRevenue error: ' . $e->getMessage());
             return [];
         }
     }
 
     /**
-     * Check if Sensea API is available
+     * Check if sensae API is available
      */
     public static function ping(): bool
     {

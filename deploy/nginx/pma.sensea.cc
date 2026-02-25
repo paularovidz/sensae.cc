@@ -1,15 +1,15 @@
 server {
     listen 80;
-    server_name pma.sensea.cc;
+    server_name pma.sensae.cc;
     return 301 https://$host$request_uri;
 }
 
 server {
     listen 443 ssl;
-    server_name pma.sensea.cc;
+    server_name pma.sensae.cc;
 
-    ssl_certificate /etc/ssl/cloudflare/sensea.cc.pem;
-    ssl_certificate_key /etc/ssl/cloudflare/sensea.cc.key;
+    ssl_certificate /etc/ssl/cloudflare/sensae.cc.pem;
+    ssl_certificate_key /etc/ssl/cloudflare/sensae.cc.key;
 
     # Restriction par IP
     allow 86.192.205.61;

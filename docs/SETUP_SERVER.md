@@ -7,8 +7,8 @@ Guide de déploiement pour le projet Snoezelen (API + Dashboard + Site vitrine).
 - VPS Hetzner CX23 (4 Go RAM, 2 vCPU, 40 Go SSD)
 - Ubuntu 24.04 ou Debian 12
 - Domaines pointant vers le VPS :
-  - `sensea.cc` → Site vitrine
-  - `suivi.sensea.cc` → Dashboard + API
+  - `sensae.cc` → Site vitrine
+  - `suivi.sensae.cc` → Dashboard + API
 
 ---
 
@@ -124,16 +124,16 @@ cd ~/apps/snoezelen
 
 ## 10. Configuration Nginx
 
-### Site vitrine (sensea.cc)
+### Site vitrine (sensae.cc)
 
 ```bash
-sudo nano /etc/nginx/sites-available/sensea.cc
+sudo nano /etc/nginx/sites-available/sensae.cc
 ```
 
 ```nginx
 server {
     listen 80;
-    server_name sensea.cc www.sensea.cc;
+    server_name sensae.cc www.sensae.cc;
 
     root /home/deploy/apps/snoezelen/www/dist;
     index index.html;
@@ -162,16 +162,16 @@ server {
 }
 ```
 
-### Dashboard + API (suivi.sensea.cc)
+### Dashboard + API (suivi.sensae.cc)
 
 ```bash
-sudo nano /etc/nginx/sites-available/suivi.sensea.cc
+sudo nano /etc/nginx/sites-available/suivi.sensae.cc
 ```
 
 ```nginx
 server {
     listen 80;
-    server_name suivi.sensea.cc;
+    server_name suivi.sensae.cc;
 
     # Dashboard (fichiers statiques)
     root /home/deploy/apps/snoezelen/frontend/dist;
@@ -203,8 +203,8 @@ server {
 ### Activer les sites
 
 ```bash
-sudo ln -s /etc/nginx/sites-available/sensea.cc /etc/nginx/sites-enabled/
-sudo ln -s /etc/nginx/sites-available/suivi.sensea.cc /etc/nginx/sites-enabled/
+sudo ln -s /etc/nginx/sites-available/sensae.cc /etc/nginx/sites-enabled/
+sudo ln -s /etc/nginx/sites-available/suivi.sensae.cc /etc/nginx/sites-enabled/
 sudo rm /etc/nginx/sites-enabled/default
 sudo nginx -t
 sudo systemctl reload nginx
@@ -213,8 +213,8 @@ sudo systemctl reload nginx
 ## 11. SSL avec Let's Encrypt
 
 ```bash
-sudo certbot --nginx -d sensea.cc -d www.sensea.cc
-sudo certbot --nginx -d suivi.sensea.cc
+sudo certbot --nginx -d sensae.cc -d www.sensae.cc
+sudo certbot --nginx -d suivi.sensae.cc
 ```
 
 Certbot modifie automatiquement les configs Nginx pour HTTPS.
@@ -293,12 +293,12 @@ MAIL_HOST=<SMTP_HOST>
 MAIL_PORT=587
 MAIL_USER=<SMTP_USER>
 MAIL_PASS=<SMTP_PASS>
-MAIL_FROM=noreply@sensea.cc
-MAIL_FROM_NAME=sensëa Snoezelen
+MAIL_FROM=noreply@sensae.cc
+MAIL_FROM_NAME=sensaë Snoezelen
 
 # URLs
-APP_URL=https://suivi.sensea.cc/api
-FRONTEND_URL=https://suivi.sensea.cc
+APP_URL=https://suivi.sensae.cc/api
+FRONTEND_URL=https://suivi.sensae.cc
 
 # Environment
 ENV=production
@@ -395,7 +395,7 @@ docker exec -it snoezelen_db mysql -u root -p
 ## Checklist
 
 - [ ] VPS créé avec IPv4
-- [ ] DNS configuré (sensea.cc, suivi.sensea.cc)
+- [ ] DNS configuré (sensae.cc, suivi.sensae.cc)
 - [ ] SSH sécurisé (clé, pas de root, pas de password)
 - [ ] Firewall UFW actif
 - [ ] Docker installé

@@ -1,4 +1,4 @@
-# sensëa - Suivi Snoezelen
+# sensaë - Suivi Snoezelen
 
 Application de suivi des séances Snoezelen (thérapie sensorielle).
 
@@ -33,7 +33,7 @@ docker compose up -d
 ## Première connexion
 
 1. Ouvrir http://localhost:5173
-2. Entrer l'email : `bonjour@sensea.cc`
+2. Entrer l'email : `bonjour@sensae.cc`
 3. Cliquer sur "Recevoir le lien de connexion"
 4. Ouvrir MailHog (http://localhost:8025) pour voir l'email
 5. Cliquer sur le lien de connexion
@@ -149,4 +149,4 @@ openssl rand -hex 32  # Pour ENCRYPTION_KEY
 
 ## Licence
 
-Propriétaire - sensëa
+Propriétaire - sensaë

@@ -1,9 +1,9 @@
 @extends('layouts.immersive')
 
 @section('meta')
-    <title>Séance Snoezelen pour enfant autiste — sensëa</title>
+    <title>Séance Snoezelen pour enfant autiste — sensaë</title>
     <meta name="description" content="Comment se déroule une séance Snoezelen pour un enfant autiste ? Un espace adapté, sans contrainte, pour explorer ses sens à son propre rythme.">
-    <meta property="og:title" content="Snoezelen et autisme — sensëa">
+    <meta property="og:title" content="Snoezelen et autisme — sensaë">
     <meta property="og:description" content="Un espace adapté, sans attente ni contrainte. L'enfant explore à son rythme.">
     <meta property="og:type" content="website">
 @endsection

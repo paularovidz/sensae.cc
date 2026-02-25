@@ -6,7 +6,7 @@ namespace App\Controllers;
 
 use App\Models\Expense;
 use App\Models\RecurringExpense;
-use App\Services\SenseaRevenueService;
+use App\Services\sensaeRevenueService;
 use App\Middleware\AuthMiddleware;
 use App\Utils\Response;
 
@@ -26,11 +26,11 @@ class DashboardController
         $expenseTotal = Expense::getTotalByMonth($year, $month);
         $expensesByCategory = Expense::getByCategory($year, $month);
 
-        // Get revenue from Sensea API (includes future confirmed sessions)
-        $revenue = SenseaRevenueService::getMonthlyRevenue($year, $month);
+        // Get revenue from sensae API (includes future confirmed sessions)
+        $revenue = sensaeRevenueService::getMonthlyRevenue($year, $month);
 
         // Get prepaid packs revenue (pack sales)
-        $prepaidRevenue = SenseaRevenueService::getPrepaidMonthlyRevenue($year, $month);
+        $prepaidRevenue = sensaeRevenueService::getPrepaidMonthlyRevenue($year, $month);
 
         // Get recurring expense total
         $recurringMonthly = RecurringExpense::getMonthlyTotal();
@@ -87,12 +87,12 @@ class DashboardController
         // Get monthly expense totals
         $expenseTotals = Expense::getMonthlyTotals($year);
 
-        // Get revenue from Sensea for all months
-        $yearlyRevenue = SenseaRevenueService::getYearlyRevenue($year);
+        // Get revenue from sensae for all months
+        $yearlyRevenue = sensaeRevenueService::getYearlyRevenue($year);
         $revenueByMonth = $yearlyRevenue['months'] ?? [];
 
         // Get prepaid packs revenue for all months
-        $yearlyPrepaid = SenseaRevenueService::getPrepaidYearlyRevenue($year);
+        $yearlyPrepaid = sensaeRevenueService::getPrepaidYearlyRevenue($year);
         $prepaidByMonth = $yearlyPrepaid['months'] ?? [];
 
         // Build monthly data
@@ -166,11 +166,11 @@ class DashboardController
 
     public function health(): void
     {
-        $senseaAvailable = SenseaRevenueService::ping();
+        $sensaeAvailable = sensaeRevenueService::ping();
 
         Response::success([
             'status' => 'ok',
-            'sensea_api' => $senseaAvailable ? 'connected' : 'disconnected'
+            'sensae_api' => $sensaeAvailable ? 'connected' : 'disconnected'
         ]);
     }
 
@@ -185,11 +185,11 @@ class DashboardController
         // Get daily expenses
         $dailyExpenses = Expense::getDailyTotals($year, $month);
 
-        // Get daily revenue from Sensea
-        $dailyRevenue = SenseaRevenueService::getDailyRevenue($year, $month);
+        // Get daily revenue from sensae
+        $dailyRevenue = sensaeRevenueService::getDailyRevenue($year, $month);
 
-        // Get daily prepaid revenue from Sensea
-        $dailyPrepaid = SenseaRevenueService::getPrepaidDailyRevenue($year, $month);
+        // Get daily prepaid revenue from sensae
+        $dailyPrepaid = sensaeRevenueService::getPrepaidDailyRevenue($year, $month);
 
         // Get number of days in month
         $daysInMonth = cal_days_in_month(CAL_GREGORIAN, $month, $year);

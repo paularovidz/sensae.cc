@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     @php
-        $pageTitle = View::yieldContent('title', $seo['seo_title'] ?? 'sensëa - Snoezelen');
+        $pageTitle = View::yieldContent('title', $seo['seo_title'] ?? 'sensaë - Snoezelen');
         $pageDescription = View::yieldContent('meta_description', $seo['seo_description'] ?? '');
-        $canonicalBase = rtrim($seo['seo_canonical_url'] ?? 'https://sensea.cc', '/');
+        $canonicalBase = rtrim($seo['seo_canonical_url'] ?? 'https://sensae.cc', '/');
         $canonicalUrl = $canonicalBase . request()->getPathInfo();
         $ogImage = $seo['seo_og_image'] ?? '';
     @endphp
@@ -19,7 +19,7 @@
     {{-- Open Graph --}}
     <meta property="og:type" content="website">
     <meta property="og:locale" content="fr_FR">
-    <meta property="og:site_name" content="{{ $seo['seo_title'] ?? 'sensëa' }}">
+    <meta property="og:site_name" content="{{ $seo['seo_title'] ?? 'sensaë' }}">
     <meta property="og:title" content="{{ $pageTitle }}">
     <meta property="og:description" content="{{ $pageDescription }}">
     <meta property="og:url" content="{{ $canonicalUrl }}">
@@ -42,7 +42,7 @@
         $websiteSchema = [
             '@context' => 'https://schema.org',
             '@type' => 'WebSite',
-            'name' => $seo['seo_title'] ?? 'sensëa',
+            'name' => $seo['seo_title'] ?? 'sensaë',
             'url' => $canonicalBase,
             'description' => $seo['seo_description'] ?? '',
         ];
@@ -54,7 +54,7 @@
         $schemaData = [
             '@context' => 'https://schema.org',
             '@type' => $schemaType,
-            'name' => $seo['seo_title'] ?? 'sensëa',
+            'name' => $seo['seo_title'] ?? 'sensaë',
             'url' => $canonicalBase,
             'description' => $seo['seo_description'] ?? '',
         ];

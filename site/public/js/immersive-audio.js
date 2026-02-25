@@ -178,8 +178,14 @@
     const delay = 6000 + Math.random() * 12000;
     chimeTimer = setTimeout(() => {
       playChime();
-      // Occasionally play a second chime shortly after (duet effect)
-      if (Math.random() < 0.3) {
+      // Occasionally play additional chimes shortly after
+      const roll = Math.random();
+      if (roll < 0.1) {
+        // Triplet (~10%)
+        setTimeout(playChime, 600 + Math.random() * 1200);
+        setTimeout(playChime, 1600 + Math.random() * 1400);
+      } else if (roll < 0.35) {
+        // Duet (~25%)
         setTimeout(playChime, 800 + Math.random() * 1500);
       }
       scheduleNextChime();

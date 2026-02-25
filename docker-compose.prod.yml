@@ -35,10 +35,10 @@ services:
       MAIL_PORT: ${MAIL_PORT:-587}
       MAIL_USER: ${MAIL_USER}
       MAIL_PASS: ${MAIL_PASS}
-      MAIL_FROM: ${MAIL_FROM:-noreply@sensea.cc}
-      MAIL_FROM_NAME: ${MAIL_FROM_NAME:-sensëa Snoezelen}
-      APP_URL: ${APP_URL:-https://suivi.sensea.cc/api}
-      FRONTEND_URL: ${FRONTEND_URL:-https://suivi.sensea.cc}
+      MAIL_FROM: ${MAIL_FROM:-noreply@sensae.cc}
+      MAIL_FROM_NAME: ${MAIL_FROM_NAME:-sensaë Snoezelen}
+      APP_URL: ${APP_URL:-https://suivi.sensae.cc/api}
+      FRONTEND_URL: ${FRONTEND_URL:-https://suivi.sensae.cc}
       ENV: production
       DEBUG: "false"
       APP_TIMEZONE: Europe/Paris
@@ -81,7 +81,7 @@ services:
     container_name: snoezelen_site
     restart: unless-stopped
     environment:
-      APP_NAME: sensea
+      APP_NAME: sensae
       APP_ENV: production
       APP_DEBUG: "false"
       APP_KEY: ${SITE_APP_KEY}
@@ -125,12 +125,12 @@ services:
       MAIL_PORT: ${MAIL_PORT:-587}
       MAIL_USER: ${MAIL_USER}
       MAIL_PASS: ${MAIL_PASS}
-      MAIL_FROM: ${OPS_MAIL_FROM:-noreply-ops@sensea.cc}
-      MAIL_FROM_NAME: ${OPS_MAIL_FROM_NAME:-sensëa OPS}
-      APP_URL: ${OPS_APP_URL:-https://ops.sensea.cc/api}
-      FRONTEND_URL: ${OPS_FRONTEND_URL:-https://ops.sensea.cc}
-      SENSEA_API_URL: http://api
-      SENSEA_API_KEY: ${OPS_API_KEY}
+      MAIL_FROM: ${OPS_MAIL_FROM:-noreply-ops@sensae.cc}
+      MAIL_FROM_NAME: ${OPS_MAIL_FROM_NAME:-sensaë OPS}
+      APP_URL: ${OPS_APP_URL:-https://ops.sensae.cc/api}
+      FRONTEND_URL: ${OPS_FRONTEND_URL:-https://ops.sensae.cc}
+      sensae_API_URL: http://api
+      sensae_API_KEY: ${OPS_API_KEY}
       ENV: production
       DEBUG: "false"
       APP_TIMEZONE: Europe/Paris

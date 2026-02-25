@@ -43,6 +43,11 @@
   src: url('../fonts/amandine.woff2') format('woff2');
 }
 
+::selection {
+  background: var(--color-primary-override, #721ad6);
+  color: #fff;
+}
+
 @theme {
     --color-primary: var(--color-primary-override, #721ad6);
     --color-secondary: var(--color-secondary-override, #D299FF);

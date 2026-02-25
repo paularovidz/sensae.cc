@@ -18,7 +18,7 @@
       <!-- Logo -->
       <div class="lg:text-left mb-8 lg:mb-12">
         <div>
-          <span class="text-3xl font-logo text-white">sensëa</span>
+          <span class="text-3xl font-logo text-white">sensaë</span>
           <p class="text-gray-500 text-sm">Suivi des séances Snoezelen</p>
         </div>
       </div>
@@ -107,7 +107,7 @@
               <div>
                 <h3 class="text-white font-medium mb-1">Documents sécurisés</h3>
                 <p class="text-gray-400 text-sm leading-relaxed">
-                  Partagez vos documents de manière sécurisée avec sensëa
+                  Partagez vos documents de manière sécurisée avec sensaë
                 </p>
               </div>
             </div>

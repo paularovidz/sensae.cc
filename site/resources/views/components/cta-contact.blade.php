@@ -2,7 +2,7 @@
 
 <button
     data-tf-popup="EjSgPPjE"
-    data-tf-iframe-props="title=Contact sensëa"
+    data-tf-iframe-props="title=Contact sensaë"
     data-tf-medium="snippet"
     data-tf-size="90"
     {{ $attributes->merge(['class' => 'cta-button group inline-flex items-center gap-3 px-8 py-3 bg-primary text-text-light rounded-full font-medium hover:opacity-90 transition cursor-pointer']) }}

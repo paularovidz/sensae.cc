@@ -8,7 +8,7 @@
 
 import { randomRange, clamp, vh, vw, haptic } from '../utils.js';
 
-const MIN_DURATION = 18000; // 18s
+const MIN_DURATION = 10000; // 10s
 const BASE_GRAVITY = 0.08;  // Stronger gravity — orbs follow cursor more clearly
 const FRICTION = 0.97;      // More damping — responsive but smooth
 
@@ -38,12 +38,13 @@ export function act2(gsap, next, mobile) {
     let lastMoveTime = 0;
     let rafId = null;
 
-    // Intro text — hint stays visible throughout
+    // Intro text — hint disappears with title
     const introTl = gsap.timeline();
     introTl
         .to(text, { autoAlpha: 1, duration: 1.2, ease: 'power2.out' }, 0.3)
         .to(hint, { autoAlpha: 1, duration: 0.8, ease: 'power2.out' }, 1.2)
-        .to(text, { autoAlpha: 0, duration: 0.8, ease: 'power2.inOut' }, 3.5);
+        .to(text, { autoAlpha: 0, duration: 0.8, ease: 'power2.inOut' }, 3.5)
+        .to(hint, { autoAlpha: 0, duration: 0.8, ease: 'power2.inOut' }, 3.5);
 
     const w = vw();
     const h = vh();
@@ -203,7 +204,7 @@ export function act2(gsap, next, mobile) {
 
         // Transition check
         const elapsed = now - startTime;
-        if (!transitioned && elapsed >= MIN_DURATION && interactionTime >= 4000) {
+        if (!transitioned && elapsed >= MIN_DURATION && interactionTime >= 2000) {
             transitioned = true;
             transitionOut();
         }

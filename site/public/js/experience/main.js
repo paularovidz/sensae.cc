@@ -10,6 +10,7 @@ import { act2 } from './acts/act2-touch.js';
 import { act3 } from './acts/act3-sound.js';
 import { act4 } from './acts/act4-light.js';
 import { act5 } from './acts/act5-breathing.js';
+import { actInsight } from './acts/act-insight.js';
 import { act6 } from './acts/act6-ink.js';
 
 const gsap = window.gsap;
@@ -51,6 +52,7 @@ function init() {
         { key: 3, run: (next) => act3(gsap, audio, next, mobile) },
         { key: 4, run: (next) => act4(gsap, audio, next) },
         { key: 5, run: (next) => act5(gsap, audio, next) },
+        { key: 'insight', run: (next) => actInsight(gsap, audio, next) },
         { key: 6, run: () => act6(gsap, audio) },
     ];
 

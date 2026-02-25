@@ -128,7 +128,7 @@ function goToUser(userId) {
             >
               <td class="px-4 py-3">
                 <div class="flex items-center">
-                  <div class="w-8 h-8 rounded-full gradient-sensea flex items-center justify-center text-white font-medium text-sm mr-3">
+                  <div class="w-8 h-8 rounded-full gradient-sensae flex items-center justify-center text-white font-medium text-sm mr-3">
                     {{ user.first_name[0] }}{{ user.last_name[0] }}
                   </div>
                   <div>

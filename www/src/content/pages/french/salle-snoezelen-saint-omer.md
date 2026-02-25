@@ -1,5 +1,5 @@
 ---
-title: "Salle Snoezelen Saint-Omer - sensëa"
+title: "Salle Snoezelen Saint-Omer - sensaë"
 h1: "Salle Snoezelen Saint-Omer"
 big_title: "Espace Snoezelen pour une **expérience multi-sensorielle** à Saint-Omer"
 description: ""

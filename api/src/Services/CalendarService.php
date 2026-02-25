@@ -174,7 +174,7 @@ class CalendarService
             $context = stream_context_create([
                 'http' => [
                     'timeout' => 10,
-                    'user_agent' => 'sensëa-Snoezelen/1.0'
+                    'user_agent' => 'sensaë-Snoezelen/1.0'
                 ],
                 'ssl' => [
                     'verify_peer' => true,

@@ -1,7 +1,7 @@
 ---
 subtitle: "FAQ"
 title: "Foire **Aux Questions**"
-meta_description: Toutes vos questions sur sensëa, la salle Snoezelen multi-sensorielle à Audruicq
+meta_description: Toutes vos questions sur sensaë, la salle Snoezelen multi-sensorielle à Audruicq
 draft: false
 
 show_categories: true
@@ -10,7 +10,7 @@ list:
   - label: "Informations générales"
     list:
       - active: true
-        title: "Qu’est-ce qu’une séance chez sensëa ?"
+        title: "Qu’est-ce qu’une séance chez sensaë ?"
         content: |
           Une séance Snoezelen est un moment de détente et d’éveil sensoriel dans un environnement apaisant. Elle vise à favoriser la relaxation, la concentration ou l’exploration sensorielle en combinant :
           - Des lumières douces et tamisées
@@ -20,7 +20,7 @@ list:
       - active: false
         title: "Qui peut bénéficier des séances Snoezelen ?"
         content: |
-          Chez sensëa, les séances sont toujours adaptées au rythme et aux besoins de chacun, elles s’adressent à : 
+          Chez sensaë, les séances sont toujours adaptées au rythme et aux besoins de chacun, elles s’adressent à : 
           - Enfants et adolescents
           - Adultes et seniors
           - Personnes neuroatypiques (TSA, TDAH, HPI…)
@@ -44,9 +44,9 @@ list:
           - Stimulations sensorielles adaptées : lumières, sons, parfums, textures
           - Retour au calme et ressenti en fin de Séance
       - active: false
-        title: "Où se situe la salle Snoezelen sensëa ?"
+        title: "Où se situe la salle Snoezelen sensaë ?"
         content: |
-          La salle Snoezelen sensëa est située à Audruicq dans le Pas-de-Calais.
+          La salle Snoezelen sensaë est située à Audruicq dans le Pas-de-Calais.
           - Accès facile depuis Calais, Saint-Omer et Dunkerque
           - Stationnement gratuit sur place
           - Salle accessible et sécurisée

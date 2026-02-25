@@ -22,7 +22,7 @@ const isEmbed = computed(() => {
     <!-- Header: Logo only, centered -->
     <header v-if="!isEmbed" class="relative z-10 py-8">
       <div class="flex justify-center">
-        <span class="text-3xl font-logo text-white">sensëa</span>
+        <span class="text-3xl font-logo text-white">sensaë</span>
       </div>
     </header>
 

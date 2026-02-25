@@ -3,7 +3,7 @@
         <div class="mx-auto shrink-0 text-center lg:max-w-2xl" data-animate="fade-up">
             <div
                 class="from-primary/20 to-primary/5 mx-auto mb-2.5 flex w-fit items-center gap-2 rounded-full bg-gradient-to-r from-80% py-1 ps-5 pe-2.5 text-white">
-                Pourquoi choisir sensëa<svg width="20" height="19" viewBox="0 0 20 19" fill="none"
+                Pourquoi choisir sensaë<svg width="20" height="19" viewBox="0 0 20 19" fill="none"
                     xmlns="http://www.w3.org/2000/svg">
                     <path
                         d="M10 0.5C9.55417 8.76875 9.1875 9.09875 0 9.5C9.1875 9.90125 9.55417 10.2312 10 18.5C10.4458 10.2312 10.8125 9.90125 20 9.5C10.8125 9.09875 10.4458 8.76875 10 0.5Z"
@@ -17,7 +17,7 @@
                 <div class="order-1 px-8 py-10 lg:px-10 lg:py-10 xl:px-16 xl:py-16">
                     <h3 class="prose-strong:font-medium prose-strong:text-secondary mb-8">Une reconnexion à soi</h3>
                     <div class="prose-styles">
-                        <p>Chez sensëa, chaque séance Snoezelen s’adapte à votre rythme et vos besoins. Vous êtes
+                        <p>Chez sensaë, chaque séance Snoezelen s’adapte à votre rythme et vos besoins. Vous êtes
                             accueilli·e dans un lieu où vous pouvez lâcher prise, explorer vos sens et profiter d’un
                             moment rien que pour vous.</p>
                     </div>

@@ -1,9 +1,9 @@
 @extends('layouts.immersive')
 
 @section('meta')
-    <title>Cadeau naissance sensoriel : offrir une séance Snoezelen — sensëa</title>
+    <title>Cadeau naissance sensoriel : offrir une séance Snoezelen — sensaë</title>
     <meta name="description" content="Offrez un cadeau de naissance unique : une séance Snoezelen pour éveiller les sens de bébé en douceur. Un moment de connexion parent-enfant inoubliable.">
-    <meta property="og:title" content="Cadeau naissance sensoriel — sensëa">
+    <meta property="og:title" content="Cadeau naissance sensoriel — sensaë">
     <meta property="og:description" content="Un cadeau qui ne s'achète pas en magasin. Un moment de douceur sensorielle pour bébé et ses parents.">
     <meta property="og:type" content="website">
 @endsection

@@ -135,7 +135,7 @@
                 <div class="st-grid-2">
                     <div class="st-field">
                         <label class="st-label">Email</label>
-                        <input type="email" wire:model="data.contact_email" class="st-input" placeholder="bonjour@sensea.cc">
+                        <input type="email" wire:model="data.contact_email" class="st-input" placeholder="bonjour@sensae.cc">
                     </div>
                     <div class="st-field">
                         <label class="st-label">Téléphone</label>
@@ -189,7 +189,7 @@
                 <div class="st-field">
                     <label class="st-label">Titre du site</label>
                     <span class="st-hint">Apparaît dans l'onglet du navigateur et les résultats Google (50-60 caractères)</span>
-                    <input type="text" wire:model="data.seo_title" class="st-input" placeholder="sensëa - Salle Snoezelen">
+                    <input type="text" wire:model="data.seo_title" class="st-input" placeholder="sensaë - Salle Snoezelen">
                 </div>
                 <div class="st-field">
                     <label class="st-label">Description</label>
@@ -199,7 +199,7 @@
                 <div class="st-field">
                     <label class="st-label">URL canonique</label>
                     <span class="st-hint">URL de base du site, sans slash final</span>
-                    <input type="url" wire:model="data.seo_canonical_url" class="st-input" placeholder="https://sensea.cc">
+                    <input type="url" wire:model="data.seo_canonical_url" class="st-input" placeholder="https://sensae.cc">
                 </div>
 
                 {{-- Open Graph --}}
@@ -212,7 +212,7 @@
                 <div class="st-field">
                     <label class="st-label">Image de partage</label>
                     <span class="st-hint">URL complète de l'image (1200×630px, JPG ou PNG, &lt; 5 Mo)</span>
-                    <input type="url" wire:model="data.seo_og_image" class="st-input" placeholder="https://sensea.cc/storage/og-image.jpg">
+                    <input type="url" wire:model="data.seo_og_image" class="st-input" placeholder="https://sensae.cc/storage/og-image.jpg">
                 </div>
 
                 {{-- Rich Snippets / Schema.org --}}
@@ -245,8 +245,8 @@
                 <p class="st-section-desc">Le script Plausible est injecté automatiquement si le domaine est renseigné.</p>
                 <div class="st-field">
                     <label class="st-label">Domaine Plausible</label>
-                    <span class="st-hint">Ex : sensea.cc</span>
-                    <input type="text" wire:model="data.seo_plausible_domain" class="st-input" placeholder="sensea.cc">
+                    <span class="st-hint">Ex : sensae.cc</span>
+                    <input type="text" wire:model="data.seo_plausible_domain" class="st-input" placeholder="sensae.cc">
                 </div>
             </div>
 

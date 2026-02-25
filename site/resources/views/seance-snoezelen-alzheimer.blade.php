@@ -1,9 +1,9 @@
 @extends('layouts.immersive')
 
 @section('meta')
-    <title>Séance Snoezelen et Alzheimer — sensëa</title>
+    <title>Séance Snoezelen et Alzheimer — sensaë</title>
     <meta name="description" content="Comment le Snoezelen accompagne les personnes atteintes d'Alzheimer. Quand les mots s'effacent, les sens restent. Une approche douce et respectueuse.">
-    <meta property="og:title" content="Snoezelen et Alzheimer — sensëa">
+    <meta property="og:title" content="Snoezelen et Alzheimer — sensaë">
     <meta property="og:description" content="Quand les mots s'effacent, les sens restent. Une approche sensorielle douce pour les personnes atteintes d'Alzheimer.">
     <meta property="og:type" content="website">
 @endsection

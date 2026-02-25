@@ -1,15 +1,15 @@
 server {
     listen 80;
-    server_name suivi.sensea.cc;
+    server_name suivi.sensae.cc;
     return 301 https://$host$request_uri;
 }
 
 server {
     listen 443 ssl;
-    server_name suivi.sensea.cc;
+    server_name suivi.sensae.cc;
 
-    ssl_certificate /etc/ssl/cloudflare/sensea.cc.pem;
-    ssl_certificate_key /etc/ssl/cloudflare/sensea.cc.key;
+    ssl_certificate /etc/ssl/cloudflare/sensae.cc.pem;
+    ssl_certificate_key /etc/ssl/cloudflare/sensae.cc.key;
 
     root /home/deploy/apps/snoezelen/frontend/dist;
     index index.html;

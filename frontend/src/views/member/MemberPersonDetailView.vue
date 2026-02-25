@@ -138,7 +138,7 @@ async function handleLogout() {
           <div class="w-10 h-10 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-xl flex items-center justify-center">
             <span class="text-white text-lg font-bold">S</span>
           </div>
-          <h1 class="text-xl font-semibold text-white">sensea</h1>
+          <h1 class="text-xl font-semibold text-white">sensae</h1>
         </div>
         <div class="flex items-center space-x-4">
           <span class="text-sm text-gray-400">{{ authStore.fullName }}</span>

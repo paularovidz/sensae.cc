@@ -1,4 +1,4 @@
-# Site Vitrine sensëa — Laravel (`site/`)
+# Site Vitrine sensaë — Laravel (`site/`)
 
 Site vitrine public remplaçant l'ancien site Astro (`www/`). Admin pilotable via Filament.
 

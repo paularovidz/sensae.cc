@@ -1,9 +1,9 @@
 ---
-title: "Salle Snoezelen Audruicq - sensëa"
+title: "Salle Snoezelen Audruicq - sensaë"
 h1: "Salle Snoezelen Audruicq"
 big_title: "Espace Snoezelen pour une **expérience multi-sensorielle** à Audruicq"
 description: ""
-image: "/images/snoezelen-sensea.jpg"
+image: "/images/snoezelen-sensae.jpg"
 draft: false
 buttons:
   - enable: true
@@ -24,7 +24,7 @@ buttons:
 
 ## Ouverture en août 2026
 
-Notre espace sensoriel **sensëa** ouvrira ses portes en **août 2026**. Nous préparons actuellement un lieu unique pour vous accueillir dans les meilleures conditions. N'hésitez pas à nous contacter pour être informé de l'ouverture et réserver vos premières séances.
+Notre espace sensoriel **sensaë** ouvrira ses portes en **août 2026**. Nous préparons actuellement un lieu unique pour vous accueillir dans les meilleures conditions. N'hésitez pas à nous contacter pour être informé de l'ouverture et réserver vos premières séances.
 
 ## Qu'est-ce qu'une salle snoezelen ?
 

@@ -7,7 +7,7 @@
    FONTS
    ========================================================================== */
 
-/* Amandine - Logo only (subset: sensëa) */
+/* Amandine - Logo only (subset: sensaë) */
 @font-face {
   font-family: 'Amandine';
   src: url('/fonts/amandine-subset.woff2') format('woff2');
@@ -64,13 +64,13 @@
 
 :root {
   /* Brand Colors */
-  --sensea-primary: #721ad6;
-  --sensea-primary-light: #9333ea;
-  --sensea-primary-dark: #5b14a8;
+  --sensae-primary: #721ad6;
+  --sensae-primary-light: #9333ea;
+  --sensae-primary-dark: #5b14a8;
 
   /* Gradients */
-  --sensea-gradient: linear-gradient(82.48deg, transparent -1.1%, rgba(114, 26, 214, 0.36) 96.45%);
-  --sensea-cta-gradient: linear-gradient(to right, var(--sensea-primary-light), var(--sensea-primary));
+  --sensae-gradient: linear-gradient(82.48deg, transparent -1.1%, rgba(114, 26, 214, 0.36) 96.45%);
+  --sensae-cta-gradient: linear-gradient(to right, var(--sensae-primary-light), var(--sensae-primary));
 
   /* Typography */
   --font-logo: 'Amandine', system-ui, sans-serif;

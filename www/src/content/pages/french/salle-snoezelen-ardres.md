@@ -1,9 +1,9 @@
 ---
-title: "Salle Snoezelen Ardres - sensëa"
+title: "Salle Snoezelen Ardres - sensaë"
 h1: "Salle Snoezelen Ardres"
 big_title: "Espace Snoezelen pour une **expérience multi-sensorielle** à Ardres"
 description: ""
-image: "/images/snoezelen-sensea.jpg"
+image: "/images/snoezelen-sensae.jpg"
 draft: false
 buttons:
   - enable: true

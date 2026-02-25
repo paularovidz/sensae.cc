@@ -51,7 +51,7 @@ class PublicCalendarController
 
         // Send ICS headers (inline for subscription, not download)
         header('Content-Type: text/calendar; charset=utf-8');
-        header('Content-Disposition: inline; filename="sensea-calendar.ics"');
+        header('Content-Disposition: inline; filename="sensae-calendar.ics"');
         header('Cache-Control: no-cache, must-revalidate');
         header('Pragma: no-cache');
 
@@ -68,7 +68,7 @@ class PublicCalendarController
         $icsContent = ICSGeneratorService::generateOffDaysCalendar($offDays);
 
         header('Content-Type: text/calendar; charset=utf-8');
-        header('Content-Disposition: inline; filename="sensea-off-days.ics"');
+        header('Content-Disposition: inline; filename="sensae-off-days.ics"');
         header('Cache-Control: no-cache, must-revalidate');
         header('Pragma: no-cache');
 

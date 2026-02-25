@@ -1,9 +1,9 @@
 ---
-title: "Salle Snoezelen Gravelines - sensëa"
+title: "Salle Snoezelen Gravelines - sensaë"
 h1: "Salle Snoezelen Gravelines"
 big_title: "Espace Snoezelen pour une **expérience multi-sensorielle** à Gravelines"
 description: ""
-image: "/images/snoezelen-sensea.jpg"
+image: "/images/snoezelen-sensae.jpg"
 draft: true
 buttons:
   - enable: true

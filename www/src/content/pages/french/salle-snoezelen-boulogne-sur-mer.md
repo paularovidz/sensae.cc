@@ -1,9 +1,9 @@
 ---
-title: "Salle Snoezelen Boulogne-sur-Mer - sensëa"
+title: "Salle Snoezelen Boulogne-sur-Mer - sensaë"
 h1: "Salle Snoezelen Boulogne-sur-Mer"
 big_title: "Espace Snoezelen pour une **expérience multi-sensorielle** à Boulogne-sur-Mer"
 description: ""
-image: "/images/snoezelen-sensea.jpg"
+image: "/images/snoezelen-sensae.jpg"
 draft: false
 buttons:
   - enable: true

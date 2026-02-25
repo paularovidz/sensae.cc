@@ -1,6 +1,6 @@
 ---
 enable: true # Control the visibility of this section across all pages where it is used
-subtitle: Pourquoi choisir sensëa
+subtitle: Pourquoi choisir sensaë
 title: Un moment de détente et d’éveil sensoriel grâce à l’approche Snoezelen
 
 list:
@@ -8,7 +8,7 @@ list:
     image: "/images/why-us/centrer-sens.png"
     description_font_size: "" # sm | lg (default - sm)
     description: |
-      Chez sensëa, chaque séance Snoezelen s’adapte à votre rythme et vos besoins. Vous êtes accueilli·e dans un lieu où vous pouvez lâcher prise, explorer vos sens et profiter d’un moment rien que pour vous.
+      Chez sensaë, chaque séance Snoezelen s’adapte à votre rythme et vos besoins. Vous êtes accueilli·e dans un lieu où vous pouvez lâcher prise, explorer vos sens et profiter d’un moment rien que pour vous.
     cta_btn:
       enable: false
       label: ""

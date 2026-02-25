@@ -16,7 +16,7 @@
           Réservation de séance
         </h1>
         <p class="text-sm text-gray-500 mt-1">
-          sensëa Snoezelen
+          sensaë Snoezelen
         </p>
       </div>
 
@@ -85,12 +85,12 @@
         <p class="text-xs text-gray-400">
           Propulsé par
           <a
-            href="https://sensea.cc"
+            href="https://sensae.cc"
             target="_blank"
             rel="noopener noreferrer"
             class="text-indigo-500 hover:underline"
           >
-            sensëa Snoezelen
+            sensaë Snoezelen
           </a>
         </p>
       </div>
@@ -174,7 +174,7 @@ async function handleNext() {
 function notifyParent(event, data) {
   if (window.parent !== window) {
     window.parent.postMessage({
-      type: 'sensea_booking',
+      type: 'sensae_booking',
       event,
       data
     }, '*')
@@ -183,7 +183,7 @@ function notifyParent(event, data) {
 
 // Listen for messages from parent
 window.addEventListener('message', (event) => {
-  if (event.data?.type === 'sensea_booking_command') {
+  if (event.data?.type === 'sensae_booking_command') {
     switch (event.data.command) {
       case 'reset':
         bookingStore.resetWizard()

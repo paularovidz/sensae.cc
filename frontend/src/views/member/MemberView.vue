@@ -77,7 +77,7 @@ async function handleLogout() {
           <div class="w-10 h-10 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-xl flex items-center justify-center">
             <span class="text-white text-lg font-bold">S</span>
           </div>
-          <h1 class="text-xl font-semibold text-white">sensëa</h1>
+          <h1 class="text-xl font-semibold text-white">sensaë</h1>
         </div>
         <div class="flex items-center space-x-4">
           <button

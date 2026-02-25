@@ -20,7 +20,7 @@
     <section class="xp-canvas" data-xp-act="2">
         <div data-xp-fluid-orbs></div>
         <p class="xp-text" data-xp-text="2">Laissez-vous traverser.</p>
-        <p class="xp-text xp-text--small xp-text--bottom xp-hint" data-xp-hint="2">Bougez &middot; Scrollez &middot; Cliquez</p>
+        <p class="xp-hint" data-xp-hint="2">Bougez &middot; Scrollez &middot; Cliquez</p>
     </section>
 
     {{-- Act 3 — Sound --}}
@@ -37,7 +37,7 @@
             <button class="xp-pad" data-note="7">Mi</button>
         </div>
         <p class="xp-text" data-xp-text="3">Composez votre silence.</p>
-        <p class="xp-text xp-text--small xp-text--bottom xp-hint" data-xp-hint="3">Jouez avec votre clavier</p>
+        <p class="xp-hint" data-xp-hint="3">Utilisez votre clavier pour jouer</p>
     </section>
 
     {{-- Act 4 — Light --}}
@@ -56,6 +56,15 @@
         </div>
         <p class="xp-breath-label" data-xp-breath-label></p>
         <p class="xp-text" data-xp-text="5" style="top: 30%;">Respirez.</p>
+    </section>
+
+    {{-- Insight — Revelation --}}
+    <section class="xp-canvas" data-xp-act="insight">
+        <div class="xp-insight">
+            <p class="xp-insight-line" data-xp-insight="1">En quelques instants, nous avons &eacute;veill&eacute; votre ou&iuml;e, votre vue et votre toucher.</p>
+            <p class="xp-insight-line" data-xp-insight="2">&Agrave; travers un &eacute;cran.</p>
+            <p class="xp-insight-line xp-insight-line--accent" data-xp-insight="3">Imaginez une s&eacute;ance compl&egrave;te chez sensa&euml;.</p>
+        </div>
     </section>
 
     {{-- Act 6 — Ripples + CTA --}}

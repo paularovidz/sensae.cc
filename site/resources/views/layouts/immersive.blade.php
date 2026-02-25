@@ -11,6 +11,8 @@
         @font-face { font-family:'Amandine'; src:url('/fonts/amandine.woff2') format('woff2'); font-weight:400; font-display:swap; }
 
         *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+        ::selection { background: transparent; color: inherit; }
+        ::-moz-selection { background: transparent; color: inherit; }
 
         :root {
             --ps-bg: #050208;
@@ -586,7 +588,7 @@
 <body>
 
     <div class="ps-cursor" data-ps-cursor></div>
-    <a href="/" class="ps-home">sensëa</a>
+    <a href="/" class="ps-home">sensaë</a>
 
     {{-- Sound toggle --}}
     <button class="ps-sound" data-immersive-sound aria-pressed="false" aria-label="Activer le son ambiant">

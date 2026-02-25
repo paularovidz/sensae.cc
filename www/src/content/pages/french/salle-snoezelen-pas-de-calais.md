@@ -1,9 +1,9 @@
 ---
-title: "Salle Snoezelen Pas-de-Calais - sensëa"
+title: "Salle Snoezelen Pas-de-Calais - sensaë"
 h1: "Salle Snoezelen Pas-de-Calais"
 big_title: "Espace Snoezelen pour une **expérience multi-sensorielle** dans le Pas-de-Calais"
 description: ""
-image: "/images/snoezelen-sensea.jpg"
+image: "/images/snoezelen-sensae.jpg"
 draft: false
 buttons:
   - enable: true

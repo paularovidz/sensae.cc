@@ -37,7 +37,7 @@ function resetForm() {
       <!-- Logo -->
       <div class="text-center mb-8">
         <h1 class="text-4xl font-bold text-ops-400">OPS</h1>
-        <p class="mt-2 text-gray-400">Cockpit Financier sensea</p>
+        <p class="mt-2 text-gray-400">Cockpit Financier sensae</p>
       </div>
 
       <!-- Magic link sent confirmation -->

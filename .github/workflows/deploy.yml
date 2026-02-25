@@ -161,7 +161,7 @@ jobs:
         working-directory: frontend
         run: npm run build
         env:
-          VITE_API_URL: https://suivi.sensea.cc/api
+          VITE_API_URL: https://suivi.sensae.cc/api
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -275,7 +275,7 @@ jobs:
         working-directory: ops/frontend
         run: npm run build
         env:
-          VITE_API_URL: https://ops.sensea.cc/api
+          VITE_API_URL: https://ops.sensae.cc/api
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4

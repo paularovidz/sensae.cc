@@ -41,7 +41,7 @@ class MailService
         }
 
         // Default sender
-        $this->mailer->setFrom(self::env('MAIL_FROM', 'noreply-ops@sensea.cc'), self::env('MAIL_FROM_NAME', 'sensea OPS'));
+        $this->mailer->setFrom(self::env('MAIL_FROM', 'noreply-ops@sensae.cc'), self::env('MAIL_FROM_NAME', 'sensae OPS'));
     }
 
     public function sendMagicLink(string $email, string $firstName, string $token): bool
@@ -51,7 +51,7 @@ class MailService
             $this->mailer->addAddress($email);
 
             $this->mailer->isHTML(true);
-            $this->mailer->Subject = 'Votre lien de connexion - sensea OPS';
+            $this->mailer->Subject = 'Votre lien de connexion - sensae OPS';
 
             $magicLink = self::env('FRONTEND_URL', 'http://localhost:5180') . '/auth/verify/' . $token;
             $expiryMinutes = 15;
@@ -75,7 +75,7 @@ class MailService
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Connexion sensea OPS</title>
+    <title>Connexion sensae OPS</title>
 </head>
 <body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7fa;">
     <table role="presentation" style="width: 100%; border-collapse: collapse;">
@@ -84,7 +84,7 @@ class MailService
                 <table role="presentation" style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
                     <tr>
                         <td style="padding: 40px 40px 20px; text-align: center; background: linear-gradient(135deg, #1e3a5f 0%, #2c5282 100%); border-radius: 12px 12px 0 0;">
-                            <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 600;">sensea OPS</h1>
+                            <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 600;">sensae OPS</h1>
                             <p style="margin: 10px 0 0; color: rgba(255,255,255,0.8); font-size: 14px;">Cockpit Financier</p>
                         </td>
                     </tr>
@@ -92,7 +92,7 @@ class MailService
                         <td style="padding: 40px;">
                             <p style="margin: 0 0 20px; font-size: 18px; color: #333;">Bonjour {$firstName},</p>
                             <p style="margin: 0 0 30px; font-size: 16px; color: #555; line-height: 1.6;">
-                                Vous avez demande a vous connecter a votre espace sensea OPS.
+                                Vous avez demande a vous connecter a votre espace sensae OPS.
                                 Cliquez sur le bouton ci-dessous pour acceder a votre compte :
                             </p>
                             <table role="presentation" style="margin: 0 auto 30px;">
@@ -115,7 +115,7 @@ class MailService
                     <tr>
                         <td style="padding: 20px 40px; background-color: #f8f9fa; border-radius: 0 0 12px 12px; text-align: center;">
                             <p style="margin: 0; font-size: 12px; color: #999;">
-                                Cet email a ete envoye par sensea OPS.<br>
+                                Cet email a ete envoye par sensae OPS.<br>
                                 Pour des raisons de securite, ne partagez jamais ce lien.
                             </p>
                         </td>
@@ -134,7 +134,7 @@ HTML;
         return <<<TEXT
 Bonjour {$firstName},
 
-Vous avez demande a vous connecter a votre espace sensea OPS.
+Vous avez demande a vous connecter a votre espace sensae OPS.
 
 Cliquez sur le lien suivant pour acceder a votre compte :
 {$link}
@@ -144,7 +144,7 @@ Ce lien est valable pendant {$expiryMinutes} minutes et ne peut etre utilise qu'
 Si vous n'avez pas demande ce lien, vous pouvez ignorer cet email en toute securite.
 
 ---
-Cet email a ete envoye par sensea OPS.
+Cet email a ete envoye par sensae OPS.
 Pour des raisons de securite, ne partagez jamais ce lien.
 TEXT;
     }

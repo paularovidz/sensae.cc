@@ -3,9 +3,9 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-    <title>Voyage Sensoriel — sensëa</title>
+    <title>Voyage Sensoriel — sensaë</title>
     <meta name="description" content="Une expérience immersive pour ressentir les sens depuis votre navigateur. Toucher, son, lumière, respiration.">
-    <meta property="og:title" content="Voyage Sensoriel — sensëa">
+    <meta property="og:title" content="Voyage Sensoriel — sensaë">
     <meta property="og:description" content="Explorez vos sens dans une expérience interactive unique.">
     <meta property="og:type" content="website">
     <style>
@@ -333,6 +333,36 @@
             visibility: hidden;
         }
 
+        /* --- Insight (revelation) --- */
+        .xp-insight {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            max-width: 600px;
+            padding: 0 2rem;
+            z-index: 10;
+        }
+
+        .xp-insight-line {
+            font-size: clamp(1.1rem, 3vw, 1.6rem);
+            font-weight: 400;
+            letter-spacing: 0.03em;
+            line-height: 1.6;
+            color: var(--xp-white);
+            opacity: 0;
+            visibility: hidden;
+            margin-bottom: 0.8em;
+        }
+
+        .xp-insight-line--accent {
+            color: var(--xp-rose);
+            font-size: clamp(1.2rem, 3.5vw, 1.8rem);
+            margin-top: 0.4em;
+            margin-bottom: 0;
+        }
+
         /* --- CTA --- */
         .xp-cta {
             position: fixed;
@@ -382,16 +412,15 @@
             to { transform: rotate(360deg); }
         }
 
-        /* --- Hint (small helper at bottom) --- */
+        /* --- Hint (below title) --- */
         .xp-hint {
             position: fixed;
-            bottom: 4vh;
+            top: calc(50% + 2.5rem);
             left: 50%;
             transform: translateX(-50%);
-            font-size: 0.7rem;
-            letter-spacing: 0.1em;
-            text-transform: uppercase;
-            color: rgba(255, 250, 245, 0.25);
+            font-size: clamp(0.85rem, 2vw, 1rem);
+            letter-spacing: 0.08em;
+            color: rgba(255, 250, 245, 0.5);
             pointer-events: none;
             z-index: 10;
             opacity: 0;
@@ -464,6 +493,10 @@
                 opacity: 1 !important;
                 visibility: visible !important;
                 padding: 2rem;
+            }
+            .xp-insight-line {
+                opacity: 1 !important;
+                visibility: visible !important;
             }
             .xp-halo, .xp-particle, .xp-fluid-orb, .xp-circle, .xp-orb,
             .xp-bubble, .xp-breath-container, .xp-breath-label, .xp-breath-timer,

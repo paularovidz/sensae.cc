@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', $sens->title . ' - sensëa')
+@section('title', $sens->title . ' - sensaë')
 @section('meta_description', $sens->excerpt)
 
 @section('content')

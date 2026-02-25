@@ -124,7 +124,7 @@ jobs:
         working-directory: frontend
         run: npm run build
         env:
-          VITE_API_URL: https://suivi.sensea.cc/api
+          VITE_API_URL: https://suivi.sensae.cc/api
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -346,6 +346,6 @@ docker compose -f docker-compose.prod.yml ps
 ### Healthcheck
 
 ```bash
-curl -I https://suivi.sensea.cc/api/health
-curl -I https://sensea.cc
+curl -I https://suivi.sensae.cc/api/health
+curl -I https://sensae.cc
 ```

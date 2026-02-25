@@ -129,7 +129,7 @@ async function handleLogout() {
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
             </svg>
           </button>
-          <h1 class="text-xl font-bold text-gradient">sensëa</h1>
+          <h1 class="text-xl font-bold text-gradient">sensaë</h1>
         </div>
         <div class="flex items-center space-x-4">
           <span class="text-sm text-gray-400">{{ authStore.fullName }}</span>

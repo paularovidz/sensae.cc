@@ -13,8 +13,8 @@
   }
 
   .btn-primary {
-    @apply btn text-white hover:opacity-90 focus:ring-sensea;
-    background: var(--sensea-cta-gradient);
+    @apply btn text-white hover:opacity-90 focus:ring-indigo-600;
+    background: var(--sensae-cta-gradient);
   }
 
   .btn-secondary {
@@ -38,7 +38,7 @@
      ========================================================================== */
 
   .input {
-    @apply w-full px-4 py-2 text-sm border border-gray-600 rounded-lg bg-gray-700 text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-sensea focus:border-transparent transition-shadow duration-200;
+    @apply w-full px-4 py-2 text-sm border border-gray-600 rounded-lg bg-gray-700 text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent transition-shadow duration-200;
   }
 
   select.input {
@@ -132,17 +132,17 @@
      GRADIENT UTILITIES
      ========================================================================== */
 
-  .gradient-sensea {
-    background: var(--sensea-cta-gradient);
+  .gradient-sensae {
+    background: var(--sensae-cta-gradient);
   }
 
   .text-gradient {
     @apply bg-clip-text text-transparent;
-    background: var(--sensea-cta-gradient);
+    background: var(--sensae-cta-gradient);
   }
 
-  .bg-sensea-gradient {
-    background: var(--sensea-gradient);
+  .bg-sensae-gradient {
+    background: var(--sensae-gradient);
   }
 
   /* ==========================================================================
@@ -166,7 +166,7 @@
   }
 
   .card-dark-interactive {
-    @apply bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-xl transition-all hover:border-sensea/50 hover:bg-gray-800/70;
+    @apply bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-xl transition-all hover:border-indigo-600/50 hover:bg-gray-800/70;
   }
 
   .header-dark {
@@ -174,7 +174,7 @@
   }
 
   .input-dark {
-    @apply w-full px-4 py-2 text-sm bg-gray-700/50 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-sensea focus:border-transparent transition-shadow duration-200;
+    @apply w-full px-4 py-2 text-sm bg-gray-700/50 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent transition-shadow duration-200;
   }
 
   /* Dark mode badges */
@@ -196,8 +196,8 @@
 
   /* Dark mode button variants */
   .btn-dark-primary {
-    @apply btn text-white hover:opacity-90 focus:ring-sensea;
-    background: var(--sensea-cta-gradient);
+    @apply btn text-white hover:opacity-90 focus:ring-indigo-600;
+    background: var(--sensae-cta-gradient);
   }
 
   .btn-dark-secondary {

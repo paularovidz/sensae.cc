@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', $page->meta_title ?? $page->title . ' - sensëa')
+@section('title', $page->meta_title ?? $page->title . ' - sensaë')
 
 @section('content')
     <section class="py-16">

@@ -25,7 +25,7 @@ class ICSGeneratorService
 
         $summary = self::buildSummary($booking, $startDate);
         $description = self::buildDescription($booking);
-        $uid = $booking['id'] . '@' . parse_url(self::env('APP_URL', 'sensea.cc'), PHP_URL_HOST);
+        $uid = $booking['id'] . '@' . parse_url(self::env('APP_URL', 'sensae.cc'), PHP_URL_HOST);
 
         $ics = self::buildICS([
             'uid' => $uid,
@@ -34,9 +34,9 @@ class ICSGeneratorService
             'start' => $startDate,
             'end' => $endDate,
             'timezone' => $timezone,
-            'location' => 'sensëa Snoezelen',
-            'organizer_email' => self::env('MAIL_FROM', 'noreply@sensea.cc'),
-            'organizer_name' => 'sensëa Snoezelen'
+            'location' => 'sensaë Snoezelen',
+            'organizer_email' => self::env('MAIL_FROM', 'noreply@sensae.cc'),
+            'organizer_name' => 'sensaë Snoezelen'
         ]);
 
         return $ics;
@@ -54,7 +54,7 @@ class ICSGeneratorService
 
         $summary = self::buildSummary($booking, $startDate);
         $description = self::buildDescription($booking);
-        $uid = $booking['id'] . '@' . parse_url(self::env('APP_URL', 'sensea.cc'), PHP_URL_HOST);
+        $uid = $booking['id'] . '@' . parse_url(self::env('APP_URL', 'sensae.cc'), PHP_URL_HOST);
 
         $ics = self::buildICS([
             'uid' => $uid,
@@ -63,9 +63,9 @@ class ICSGeneratorService
             'start' => $startDate,
             'end' => $endDate,
             'timezone' => $timezone,
-            'location' => 'sensëa Snoezelen',
-            'organizer_email' => self::env('MAIL_FROM', 'noreply@sensea.cc'),
-            'organizer_name' => 'sensëa Snoezelen',
+            'location' => 'sensaë Snoezelen',
+            'organizer_email' => self::env('MAIL_FROM', 'noreply@sensae.cc'),
+            'organizer_name' => 'sensaë Snoezelen',
             'method' => 'REQUEST',
             'attendees' => $attendees
         ]);
@@ -86,13 +86,13 @@ class ICSGeneratorService
             $endDate = (clone $startDate)->modify("+{$booking['duration_blocked_minutes']} minutes");
 
             $events[] = [
-                'uid' => $booking['id'] . '@' . parse_url(self::env('APP_URL', 'sensea.cc'), PHP_URL_HOST),
+                'uid' => $booking['id'] . '@' . parse_url(self::env('APP_URL', 'sensae.cc'), PHP_URL_HOST),
                 'summary' => self::buildSummary($booking, $startDate),
                 'description' => self::buildDescription($booking),
                 'start' => $startDate,
                 'end' => $endDate,
                 'timezone' => $timezone,
-                'location' => 'sensëa Snoezelen'
+                'location' => 'sensaë Snoezelen'
             ];
         }
 
@@ -211,10 +211,10 @@ class ICSGeneratorService
         $lines = [
             'BEGIN:VCALENDAR',
             'VERSION:2.0',
-            'PRODID:-//sensëa Snoezelen//Booking System//FR',
+            'PRODID:-//sensaë Snoezelen//Booking System//FR',
             'CALSCALE:GREGORIAN',
             'METHOD:' . $method,
-            'X-WR-CALNAME:sensëa Snoezelen',
+            'X-WR-CALNAME:sensaë Snoezelen',
             'X-WR-TIMEZONE:' . $event['timezone'],
             '',
             self::generateVTimezone($event['timezone']),
@@ -233,7 +233,7 @@ class ICSGeneratorService
         }
 
         if (!empty($event['organizer_email'])) {
-            $name = $event['organizer_name'] ?? 'sensëa';
+            $name = $event['organizer_name'] ?? 'sensaë';
             $lines[] = 'ORGANIZER;CN=' . self::escapeValue($name) . ':mailto:' . $event['organizer_email'];
         }
 
@@ -267,10 +267,10 @@ class ICSGeneratorService
         $lines = [
             'BEGIN:VCALENDAR',
             'VERSION:2.0',
-            'PRODID:-//sensëa Snoezelen//Booking System//FR',
+            'PRODID:-//sensaë Snoezelen//Booking System//FR',
             'CALSCALE:GREGORIAN',
             'METHOD:PUBLISH',
-            'X-WR-CALNAME:sensëa Snoezelen - Réservations',
+            'X-WR-CALNAME:sensaë Snoezelen - Réservations',
             'X-WR-TIMEZONE:' . $timezone,
             '',
             self::generateVTimezone($timezone),
@@ -387,15 +387,15 @@ VTIMEZONE;
     public static function generateFullCalendar(array $bookings, array $offDays): string
     {
         $timezone = self::env('APP_TIMEZONE', 'Europe/Paris');
-        $host = parse_url(self::env('APP_URL', 'sensea.cc'), PHP_URL_HOST);
+        $host = parse_url(self::env('APP_URL', 'sensae.cc'), PHP_URL_HOST);
 
         $lines = [
             'BEGIN:VCALENDAR',
             'VERSION:2.0',
-            'PRODID:-//sensëa Snoezelen//Calendar//FR',
+            'PRODID:-//sensaë Snoezelen//Calendar//FR',
             'CALSCALE:GREGORIAN',
             'METHOD:PUBLISH',
-            'X-WR-CALNAME:sensëa Snoezelen',
+            'X-WR-CALNAME:sensaë Snoezelen',
             'X-WR-TIMEZONE:' . $timezone,
             '',
             self::generateVTimezone($timezone),
@@ -414,7 +414,7 @@ VTIMEZONE;
             $lines[] = 'DTEND;TZID=' . $timezone . ':' . self::formatDateTime($endDate);
             $lines[] = 'SUMMARY:' . self::escapeValue(self::buildSummary($booking, $startDate));
             $lines[] = 'DESCRIPTION:' . self::escapeValue(self::buildDescription($booking));
-            $lines[] = 'LOCATION:sensëa Snoezelen';
+            $lines[] = 'LOCATION:sensaë Snoezelen';
             $lines[] = 'STATUS:CONFIRMED';
             $lines[] = 'END:VEVENT';
         }
@@ -440,7 +440,7 @@ VTIMEZONE;
             $lines[] = 'DTSTART;VALUE=DATE:' . $startDate->format('Ymd');
             $lines[] = 'DTEND;VALUE=DATE:' . $icsEndDate->format('Ymd');
             $lines[] = 'SUMMARY:' . self::escapeValue($summary);
-            $lines[] = 'DESCRIPTION:Jour de fermeture sensëa';
+            $lines[] = 'DESCRIPTION:Jour de fermeture sensaë';
             $lines[] = 'TRANSP:TRANSPARENT';
             $lines[] = 'STATUS:CONFIRMED';
             $lines[] = 'END:VEVENT';
@@ -457,15 +457,15 @@ VTIMEZONE;
     public static function generateOffDaysCalendar(array $offDays): string
     {
         $timezone = self::env('APP_TIMEZONE', 'Europe/Paris');
-        $host = parse_url(self::env('APP_URL', 'sensea.cc'), PHP_URL_HOST);
+        $host = parse_url(self::env('APP_URL', 'sensae.cc'), PHP_URL_HOST);
 
         $lines = [
             'BEGIN:VCALENDAR',
             'VERSION:2.0',
-            'PRODID:-//sensëa Snoezelen//Off Days//FR',
+            'PRODID:-//sensaë Snoezelen//Off Days//FR',
             'CALSCALE:GREGORIAN',
             'METHOD:PUBLISH',
-            'X-WR-CALNAME:sensëa - Jours de fermeture',
+            'X-WR-CALNAME:sensaë - Jours de fermeture',
             'X-WR-TIMEZONE:' . $timezone,
             '',
             self::generateVTimezone($timezone),
@@ -477,7 +477,7 @@ VTIMEZONE;
             $uid = 'off-' . $offDay['id'] . '@' . $host;
 
             // Summary avec raison si présente
-            $summary = 'sensëa - Fermé';
+            $summary = 'sensaë - Fermé';
             if (!empty($offDay['reason'])) {
                 $summary .= ' (' . $offDay['reason'] . ')';
             }
@@ -493,7 +493,7 @@ VTIMEZONE;
             $lines[] = 'DTSTART;VALUE=DATE:' . $startDate->format('Ymd');
             $lines[] = 'DTEND;VALUE=DATE:' . $icsEndDate->format('Ymd');
             $lines[] = 'SUMMARY:' . self::escapeValue($summary);
-            $lines[] = 'DESCRIPTION:' . self::escapeValue('Jour de fermeture sensëa Snoezelen');
+            $lines[] = 'DESCRIPTION:' . self::escapeValue('Jour de fermeture sensaë Snoezelen');
             $lines[] = 'TRANSP:TRANSPARENT';
             $lines[] = 'STATUS:CONFIRMED';
             $lines[] = 'END:VEVENT';

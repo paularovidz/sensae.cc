@@ -1,8 +1,8 @@
 ---
-h1: sensëa - Salle Snoezelen à Audruicq
+h1: sensaë - Salle Snoezelen à Audruicq
 title: Écouter les besoins, répondre aux sens, **prendre soin autrement**
 description: Une expérience multisensorielle sur-mesure pour gérer les émotions, réduire l’anxiété et retrouver un équilibre intérieur.
-image: "/images/snoezelen-sensea.jpg"
+image: "/images/snoezelen-sensae.jpg"
 buttons:
   - enable: true
     label: "Ouverture en août"

@@ -2,7 +2,7 @@
 
 # Default target
 help:
-	@echo "sensëa Snoezelen - Commandes disponibles:"
+	@echo "sensaë Snoezelen - Commandes disponibles:"
 	@echo ""
 	@echo "  make install    - Installation initiale (copie .env, build, start)"
 	@echo "  make start      - Démarrer tous les conteneurs"
@@ -64,7 +64,7 @@ install:
 	@echo "  - MailHog:    http://localhost:8025 (pour voir les emails)"
 	@echo "  - phpMyAdmin: http://localhost:8081"
 	@echo ""
-	@echo "Compte admin par défaut: bonjour@sensea.cc"
+	@echo "Compte admin par défaut: bonjour@sensae.cc"
 	@echo "Demandez un magic link sur la page de login pour vous connecter."
 
 # Démarrer

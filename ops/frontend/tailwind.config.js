@@ -21,8 +21,8 @@ export default {
           800: '#065f46',
           900: '#064e3b',
         },
-        // Keep sensea colors for branding consistency
-        sensea: {
+        // Keep sensae colors for branding consistency
+        sensae: {
           light: '#9333ea',
           DEFAULT: '#721ad6',
           dark: '#5b14a8'

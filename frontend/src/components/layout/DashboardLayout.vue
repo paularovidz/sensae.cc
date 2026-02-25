@@ -114,7 +114,7 @@ async function handleLogout() {
     <!-- Mobile menu button -->
     <div class="lg:hidden fixed top-0 left-0 right-0 z-50 bg-gray-800 border-b border-gray-700 px-4 py-3">
       <div class="flex items-center justify-between">
-        <span class="text-xl font-logo text-white">sensëa</span>
+        <span class="text-xl font-logo text-white">sensaë</span>
         <button @click="toggleMobileMenu" class="p-2 text-gray-400 hover:text-gray-200">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path v-if="!mobileMenuOpen" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
@@ -179,7 +179,7 @@ async function handleLogout() {
       <div class="flex-1 flex flex-col min-h-0">
         <!-- Logo -->
         <div class="flex items-center h-16 px-6 border-b border-gray-700">
-          <span class="text-2xl font-logo text-white">sensëa</span>
+          <span class="text-2xl font-logo text-white">sensaë</span>
         </div>
 
         <!-- Navigation -->
@@ -219,7 +219,7 @@ async function handleLogout() {
         <!-- User menu -->
         <div class="p-4 border-t border-gray-700">
           <div class="flex items-center space-x-3">
-            <div class="w-10 h-10 rounded-full gradient-sensea flex items-center justify-center text-white font-medium">
+            <div class="w-10 h-10 rounded-full gradient-sensae flex items-center justify-center text-white font-medium">
               {{ authStore.user?.first_name?.[0] }}{{ authStore.user?.last_name?.[0] }}
             </div>
             <div class="flex-1 min-w-0">

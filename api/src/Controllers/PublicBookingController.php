@@ -972,7 +972,7 @@ class PublicBookingController
         }
 
         $icsContent = ICSGeneratorService::generateBookingEvent($booking);
-        $headers = ICSGeneratorService::getDownloadHeaders('sensea-rdv.ics');
+        $headers = ICSGeneratorService::getDownloadHeaders('sensae-rdv.ics');
 
         foreach ($headers as $name => $value) {
             header("{$name}: {$value}");

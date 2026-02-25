@@ -94,7 +94,7 @@
             ]"
           >
             <p class="font-medium text-white">Avec accompagnement</p>
-            <p class="text-sm text-gray-400">Séances animées par sensëa</p>
+            <p class="text-sm text-gray-400">Séances animées par sensaë</p>
           </button>
           <button
             @click="bookingStore.setWithAccompaniment(false)"

@@ -41,7 +41,7 @@ class MailService
         }
 
         // Default sender
-        $this->mailer->setFrom(self::env('MAIL_FROM', 'noreply@sensea.cc'), self::env('MAIL_FROM_NAME', 'sensëa Snoezelen'));
+        $this->mailer->setFrom(self::env('MAIL_FROM', 'noreply@sensae.cc'), self::env('MAIL_FROM_NAME', 'sensaë Snoezelen'));
     }
 
     public function sendMagicLink(string $email, string $firstName, string $token): bool
@@ -51,7 +51,7 @@ class MailService
             $this->mailer->addAddress($email);
 
             $this->mailer->isHTML(true);
-            $this->mailer->Subject = 'Votre lien de connexion - sensëa Snoezelen';
+            $this->mailer->Subject = 'Votre lien de connexion - sensaë Snoezelen';
 
             $magicLink = self::env('FRONTEND_URL', 'http://localhost:5173') . '/auth/verify/' . $token;
             $expiryMinutes = 15;
@@ -75,7 +75,7 @@ class MailService
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Connexion sensëa</title>
+    <title>Connexion sensaë</title>
 </head>
 <body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7fa;">
     <table role="presentation" style="width: 100%; border-collapse: collapse;">
@@ -84,14 +84,14 @@ class MailService
                 <table role="presentation" style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
                     <tr>
                         <td style="padding: 40px 40px 20px; text-align: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px 12px 0 0;">
-                            <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 600;">sensëa Snoezelen</h1>
+                            <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 600;">sensaë Snoezelen</h1>
                         </td>
                     </tr>
                     <tr>
                         <td style="padding: 40px;">
                             <p style="margin: 0 0 20px; font-size: 18px; color: #333;">Bonjour {$firstName},</p>
                             <p style="margin: 0 0 30px; font-size: 16px; color: #555; line-height: 1.6;">
-                                Vous avez demandé à vous connecter à votre espace sensëa Snoezelen.
+                                Vous avez demandé à vous connecter à votre espace sensaë Snoezelen.
                                 Cliquez sur le bouton ci-dessous pour accéder à votre compte :
                             </p>
                             <table role="presentation" style="margin: 0 auto 30px;">
@@ -114,7 +114,7 @@ class MailService
                     <tr>
                         <td style="padding: 20px 40px; background-color: #f8f9fa; border-radius: 0 0 12px 12px; text-align: center;">
                             <p style="margin: 0; font-size: 12px; color: #999;">
-                                Cet email a été envoyé par sensëa Snoezelen.<br>
+                                Cet email a été envoyé par sensaë Snoezelen.<br>
                                 Pour des raisons de sécurité, ne partagez jamais ce lien.
                             </p>
                         </td>
@@ -133,7 +133,7 @@ HTML;
         return <<<TEXT
 Bonjour {$firstName},
 
-Vous avez demandé à vous connecter à votre espace sensëa Snoezelen.
+Vous avez demandé à vous connecter à votre espace sensaë Snoezelen.
 
 Cliquez sur le lien suivant pour accéder à votre compte :
 {$link}
@@ -143,7 +143,7 @@ Ce lien est valable pendant {$expiryMinutes} minutes et ne peut être utilisé q
 Si vous n'avez pas demandé ce lien, vous pouvez ignorer cet email en toute sécurité.
 
 ---
-Cet email a été envoyé par sensëa Snoezelen.
+Cet email a été envoyé par sensaë Snoezelen.
 Pour des raisons de sécurité, ne partagez jamais ce lien.
 TEXT;
     }
@@ -158,7 +158,7 @@ TEXT;
             $this->mailer->addAddress($email);
 
             $this->mailer->isHTML(true);
-            $this->mailer->Subject = 'Votre séance gratuite vous attend ! - sensëa Snoezelen';
+            $this->mailer->Subject = 'Votre séance gratuite vous attend ! - sensaë Snoezelen';
 
             $bookingUrl = self::env('FRONTEND_URL', 'http://localhost:5173') . '/booking';
 
@@ -181,7 +181,7 @@ TEXT;
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Votre séance gratuite - sensëa</title>
+    <title>Votre séance gratuite - sensaë</title>
 </head>
 <body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7fa;">
     <table role="presentation" style="width: 100%; border-collapse: collapse;">
@@ -223,7 +223,7 @@ TEXT;
                         <td style="padding: 20px 40px; background-color: #f8f9fa; border-radius: 0 0 12px 12px; text-align: center;">
                             <p style="margin: 0; font-size: 12px; color: #999;">
                                 Ce code est personnel et ne peut être utilisé qu'une seule fois.<br>
-                                sensëa Snoezelen - Merci pour votre confiance.
+                                sensaë Snoezelen - Merci pour votre confiance.
                             </p>
                         </td>
                     </tr>
@@ -251,7 +251,7 @@ Réservez votre séance : {$bookingUrl}
 
 ---
 Ce code est personnel et ne peut être utilisé qu'une seule fois.
-sensëa Snoezelen - Merci pour votre confiance.
+sensaë Snoezelen - Merci pour votre confiance.
 TEXT;
     }
 }

@@ -3,7 +3,7 @@
 // Tâches planifiées pour le système de réservation
 //
 // À exécuter via cron, par exemple :
-//   Toutes les 15 min : 0,15,30,45 * * * * php booking-tasks.php >> /var/log/sensea-booking.log 2>&1
+//   Toutes les 15 min : 0,15,30,45 * * * * php booking-tasks.php >> /var/log/sensae-booking.log 2>&1
 //
 // Ou pour des tâches spécifiques :
 //   Envoi des rappels (tous les jours à 18h) :

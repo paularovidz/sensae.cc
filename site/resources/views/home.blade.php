@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', $seo['seo_title'] ?? 'sensëa - Salle Snoezelen')
+@section('title', $seo['seo_title'] ?? 'sensaë - Salle Snoezelen')
 
 @section('content')
     {{-- Hero --}}
@@ -16,7 +16,7 @@
             <div data-hero-image class="relative mx-4 mt-12 -mb-4 max-w-screen-xl md:m-0 md:mx-auto md:mt-20">
                 <div class="relative">
                     <div class="overflow-hidden rounded-t-2xl bg-black border-2 border-b-0 border-[#0e0c0c] md:rounded-t-3xl">
-                        <x-image slug="snoezelen-sensea" alt="Salle Snoezelen sensëa" class="w-full h-full object-cover" loading="eager" fetchpriority="high" />
+                        <x-image slug="snoezelen-sensae" alt="Salle Snoezelen sensaë" class="w-full h-full object-cover" loading="eager" fetchpriority="high" />
                     </div>
                     <div data-hero-image-glow class="hero-image-glow"></div>
                 </div>

@@ -1,9 +1,9 @@
 ---
-title: "Salle Snoezelen Dunkerque - sensëa"
+title: "Salle Snoezelen Dunkerque - sensaë"
 h1: "Salle Snoezelen Dunkerque"
 big_title: "Espace Snoezelen pour une **expérience multi-sensorielle** à Dunkerque"
 description: ""
-image: "/images/snoezelen-sensea.jpg"
+image: "/images/snoezelen-sensae.jpg"
 draft: false
 buttons:
   - enable: true

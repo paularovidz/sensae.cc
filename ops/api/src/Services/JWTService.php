@@ -21,7 +21,7 @@ class JWTService
     {
         $issuedAt = time();
         $payload = array_merge($payload, [
-            'iss' => 'ops.sensea.cc',
+            'iss' => 'ops.sensae.cc',
             'iat' => $issuedAt,
             'exp' => $issuedAt + self::ACCESS_TOKEN_EXPIRY,
             'type' => 'access'

@@ -351,7 +351,7 @@ class BookingController
         }
 
         $icsContent = ICSGeneratorService::generateCalendarFile($bookings);
-        $headers = ICSGeneratorService::getDownloadHeaders('sensea-reservations.ics');
+        $headers = ICSGeneratorService::getDownloadHeaders('sensae-reservations.ics');
 
         foreach ($headers as $name => $value) {
             header("{$name}: {$value}");

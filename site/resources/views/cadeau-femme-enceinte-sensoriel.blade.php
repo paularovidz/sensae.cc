@@ -1,9 +1,9 @@
 @extends('layouts.immersive')
 
 @section('meta')
-    <title>Cadeau femme enceinte sensoriel : une séance Snoezelen — sensëa</title>
+    <title>Cadeau femme enceinte sensoriel : une séance Snoezelen — sensaë</title>
     <meta name="description" content="Offrez une expérience sensorielle unique à une future maman. Séance Snoezelen pour femme enceinte : détente profonde, connexion avec bébé, bien-être prénatal.">
-    <meta property="og:title" content="Cadeau femme enceinte sensoriel — sensëa">
+    <meta property="og:title" content="Cadeau femme enceinte sensoriel — sensaë">
     <meta property="og:description" content="Un cocon sensoriel pour future maman. Du bien-être à deux, avant la rencontre.">
     <meta property="og:type" content="website">
 @endsection

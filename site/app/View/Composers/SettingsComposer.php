@@ -11,7 +11,7 @@ class SettingsComposer
     {
         $menu = Setting::get('menu', [
             'logo_slug' => null,
-            'text' => 'sensëa',
+            'text' => 'sensaë',
             'entries' => [],
             'cta_text' => '',
             'cta_url' => '',

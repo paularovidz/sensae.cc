@@ -1,9 +1,9 @@
 @extends('layouts.immersive')
 
 @section('meta')
-    <title>Comment se passe une première séance Snoezelen ? — sensëa</title>
+    <title>Comment se passe une première séance Snoezelen ? — sensaë</title>
     <meta name="description" content="Découvrez le déroulement d'une première séance Snoezelen : accueil, découverte sensorielle, exploration, apaisement et retour. On ne peut pas rater une séance.">
-    <meta property="og:title" content="Votre première séance Snoezelen — sensëa">
+    <meta property="og:title" content="Votre première séance Snoezelen — sensaë">
     <meta property="og:description" content="Pas de protocole. Pas de performance. Juste un moment pour vous.">
     <meta property="og:type" content="website">
 @endsection
@@ -31,7 +31,7 @@
             <p class="ps-line">Le cadre est posé : <strong>durée, liberté, zéro obligation</strong></p>
             <p class="ps-line">Vos <strong>sensibilités</strong> sont recueillies avec attention</p>
             <p class="ps-line">Votre état émotionnel et corporel est <strong>observé</strong></p>
-            <p class="ps-small">La première séance dure en moyenne 30 à 60 minutes</p>
+            <p class="ps-small">La première séance dure en moyenne 45 à 60 minutes</p>
         </div>
     </section>
 

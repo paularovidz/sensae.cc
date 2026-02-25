@@ -1,4 +1,4 @@
-# Système d'animations GSAP — sensëa
+# Système d'animations GSAP — sensaë
 
 Guide de référence pour animer les composants du site. Toutes les animations sont pilotées par **data-attributes** — pas de JS custom nécessaire pour les nouveaux composants.
 

@@ -178,14 +178,14 @@ class Factory
         ");
         $stmt->execute([
             'id' => $id,
-            'email' => 'bonjour@sensea.cc',
+            'email' => 'bonjour@sensae.cc',
             'first_name' => 'Céline',
             'last_name' => 'Delcloy'
         ]);
 
         return [
             'id' => $id,
-            'email' => 'bonjour@sensea.cc',
+            'email' => 'bonjour@sensae.cc',
             'first_name' => 'Céline',
             'last_name' => 'Delcloy'
         ];

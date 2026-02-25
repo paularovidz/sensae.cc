@@ -2,12 +2,12 @@
 [site]
   title                = "Salle Snoezelen Audruicq" # Shared title for SEO and OpenGraph
   description          = "Salle Snoezelen à Audruicq, séances multi-sensorielles pour adultes, personnes agées, ou enfants" # Shared description for SEO and OpenGraph
-  tagline              = "sensëa"
+  tagline              = "sensaë"
   tagline_separator    = "" # default is " - " 
-  base_url             = "https://sensea.cc" # Base URL for the site and used in OpenGraph meta tags.
+  base_url             = "https://sensae.cc" # Base URL for the site and used in OpenGraph meta tags.
   logo                 = "/images/logo.png" # Path to the site's logo
   logo_hover_animation = false # Enable or disable logo hover animation
-  logo_text            = "sensëa" # Text displayed next to the logo
+  logo_text            = "sensaë" # Text displayed next to the logo
   logo_width           = "135px" # Width of the logo
   logo_height          = "33px" # Height of the logo
 
@@ -25,7 +25,7 @@
 # Specific SEO configurations that complement the general site settings.
 # -----------------------------------------------------------------------------------------------------------------------------------
 [seo]
-  author = "sensëa"
+  author = "sensaë"
   robots = "index, follow" # Instructs search engines on how to crawl and index the pages.
 
   [seo.robots_txt]

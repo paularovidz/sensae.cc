@@ -1,6 +1,6 @@
 {
-    "name": "sensea/ops-api",
-    "description": "API for Sensea Operations Management",
+    "name": "sensae/ops-api",
+    "description": "API for sensae Operations Management",
     "type": "project",
     "require": {
         "php": ">=8.2",

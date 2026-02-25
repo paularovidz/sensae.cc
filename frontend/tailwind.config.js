@@ -10,20 +10,20 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Override indigo with sensea brand colors
+        // Override indigo with sensae brand colors
         indigo: {
           50: '#faf5ff',
           100: '#f3e8ff',
           200: '#e9d5ff',
           300: '#d8b4fe',
           400: '#a855f7',
-          500: '#9333ea',   // sensea-light
-          600: '#721ad6',   // sensea (main CTA)
-          700: '#5b14a8',   // sensea-dark
+          500: '#9333ea',   // sensae-light
+          600: '#721ad6',   // sensae (main CTA)
+          700: '#5b14a8',   // sensae-dark
           800: '#4c1389',
           900: '#3b0f6a',
         },
-        sensea: {
+        sensae: {
           light: '#9333ea',
           DEFAULT: '#721ad6',
           dark: '#5b14a8'
@@ -35,8 +35,8 @@ export default {
         heading: ['Syne', 'system-ui', 'sans-serif'],
       },
       backgroundImage: {
-        'sensea-gradient': 'linear-gradient(82.48deg, transparent -1.1%, rgba(114, 26, 214, 0.36) 96.45%)',
-        'sensea-cta': 'linear-gradient(to right, #9333ea, #721ad6)',
+        'sensae-gradient': 'linear-gradient(82.48deg, transparent -1.1%, rgba(114, 26, 214, 0.36) 96.45%)',
+        'sensae-cta': 'linear-gradient(to right, #9333ea, #721ad6)',
       }
     },
   },

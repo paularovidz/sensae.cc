@@ -88,7 +88,7 @@
             <!-- Compte désactivé : afficher contact -->
             <p v-if="isClientDeactivated" class="text-sm text-gray-400 mt-1">
               Contactez-nous par email à
-              <a href="mailto:bonjour@sensea.cc" class="text-indigo-400 hover:text-indigo-300">bonjour@sensea.cc</a>
+              <a href="mailto:bonjour@sensae.cc" class="text-indigo-400 hover:text-indigo-300">bonjour@sensae.cc</a>
               ou par téléphone au
               <a href="tel:+33600000000" class="text-indigo-400 hover:text-indigo-300">06 00 00 00 00</a>.
             </p>

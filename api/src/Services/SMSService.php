@@ -15,7 +15,7 @@ class SMSService
 {
     private const API_ENDPOINT = 'https://eu.api.ovh.com/1.0';
     private const CREDITS_CACHE_TTL = 3600; // 1 heure en secondes
-    private const CREDITS_CACHE_FILE = '/tmp/sensea_sms_credits_cache.json';
+    private const CREDITS_CACHE_FILE = '/tmp/sensae_sms_credits_cache.json';
 
     private static function env(string $key, ?string $default = null): ?string
     {
@@ -76,8 +76,8 @@ class SMSService
         $dateFormatted = self::parseDate($booking['session_date'])->format('d/m à H:i');
         $bookingLabel = self::getBookingLabel($booking);
         $message = self::isPrivatization($booking)
-            ? "Rappel sensëa: {$bookingLabel} est prévue demain {$dateFormatted}. A bientôt !"
-            : "Rappel sensëa: Votre séance pour {$bookingLabel} est prévue demain {$dateFormatted}. A bientôt !";
+            ? "Rappel sensaë: {$bookingLabel} est prévue demain {$dateFormatted}. A bientôt !"
+            : "Rappel sensaë: Votre séance pour {$bookingLabel} est prévue demain {$dateFormatted}. A bientôt !";
 
         return self::send(
             $booking['client_phone'],
@@ -103,8 +103,8 @@ class SMSService
         $dateFormatted = self::parseDate($booking['session_date'])->format('d/m/Y à H:i');
         $bookingLabel = self::getBookingLabel($booking);
         $message = self::isPrivatization($booking)
-            ? "sensëa: Votre RDV du {$dateFormatted} ({$bookingLabel}) est confirmé. A bientôt !"
-            : "sensëa: Votre RDV du {$dateFormatted} pour {$bookingLabel} est confirmé. A bientôt !";
+            ? "sensaë: Votre RDV du {$dateFormatted} ({$bookingLabel}) est confirmé. A bientôt !"
+            : "sensaë: Votre RDV du {$dateFormatted} pour {$bookingLabel} est confirmé. A bientôt !";
 
         return self::send(
             $booking['client_phone'],
@@ -128,7 +128,7 @@ class SMSService
         }
 
         $dateFormatted = self::parseDate($booking['session_date'])->format('d/m/Y');
-        $message = "sensëa: Votre RDV du {$dateFormatted} a été annulé. N'hésitez pas à reprendre RDV sur notre site.";
+        $message = "sensaë: Votre RDV du {$dateFormatted} a été annulé. N'hésitez pas à reprendre RDV sur notre site.";
 
         return self::send(
             $booking['client_phone'],
@@ -169,7 +169,7 @@ class SMSService
             $body = [
                 'message' => $message,
                 'receivers' => [$formattedPhone],
-                'sender' => 'sensëa', // Nom de l'expéditeur (max 11 caractères)
+                'sender' => 'sensaë', // Nom de l'expéditeur (max 11 caractères)
                 'noStopClause' => true, // Pas de mention STOP (pour SMS transactionnels)
                 'priority' => 'high',
                 'validityPeriod' => 2880 // 48h de validité

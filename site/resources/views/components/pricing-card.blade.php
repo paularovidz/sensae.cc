@@ -33,6 +33,8 @@
 
                 @if($totalPrice && $totalSessions)
                     <p class="mt-2 text-sm text-text-default/60">soit {{ $totalPrice }}€ les {{ $totalSessions }} séances</p>
+                @else
+                    <p class="mt-2 text-sm text-text-default/60">&nbsp;</p>
                 @endif
             </div>
 

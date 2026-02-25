@@ -45,7 +45,7 @@
 }
 
 .booking-step-active {
-  @apply bg-sensea text-white;
+  @apply bg-indigo-600 text-white;
 }
 
 .booking-step-completed {

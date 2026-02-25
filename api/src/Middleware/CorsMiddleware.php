@@ -14,7 +14,7 @@ class CorsMiddleware
     public static function handle(): void
     {
         $allowedOrigins = [
-            self::env('FRONTEND_URL', 'https://suivi.sensea.cc')
+            self::env('FRONTEND_URL', 'https://suivi.sensae.cc')
         ];
 
         // In development, allow localhost

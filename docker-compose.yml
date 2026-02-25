@@ -45,8 +45,8 @@ services:
       MAIL_PORT: 1025
       MAIL_USER: ""
       MAIL_PASS: ""
-      MAIL_FROM: noreply@sensea.local
-      MAIL_FROM_NAME: sensëa Snoezelen
+      MAIL_FROM: noreply@sensae.local
+      MAIL_FROM_NAME: sensaë Snoezelen
       APP_URL: http://localhost:8080
       FRONTEND_URL: http://localhost:5173
       ENV: development
@@ -54,7 +54,7 @@ services:
       APP_TIMEZONE: Europe/Paris
       # Booking system
       GOOGLE_ICAL_URL: ${GOOGLE_ICAL_URL:-}
-      BOOKING_ADMIN_EMAILS: ${BOOKING_ADMIN_EMAILS:-admin@sensea.local}
+      BOOKING_ADMIN_EMAILS: ${BOOKING_ADMIN_EMAILS:-admin@sensae.local}
       # OVH SMS (optional)
       OVH_SMS_APP_KEY: ${OVH_SMS_APP_KEY:-}
       OVH_SMS_APP_SECRET: ${OVH_SMS_APP_SECRET:-}
@@ -112,7 +112,7 @@ services:
     container_name: snoezelen_site
     restart: unless-stopped
     environment:
-      APP_NAME: sensea
+      APP_NAME: sensae
       APP_ENV: local
       APP_DEBUG: "true"
       APP_KEY: ${SITE_APP_KEY:-base64:3gv7cXYD+c/E9LWqneoqdLu2KtXqzj/ks4ouF6GFMCc=}
@@ -190,12 +190,12 @@ services:
       MAIL_PORT: 1025
       MAIL_USER: ""
       MAIL_PASS: ""
-      MAIL_FROM: noreply-ops@sensea.cc
-      MAIL_FROM_NAME: sensëa OPS
+      MAIL_FROM: noreply-ops@sensae.cc
+      MAIL_FROM_NAME: sensaë OPS
       APP_URL: http://localhost:8090
       FRONTEND_URL: http://localhost:5180
-      SENSEA_API_URL: http://api
-      SENSEA_API_KEY: ${OPS_API_KEY:-ops-dev-api-key-change-in-production}
+      sensae_API_URL: http://api
+      sensae_API_KEY: ${OPS_API_KEY:-ops-dev-api-key-change-in-production}
       ENV: development
       DEBUG: "true"
       APP_TIMEZONE: Europe/Paris

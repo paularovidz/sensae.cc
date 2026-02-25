@@ -164,7 +164,7 @@ class ManageMenu extends Page
     {
         return [
             'logo_slug' => null,
-            'text' => 'sensëa',
+            'text' => 'sensaë',
             'entries' => [],
             'cta_text' => '',
             'cta_url' => '',

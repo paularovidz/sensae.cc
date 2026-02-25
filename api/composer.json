@@ -1,5 +1,5 @@
 {
-    "name": "sensea/snoezelen-api",
+    "name": "sensae/snoezelen-api",
     "description": "API for Snoezelen session tracking",
     "type": "project",
     "require": {
