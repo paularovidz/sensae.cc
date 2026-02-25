@@ -5,7 +5,7 @@ import { prefersReducedMotion } from '../utils/reduced-motion';
 
 const WHEEL = {
   orbitDuration: 30,
-  entranceDuration: 1.2,
+  entranceDuration: 1.4,
   bubbleStagger: 0.04,
 };
 
@@ -133,9 +133,9 @@ export function initWheel() {
 
   entranceTl.fromTo(allBubbles.slice(0, activeCount), { scale: 0, opacity: 0 }, {
     scale: 1, opacity: 1,
-    duration: 0.6,
+    duration: 0.8,
     stagger: WHEEL.bubbleStagger,
-    ease: 'back.out(1.4)',
+    ease: EASE.reveal,
   }, '-=0.6');
 
   // Hover pause (only when links mode)

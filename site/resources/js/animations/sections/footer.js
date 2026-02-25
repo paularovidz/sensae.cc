@@ -18,13 +18,13 @@ export function initFooter() {
 
   if (columns.length) {
     tl.fromTo(columns, {
-      y: 30,
+      y: 20,
       opacity: 0,
     }, {
       y: 0,
       opacity: 1,
-      duration: 0.6,
-      stagger: 0.1,
+      duration: 0.8,
+      stagger: 0.12,
       ease: EASE.reveal,
     });
   }
@@ -34,8 +34,8 @@ export function initFooter() {
       opacity: 0,
     }, {
       opacity: 1,
-      duration: 0.5,
+      duration: 0.6,
       ease: 'power2.out',
-    }, '-=0.2');
+    }, '-=0.3');
   }
 }

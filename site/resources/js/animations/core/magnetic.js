@@ -24,8 +24,8 @@ export function initMagnetic() {
       gsap.to(el, {
         x: 0,
         y: 0,
-        duration: 0.5,
-        ease: 'elastic.out(1, 0.4)',
+        duration: 0.6,
+        ease: 'power2.out',
       });
     });
   });

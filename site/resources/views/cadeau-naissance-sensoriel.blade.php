@@ -15,10 +15,10 @@
             <h1 class="ps-title">Offrir un éveil sensoriel</h1>
             <p class="ps-subtitle">Un cadeau de naissance qui ne se déballe pas.<br>Il se vit.</p>
         </div>
-        <div class="ps-scroll-hint">
-            <span>Découvrir</span>
-            <div class="ps-scroll-chevron"></div>
-        </div>
+        <button class="ps-start" type="button">
+            <span class="ps-start-btn">Commencer</span>
+            <div class="ps-start-chevron"></div>
+        </button>
         <div class="ps-orb" style="width:300px;height:300px;background:radial-gradient(circle,rgba(210,153,255,0.2),transparent 70%);top:60%;left:50%;transform:translateX(-50%);"></div>
     </section>
 

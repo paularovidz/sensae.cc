@@ -12,7 +12,7 @@ function initCardGrids() {
     if (!items.length) return;
 
     gsap.fromTo(items, {
-      y: 40,
+      y: 24,
       autoAlpha: 0,
     }, {
       y: 0,
@@ -43,7 +43,7 @@ function initCardTilt() {
       gsap.to(card, {
         rotateY: x * maxTilt,
         rotateX: -y * maxTilt,
-        duration: 0.3,
+        duration: 0.4,
         ease: 'power2.out',
         transformPerspective: 1000,
       });
@@ -53,7 +53,7 @@ function initCardTilt() {
       gsap.to(card, {
         rotateY: 0,
         rotateX: 0,
-        duration: 0.5,
+        duration: 0.6,
         ease: 'power2.out',
       });
     });

@@ -15,18 +15,18 @@ export function initFaq() {
         gsap.to(content, {
           height: 0,
           opacity: 0,
-          duration: 0.3,
+          duration: 0.4,
           ease: 'power2.inOut',
           onComplete: () => details.removeAttribute('open'),
         });
-        if (chevron) gsap.to(chevron, { rotation: 0, duration: 0.3, ease: 'power2.inOut' });
+        if (chevron) gsap.to(chevron, { rotation: 0, duration: 0.35, ease: 'power2.inOut' });
       } else {
         details.setAttribute('open', '');
         gsap.fromTo(content,
           { height: 0, opacity: 0 },
-          { height: 'auto', opacity: 1, duration: 0.4, ease: 'power3.out' }
+          { height: 'auto', opacity: 1, duration: 0.5, ease: 'power2.out' }
         );
-        if (chevron) gsap.to(chevron, { rotation: 180, duration: 0.3, ease: 'power2.inOut' });
+        if (chevron) gsap.to(chevron, { rotation: 180, duration: 0.35, ease: 'power2.inOut' });
       }
     });
   });

@@ -1,12 +1,12 @@
 <section class="section-gradient relative after:top-0">
     <div class="container space-y-16 md:space-y-28">
 
-        <div class="mx-auto max-w-2xl text-center">
+        <div class="mx-auto max-w-2xl text-center" data-animate="fade-up">
             <x-pill text="Une approche multisensorielle pour mieux se retrouver" />
-            <h2 class="text-white">Les 3 piliers de l’<span class="font-secondary italic">accompagnement Snoezelen</span></h2>
+            <h2 class="text-white" data-animate="fade-up" data-animate-delay="0.1">Les 3 piliers de l’<span class="font-secondary italic">accompagnement Snoezelen</span></h2>
         </div>
 
-        <div class="grid gap-x-12 gap-y-10 md:grid-cols-2 lg:grid-cols-3 aos-init aos-animate" data-aos="fade-up-sm" data-aos-delay="200">
+        <div class="grid gap-x-12 gap-y-10 md:grid-cols-2 lg:grid-cols-3" data-animate-grid>
             <div class="border-primary/40 before:bg-primary relative space-y-5 before:absolute before:-left-px before:content-[''] last:border-b-0 last:pb-0 max-sm:border-b max-sm:pb-10 before:max-sm:bottom-0 before:max-sm:h-px before:max-sm:w-1/4 last:before:max-sm:hidden sm:border-l sm:pl-10 before:sm:top-1/2 before:sm:h-1/4 before:sm:w-px before:sm:-translate-y-1/2">
                 <h3 class="h4">🌿 Sensoriel</h3>
                 <p>Au cœur de l’approche Snoezelen, les sens sont sollicités à travers la lumière, les sons, les textures et les odeurs. Cette exploration sensorielle permet à chacun de se reconnecter à son corps, d’éveiller sa curiosité et de découvrir de nouvelles façons d’entrer en contact avec son environnement.</p>

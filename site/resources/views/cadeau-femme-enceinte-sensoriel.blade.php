@@ -15,10 +15,10 @@
             <h1 class="ps-title">Un cocon sensoriel<br>pour future maman</h1>
             <p class="ps-subtitle">Du bien-être à deux,<br>avant la rencontre.</p>
         </div>
-        <div class="ps-scroll-hint">
-            <span>Découvrir</span>
-            <div class="ps-scroll-chevron"></div>
-        </div>
+        <button class="ps-start" type="button">
+            <span class="ps-start-btn">Commencer</span>
+            <div class="ps-start-chevron"></div>
+        </button>
         <div class="ps-orb" style="width:300px;height:300px;background:radial-gradient(circle,rgba(210,153,255,0.2),transparent 70%);top:60%;left:50%;transform:translateX(-50%);"></div>
     </section>
 

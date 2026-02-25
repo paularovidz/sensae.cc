@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     @yield('meta')
+    <script>if('scrollRestoration' in history)history.scrollRestoration='manual';window.scrollTo(0,0);</script>
     <style>
         @font-face { font-family:'Satoshi'; src:url('/fonts/satoshi-regular.woff2') format('woff2'); font-weight:400; font-display:swap; }
         @font-face { font-family:'Satoshi'; src:url('/fonts/satoshi-medium.woff2') format('woff2'); font-weight:500; font-display:swap; }
@@ -22,13 +23,20 @@
             --ps-gold: #ffd699;
         }
 
-        html { background: var(--ps-bg); }
+        html {
+            background: var(--ps-bg);
+            scroll-snap-type: y mandatory;
+        }
         body {
             background: var(--ps-bg);
             color: var(--ps-white);
             font-family: 'Satoshi', system-ui, sans-serif;
             -webkit-font-smoothing: antialiased;
             overflow-x: hidden;
+        }
+        @media (pointer: fine) {
+            body { cursor: none; }
+            a, button { cursor: none; }
         }
 
         /* --- Sections --- */
@@ -40,6 +48,8 @@
             align-items: center;
             justify-content: center;
             overflow: hidden;
+            scroll-snap-align: start;
+            scroll-snap-stop: always;
         }
 
         .ps-section-inner {
@@ -81,7 +91,7 @@
             font-size: clamp(0.95rem, 2.5vw, 1.15rem);
             font-weight: 400;
             letter-spacing: 0.04em;
-            color: rgba(255, 250, 245, 0.55);
+            color: rgba(255, 250, 245, 0.72);
             line-height: 1.7;
             opacity: 0;
         }
@@ -89,7 +99,7 @@
         .ps-line {
             font-size: clamp(0.9rem, 2vw, 1.05rem);
             letter-spacing: 0.03em;
-            color: rgba(255, 250, 245, 0.65);
+            color: rgba(255, 250, 245, 0.82);
             line-height: 1.8;
             margin-bottom: 0.75rem;
             opacity: 0;
@@ -102,7 +112,7 @@
 
         .ps-small {
             font-size: clamp(0.75rem, 1.5vw, 0.85rem);
-            color: rgba(255, 250, 245, 0.3);
+            color: rgba(255, 250, 245, 0.5);
             letter-spacing: 0.05em;
             margin-top: 1rem;
             opacity: 0;
@@ -240,7 +250,7 @@
         }
         .ps-duo-card p {
             font-size: clamp(0.7rem, 1.5vw, 0.8rem);
-            color: rgba(255, 250, 245, 0.6);
+            color: rgba(255, 250, 245, 0.75);
             line-height: 1.5;
         }
 
@@ -336,6 +346,51 @@
         .ps-cta-star svg { animation: ps-spin 10s linear infinite; }
         @keyframes ps-spin { to { transform: rotate(360deg); } }
 
+        /* --- Start button (intro) --- */
+        .ps-start {
+            position: absolute;
+            bottom: 5vh;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            opacity: 0;
+            font-family: 'Satoshi', system-ui, sans-serif;
+        }
+        .ps-start-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 28px;
+            border-radius: 999px;
+            border: 1px solid rgba(114, 26, 214, 0.35);
+            background: rgba(114, 26, 214, 0.1);
+            color: var(--ps-white);
+            font-size: clamp(0.8rem, 2vw, 0.9rem);
+            font-weight: 500;
+            letter-spacing: 0.06em;
+            transition: background 0.4s, border-color 0.4s, transform 0.3s;
+        }
+        .ps-start:hover .ps-start-btn {
+            background: rgba(114, 26, 214, 0.2);
+            border-color: rgba(114, 26, 214, 0.5);
+            transform: scale(1.03);
+        }
+        .ps-start-chevron {
+            width: 16px;
+            height: 16px;
+            border-right: 1.5px solid rgba(255, 250, 245, 0.3);
+            border-bottom: 1.5px solid rgba(255, 250, 245, 0.3);
+            transform: rotate(45deg);
+            animation: ps-bounce 2s ease-in-out infinite;
+        }
+
         /* --- Home link --- */
         .ps-home {
             position: fixed;
@@ -350,6 +405,74 @@
             transition: color 0.3s;
         }
         .ps-home:hover { color: var(--ps-white); }
+
+        /* --- Sound toggle --- */
+        .ps-sound {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            z-index: 50;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 14px;
+            border: 1px solid rgba(255, 250, 245, 0.1);
+            border-radius: 999px;
+            background: rgba(255, 250, 245, 0.03);
+            color: rgba(255, 250, 245, 0.35);
+            font-family: 'Satoshi', system-ui, sans-serif;
+            font-size: 0.65rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: color 0.4s, border-color 0.4s, background 0.4s;
+        }
+        .ps-sound:hover {
+            color: rgba(255, 250, 245, 0.6);
+            border-color: rgba(255, 250, 245, 0.2);
+        }
+        .ps-sound.is-active {
+            color: var(--ps-rose);
+            border-color: rgba(210, 153, 255, 0.3);
+            background: rgba(210, 153, 255, 0.06);
+        }
+        .ps-sound-icon {
+            position: relative;
+            width: 16px;
+            height: 16px;
+        }
+        .ps-sound-icon svg {
+            width: 16px;
+            height: 16px;
+            fill: currentColor;
+        }
+        .ps-sound-bars {
+            display: flex;
+            align-items: center;
+            gap: 2px;
+            height: 12px;
+        }
+        .ps-sound-bar {
+            width: 2px;
+            height: 4px;
+            background: currentColor;
+            border-radius: 1px;
+            transition: height 0.3s;
+        }
+        .ps-sound.is-active .ps-sound-bar {
+            animation: ps-sound-eq 1.2s ease-in-out infinite;
+        }
+        .ps-sound.is-active .ps-sound-bar:nth-child(1) { animation-delay: 0s; }
+        .ps-sound.is-active .ps-sound-bar:nth-child(2) { animation-delay: 0.15s; }
+        .ps-sound.is-active .ps-sound-bar:nth-child(3) { animation-delay: 0.3s; }
+        @keyframes ps-sound-eq {
+            0%, 100% { height: 4px; }
+            50% { height: 12px; }
+        }
+        @media (max-width: 640px) {
+            .ps-sound { right: 12px; top: 16px; padding: 6px 10px; }
+            .ps-sound-label { display: none; }
+        }
 
         /* --- Right-side scroll indicator --- */
         .ps-nav {
@@ -376,19 +499,30 @@
             width: 6px;
             height: 6px;
             border-radius: 50%;
-            background: rgba(255, 250, 245, 0.15);
+            background: rgba(255, 250, 245, 0.3);
             transition: background 0.4s, transform 0.4s, box-shadow 0.4s;
             flex-shrink: 0;
+            cursor: pointer;
+            position: relative;
+        }
+        .ps-nav-dot::before {
+            content: '';
+            position: absolute;
+            inset: -8px;
+            border-radius: 50%;
+        }
+        .ps-nav-dot:hover:not(.is-active) {
+            background: rgba(255, 250, 245, 0.55);
         }
         .ps-nav-dot.is-active {
-            background: rgba(210, 153, 255, 0.7);
+            background: rgba(210, 153, 255, 0.8);
             transform: scale(1.5);
-            box-shadow: 0 0 10px rgba(210, 153, 255, 0.3);
+            box-shadow: 0 0 10px rgba(210, 153, 255, 0.4);
         }
         .ps-nav-line {
             width: 1px;
             height: 16px;
-            background: rgba(255, 250, 245, 0.08);
+            background: rgba(255, 250, 245, 0.15);
             flex-shrink: 0;
         }
         .ps-nav-label {
@@ -409,9 +543,28 @@
             .ps-nav-label { display: none; }
         }
 
+        /* --- Custom cursor --- */
+        .ps-cursor {
+            position: fixed;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--ps-white);
+            pointer-events: none;
+            z-index: 100;
+            transform: translate(-50%, -50%);
+            opacity: 0;
+            mix-blend-mode: difference;
+            will-change: transform;
+        }
+        @media (pointer: coarse) {
+            .ps-cursor { display: none !important; }
+        }
+
         /* --- Reduced motion --- */
         @media (prefers-reduced-motion: reduce) {
-            .ps-section { height: auto; min-height: 60vh; padding: 4rem 0; }
+            html { scroll-snap-type: none; }
+            .ps-section { height: auto; min-height: 60vh; padding: 4rem 0; scroll-snap-align: none; }
             .ps-num, .ps-title, .ps-subtitle, .ps-line, .ps-small,
             .ps-duo-card, .ps-pill, .ps-cta, .ps-scroll-hint {
                 opacity: 1 !important;
@@ -421,7 +574,9 @@
             .ps-particle, .ps-orb { display: none !important; }
             .ps-pulse, .ps-pulse-outer { display: none !important; }
             .ps-scroll-hint { display: none !important; }
+            .ps-start { opacity: 1 !important; }
             .ps-nav { display: none !important; }
+            .ps-sound { display: none !important; }
             @keyframes ps-bounce { 0%,100% { transform: none; } }
             @keyframes ps-float { 0%,100% { transform: none; } }
             @keyframes ps-wave-expand { 0%,100% { transform: none; opacity: 0.3; } }
@@ -430,7 +585,18 @@
 </head>
 <body>
 
+    <div class="ps-cursor" data-ps-cursor></div>
     <a href="/" class="ps-home">sensëa</a>
+
+    {{-- Sound toggle --}}
+    <button class="ps-sound" data-immersive-sound aria-pressed="false" aria-label="Activer le son ambiant">
+        <span class="ps-sound-bars">
+            <span class="ps-sound-bar"></span>
+            <span class="ps-sound-bar"></span>
+            <span class="ps-sound-bar"></span>
+        </span>
+        <span class="ps-sound-label">Son</span>
+    </button>
 
     {{-- Right-side scroll indicator --}}
     <nav class="ps-nav" aria-hidden="true">
@@ -456,6 +622,8 @@
 
     <script src="/js/gsap.min.js"></script>
     <script src="/js/ScrollTrigger.min.js"></script>
+    <script src="/js/ScrollToPlugin.min.js"></script>
     <script src="/js/premiere-seance.js"></script>
+    <script src="/js/immersive-audio.js"></script>
 </body>
 </html>

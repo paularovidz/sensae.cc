@@ -2,11 +2,11 @@ import gsap from 'gsap';
 import { DURATION, EASE, SCROLL } from '../config';
 
 const ANIMATION_MAP = {
-  'fade-up':    { y: 30, autoAlpha: 0 },
+  'fade-up':    { y: 20, autoAlpha: 0 },
   'fade-in':    { autoAlpha: 0 },
-  'fade-left':  { x: -30, autoAlpha: 0 },
-  'fade-right': { x: 30, autoAlpha: 0 },
-  'scale-in':   { scale: 0.95, autoAlpha: 0 },
+  'fade-left':  { x: -20, autoAlpha: 0 },
+  'fade-right': { x: 20, autoAlpha: 0 },
+  'scale-in':   { scale: 0.97, autoAlpha: 0 },
 };
 
 const TO_MAP = {
