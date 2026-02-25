@@ -79,8 +79,7 @@ class ManageMenu extends Page
                                         ->live(),
                                     TextInput::make('url')
                                         ->label('URL')
-                                        ->helperText('Relatif (/page) ou absolu (https://...)')
-                                        ->visible(fn ($get) => $get('type') === 'link'),
+                                        ->helperText('Relatif (/page) ou absolu (https://...). Pour un dropdown, lien au clic sur le libellé.'),
                                 ]),
                                 Repeater::make('submenus')
                                     ->label('Sous-menus')
@@ -113,6 +112,13 @@ class ManageMenu extends Page
                                                         ->required(),
                                                 ]),
                                             ]),
+                                        Grid::make(2)->schema([
+                                            TextInput::make('cta_text')
+                                                ->label('Texte du CTA')
+                                                ->helperText('Facultatif — bouton en bas du sous-menu'),
+                                            TextInput::make('cta_url')
+                                                ->label('URL du CTA'),
+                                        ]),
                                     ]),
                             ]),
                     ]),

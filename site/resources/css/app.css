@@ -5,6 +5,10 @@
 @source '../**/*.blade.php';
 @source '../**/*.js';
 
+html {
+  scroll-behavior: smooth;
+}
+
 /* Register custom properties for GPU-animated conic-gradients */
 @property --glow-angle {
   syntax: '<angle>';
@@ -111,6 +115,47 @@
     --default-transition-timing-function: .15s
 }
 
+.prose-styles {
+    --tw-prose-body: oklch(37.3% .034 259.733);
+    --tw-prose-headings: oklch(21% .034 264.665);
+    --tw-prose-lead: oklch(44.6% .03 256.802);
+    --tw-prose-links: oklch(21% .034 264.665);
+    --tw-prose-bold: oklch(21% .034 264.665);
+    --tw-prose-counters: oklch(55.1% .027 264.364);
+    --tw-prose-bullets: oklch(87.2% .01 258.338);
+    --tw-prose-hr: oklch(92.8% .006 264.531);
+    --tw-prose-quotes: oklch(21% .034 264.665);
+    --tw-prose-quote-borders: oklch(92.8% .006 264.531);
+    --tw-prose-captions: oklch(55.1% .027 264.364);
+    --tw-prose-kbd: oklch(21% .034 264.665);
+    --tw-prose-kbd-shadows: NaN NaN NaN;
+    --tw-prose-code: oklch(21% .034 264.665);
+    --tw-prose-pre-code: oklch(92.8% .006 264.531);
+    --tw-prose-pre-bg: oklch(27.8% .033 256.848);
+    --tw-prose-th-borders: oklch(87.2% .01 258.338);
+    --tw-prose-td-borders: oklch(92.8% .006 264.531);
+    --tw-prose-invert-body: oklch(87.2% .01 258.338);
+    --tw-prose-invert-headings: #fff;
+    --tw-prose-invert-lead: oklch(70.7% .022 261.325);
+    --tw-prose-invert-links: #fff;
+    --tw-prose-invert-bold: #fff;
+    --tw-prose-invert-counters: oklch(70.7% .022 261.325);
+    --tw-prose-invert-bullets: oklch(44.6% .03 256.802);
+    --tw-prose-invert-hr: oklch(37.3% .034 259.733);
+    --tw-prose-invert-quotes: oklch(96.7% .003 264.542);
+    --tw-prose-invert-quote-borders: oklch(37.3% .034 259.733);
+    --tw-prose-invert-captions: oklch(70.7% .022 261.325);
+    --tw-prose-invert-kbd: #fff;
+    --tw-prose-invert-kbd-shadows: 255 255 255;
+    --tw-prose-invert-code: #fff;
+    --tw-prose-invert-pre-code: oklch(87.2% .01 258.338);
+    --tw-prose-invert-pre-bg: #00000080;
+    --tw-prose-invert-th-borders: oklch(44.6% .03 256.802);
+    --tw-prose-invert-td-borders: oklch(37.3% .034 259.733);
+    font-size: 1rem;
+    line-height: 1.75;
+}
+
 /* GSAP: prevent FOUC — elements hidden until GSAP reveals them */
 [data-animate],
 [data-animate-grid] > *,
@@ -163,20 +208,7 @@
   transform: rotate(180deg);
 }
 
-/* Header mobile menu */
-.mobile-menu {
-  display: grid;
-  grid-template-rows: 0fr;
-  transition: grid-template-rows 0.3s ease-out;
-}
-
-.mobile-menu.is-open {
-  grid-template-rows: 1fr;
-}
-
-.mobile-menu > div {
-  overflow: hidden;
-}
+/* Header mobile menu — animated via GSAP, hidden by default */
 
 html {
   font-size: 16px;
@@ -632,7 +664,78 @@ ul:not(.list-unstyled) li::after {
     transition-timing-function: var(--tw-ease, var(--default-transition-timing-function));
     transition-duration: var(--tw-duration, var(--default-transition-duration));
 }
+.prose-styles :where(h1,h2,h3,h4,h5,h6,th):not(:where([class~=not-prose],[class~=not-prose] *)) {
+    margin-top: calc(var(--spacing) * 10);
+    scroll-margin-top: calc(var(--spacing) * 32);
+    --tw-font-weight: var(--font-weight-medium);
+    font-weight: var(--font-weight-medium);
+    color: #fff6f6;
+    margin-bottom: .6em;
+}
+.prose-styles :where(h2):not(:where([class~=not-prose],[class~=not-prose] *)), .prose-styles :where(h3):not(:where([class~=not-prose],[class~=not-prose] *)), .prose-styles :where(h4):not(:where([class~=not-prose],[class~=not-prose] *)), .prose-styles :where(h5):not(:where([class~=not-prose],[class~=not-prose] *)) {
+    font-size: 1.2825rem;
+}
+.prose-styles :where(p):not(:where([class~=not-prose],[class~=not-prose] *)) {
+    margin-top: calc(var(--spacing) * 2);
+    margin-bottom: calc(var(--spacing) * 3);
+    color: #c8c1c1;
+}
 
+/* Tables — auto-styled to match site theme */
+table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  border-radius: 1rem;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  margin-top: 1.5em;
+  margin-bottom: 1.5em;
+  font-size: 0.875rem;
+}
+
+thead {
+  background: color-mix(in oklab, var(--color-primary) 15%, var(--color-body));
+}
+
+thead th {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-light);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid color-mix(in oklab, var(--color-primary) 30%, var(--color-border));
+}
+
+tbody tr {
+  border-bottom: 1px solid var(--color-border);
+}
+
+tbody tr:last-child {
+  border-bottom: none;
+}
+
+tbody td {
+  padding: 0.75rem 1rem;
+  color: var(--color-text-default);
+  vertical-align: top;
+}
+
+tbody tr:nth-child(even) {
+  background: color-mix(in oklab, var(--color-primary) 5%, transparent);
+}
+
+[data-lk], [data-lkb] {
+  cursor: pointer;
+}
+
+@media (max-width: 440px) {
+  h2, .h2 {
+    font-size: 2rem;
+  }
+}
 @media (min-width: 440px) {
   .container {
     max-width: 440px;

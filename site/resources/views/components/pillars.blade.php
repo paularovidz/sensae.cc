@@ -1,4 +1,4 @@
-<section class="section-gradient relative after:top-0">
+<section id="piliers" class="section-gradient relative after:top-0">
     <div class="container space-y-16 md:space-y-28">
 
         <div class="mx-auto max-w-2xl text-center" data-animate="fade-up">

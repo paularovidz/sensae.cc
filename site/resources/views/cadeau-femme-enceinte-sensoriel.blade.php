@@ -110,13 +110,19 @@
         <div class="ps-section-inner">
             <h2 class="ps-title" style="font-size:clamp(2rem,6vw,3.8rem);">Offrir du temps,<br>du calme, de la douceur</h2>
             <p class="ps-subtitle">Le plus beau cadeau pour une future maman,<br>c'est un moment rien que pour elle.</p>
-            <div class="ps-cta">
-                <a href="https://sensae.cc/booking" target="_blank">
-                    Offrir cette expérience
+            <div class="ps-cta ps-cta-duo">
+                <a href="https://sensae.cc/booking" target="_blank" class="ps-cta-btn">
+                    Réserver une séance
                     <span class="ps-cta-star">
                         <svg width="16" height="16" viewBox="0 0 20 19" fill="none"><path d="M10 0.5C9.554 8.769 9.188 9.099 0 9.5C9.188 9.901 9.554 10.231 10 18.5C10.446 10.231 10.813 9.901 20 9.5C10.813 9.099 10.446 8.769 10 0.5Z" fill="currentColor"/></svg>
                     </span>
                 </a>
+                <button data-tf-popup="{{ $contact['typeform_gift_id'] ?? $contact['typeform_id'] ?? 'EjSgPPjE' }}" data-tf-iframe-props="title=Offrir une séance sensaë" data-tf-medium="snippet" data-tf-size="90" class="ps-cta-btn ps-cta-btn--outline">
+                    Offrir une séance
+                    <span class="ps-cta-star">
+                        <svg width="16" height="16" viewBox="0 0 20 19" fill="none"><path d="M10 0.5C9.554 8.769 9.188 9.099 0 9.5C9.188 9.901 9.554 10.231 10 18.5C10.446 10.231 10.813 9.901 20 9.5C10.813 9.099 10.446 8.769 10 0.5Z" fill="currentColor"/></svg>
+                    </span>
+                </button>
             </div>
         </div>
         <div class="ps-orb" style="width:500px;height:500px;background:radial-gradient(circle,rgba(210,153,255,0.1),transparent 70%);top:50%;left:50%;transform:translate(-50%,-50%);"></div>

@@ -1,0 +1,17 @@
+/* Remove sticky topbar — make it scroll with content */
+.fi-topbar-ctn {
+    position: relative !important;
+}
+
+/* Sticky toolbar for RichEditor when editing long articles */
+.fi-fo-rich-editor .fi-fo-rich-editor-toolbar {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background-color: white;
+}
+
+/* Dark mode */
+.dark .fi-fo-rich-editor .fi-fo-rich-editor-toolbar {
+    background-color: rgb(31 41 55); /* gray-800 */
+}

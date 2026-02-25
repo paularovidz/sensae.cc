@@ -18,7 +18,7 @@
             <span class="inline-block text-xs py-1">&nbsp;</span>
         @endif
 
-        <h3 class="text-xl md:text-2xl font-medium text-text-light font-secondary">{{ $label }}</h3>
+        <p class="h3 text-xl md:text-2xl font-medium text-text-light font-secondary">{{ $label }}</h3>
 
         <div class="space-y-5">
             @if($description)

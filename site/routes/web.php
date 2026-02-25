@@ -30,7 +30,7 @@ Route::get('/conseils', [ArticleController::class, 'index'])->name('articles.ind
 Route::get('/conseils/{slug}', [ArticleController::class, 'show'])->name('articles.show');
 
 Route::get('/faq', [FaqController::class, 'index'])->name('faq');
-Route::get('/tarifs', [TarifsController::class, 'index'])->name('tarifs');
+Route::get('/tarifs-snoezelen-audruicq', [TarifsController::class, 'index'])->name('tarifs');
 
 Route::get('/salle-snoezelen-{city}', [PageController::class, 'location'])->name('page.location');
 

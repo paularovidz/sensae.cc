@@ -15,6 +15,6 @@ class ViewServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        View::composer('layouts.app', SettingsComposer::class);
+        View::composer(['layouts.app', 'layouts.immersive'], SettingsComposer::class);
     }
 }

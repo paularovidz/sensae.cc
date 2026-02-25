@@ -133,6 +133,7 @@ services:
       - /var/www/html/node_modules
     ports:
       - "8000:80"
+      - "5174:5173"
     depends_on:
       db:
         condition: service_healthy

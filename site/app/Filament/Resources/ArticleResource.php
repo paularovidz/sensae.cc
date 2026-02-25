@@ -6,12 +6,13 @@ use App\Filament\Resources\ArticleResource\Pages;
 use App\Models\Article;
 use App\Filament\Forms\Components\MediaPicker;
 use Filament\Resources\Resource;
-use Filament\Forms\Components\DateTimePicker;
+use Filament\Actions\Action as FormAction;
 use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\TagsInput;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
@@ -54,9 +55,23 @@ class ArticleResource extends Resource
                 RichEditor::make('content')
                     ->label('Contenu')
                     ->required()
+                    ->extraInputAttributes(['style' => 'min-height: 30rem;'])
+                    ->hintAction(
+                        FormAction::make('editHtml')
+                            ->label('HTML')
+                            ->icon('heroicon-o-code-bracket')
+                            ->modalHeading('Éditer le HTML')
+                            ->modalWidth('5xl')
+                            ->fillForm(fn ($get) => ['html' => $get('content')])
+                            ->form([
+                                Textarea::make('html')
+                                    ->label('Code HTML')
+                                    ->rows(30)
+                                    ->extraInputAttributes(['style' => 'font-family: monospace; font-size: 0.85rem;']),
+                            ])
+                            ->action(fn ($set, array $data) => $set('content', $data['html']))
+                    )
                     ->columnSpanFull(),
-                DateTimePicker::make('published_at')
-                    ->label('Date de publication'),
                 Toggle::make('is_published')
                     ->label('Publié')
                     ->default(true),
@@ -70,9 +85,8 @@ class ArticleResource extends Resource
                 TextColumn::make('title')->label('Titre')->searchable()->sortable(),
                 TextColumn::make('author')->label('Auteur'),
                 IconColumn::make('is_published')->label('Publié')->boolean(),
-                TextColumn::make('published_at')->label('Publié le')->dateTime('d/m/Y')->sortable(),
             ])
-            ->defaultSort('published_at', 'desc')
+            ->defaultSort('created_at', 'desc')
             ->actions([
                 EditAction::make(),
                 DeleteAction::make(),

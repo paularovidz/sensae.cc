@@ -12,7 +12,7 @@ class HomeController extends Controller
         return view('home', [
             'sens' => Sens::published()->ordered()->get(),
             'reviews' => Review::published()->ordered()->get(),
-            'faqs' => Faq::published()->ordered()->take(6)->get(),
+            'faqs' => Faq::published()->ordered()->where('category', 'Informations générales')->get(),
         ]);
     }
 }

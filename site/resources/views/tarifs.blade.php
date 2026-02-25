@@ -1,6 +1,7 @@
 @extends('layouts.app')
 
 @section('title', 'Tarifs - sensaë')
+@section('hideGlow', 'true')
 
 @section('content')
     {{-- Hero / Intro --}}
@@ -11,6 +12,8 @@
                 <h2 class="text-white">Nos <span class="font-secondary italic">tarifs</span></h2>
                 <p class="text-text-default mt-4">Des formules adaptées à chaque besoin. Chaque séance est personnalisée et se déroule dans un cadre sensoriel unique.</p>
             </div>
+
+            <x-hero-image slug="snoezelen-sensae" alt="Salle Snoezelen sensaë" />
         </div>
     </section>
 
@@ -136,6 +139,19 @@
             </div>
         </div>
     </section>
+
+    {{-- FAQ Tarifs --}}
+    @if($faqs->count())
+        <section class="section-gradient relative">
+            <div class="container space-y-12 md:space-y-16">
+                <div class="mx-auto max-w-2xl text-center" data-animate="fade-up">
+                    <x-pill text="FAQ" />
+                    <h2>Questions sur les <strong>tarifs</strong></h2>
+                </div>
+                <x-faq :faqs="$faqs" />
+            </div>
+        </section>
+    @endif
 
     {{-- CTA --}}
     <x-cta-section />

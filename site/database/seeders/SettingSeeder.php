@@ -23,6 +23,8 @@ class SettingSeeder extends Seeder
             ['key' => 'contact_email', 'value' => 'bonjour@sensae.cc', 'type' => 'string', 'group' => 'contact', 'label' => 'Email'],
             ['key' => 'contact_phone', 'value' => '', 'type' => 'string', 'group' => 'contact', 'label' => 'Téléphone'],
             ['key' => 'contact_address', 'value' => '', 'type' => 'string', 'group' => 'contact', 'label' => 'Adresse'],
+            ['key' => 'typeform_id', 'value' => 'EjSgPPjE', 'type' => 'string', 'group' => 'contact', 'label' => 'ID Typeform (contact)'],
+            ['key' => 'typeform_gift_id', 'value' => '', 'type' => 'string', 'group' => 'contact', 'label' => 'ID Typeform (carte cadeau)'],
 
             // Social
             ['key' => 'social_facebook', 'value' => '', 'type' => 'string', 'group' => 'social', 'label' => 'Facebook'],

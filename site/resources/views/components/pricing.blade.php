@@ -1,4 +1,6 @@
 {{-- Pricing --}}
+@props(['discoveryOnly' => false])
+
 @php
     $pricing = app(\App\Services\SensaeApiService::class)->getPricing();
     $sessions = $pricing['sessions'] ?? [];
@@ -15,7 +17,7 @@
     $pack2PerSession = $pack2Sessions > 0 ? round($pack2Price / $pack2Sessions) : 0;
     $pack4PerSession = $pack4Sessions > 0 ? round($pack4Price / $pack4Sessions) : 0;
 @endphp
-<section data-animate-border class="py-16">
+<section data-animate-border class="section-pricing py-16">
     <div class="max-w-6xl mx-auto px-4 sm:px-6">
         <h2 data-animate="fade-up" class="text-3xl font-bold text-text-light mb-4 text-center">Des tarifs qui <span class="italic font-secondary">font sens</span></h2>
         <p data-animate="fade-up" data-animate-delay="0.1" class="text-text-default text-center max-w-2xl mx-auto mb-12">
@@ -27,7 +29,7 @@
             <div class="space-y-3">
                 <span class="inline-block text-xs font-medium text-primary bg-primary/10 px-3 py-1 rounded-full">1ère
                     séance</span>
-                <h3 class="text-xl md:text-2xl font-medium text-text-light font-secondary">Séance découverte</h3>
+                <p class="h3 text-xl md:text-2xl font-medium text-text-light font-secondary">Séance découverte</h3>
                 <p class="text-text-default text-sm leading-relaxed max-w-lg">Première séance plus longue pour vous
                     accueillir, comprendre vos attentes et adapter l'environnement sensoriel.</p>
                 <p class="text-xs text-text-default/50">{{ $discoveryDuration }} min</p>
@@ -54,19 +56,25 @@
             </div>
         </div>
 
-        {{-- Séances régulières + packs --}}
-        <div data-animate-grid class="grid grid-cols-1 md:grid-cols-3 gap-5 max-w-6xl mx-auto">
-            <x-pricing-card label="1 séance" :price="$regularPrice" :duration="$regularDuration"
-                description="Pour une envie de se reconnecter à soi-même ou un moment de décompression sensorielle."
-                unit="/ séance" />
+        @if($discoveryOnly)
+            <p data-animate="fade-up" class="text-center mt-6 text-text-default text-sm">
+                Vous êtes déjà venu chez sensaë ? <a href="{{ route('tarifs') }}" class="text-primary hover:underline">Découvrez nos tarifs pour le suivi Snoezelen</a>
+            </p>
+        @else
+            {{-- Séances régulières + packs --}}
+            <div data-animate-grid class="grid grid-cols-1 md:grid-cols-3 gap-5 max-w-6xl mx-auto">
+                <x-pricing-card label="1 séance" :price="$regularPrice" :duration="$regularDuration"
+                    description="Pour une envie de se reconnecter à soi-même ou un moment de décompression sensorielle."
+                    unit="/ séance" />
 
-            <x-pricing-card :label="'Pack ' . $pack2Sessions . ' séances'" :price="$pack2PerSession" :duration="$regularDuration"
-                description="Un suivi régulier pour approfondir les bienfaits sensoriels et installer une routine de bien-être."
-                :total-price="$pack2Price" :total-sessions="$pack2Sessions" :highlight="true" badge="Populaire" unit="/ séance" />
+                <x-pricing-card :label="'Pack ' . $pack2Sessions . ' séances'" :price="$pack2PerSession" :duration="$regularDuration"
+                    description="Un suivi régulier pour approfondir les bienfaits sensoriels et installer une routine de bien-être."
+                    :total-price="$pack2Price" :total-sessions="$pack2Sessions" :highlight="true" badge="Populaire" unit="/ séance" />
 
-            <x-pricing-card :label="'Pack ' . $pack4Sessions . ' séances'" :price="$pack4PerSession" :duration="$regularDuration"
-                description="L'engagement idéal pour un accompagnement complet et des résultats durables."
-                :total-price="$pack4Price" :total-sessions="$pack4Sessions" badge="Meilleur prix" unit="/ séance" />
-        </div>
+                <x-pricing-card :label="'Pack ' . $pack4Sessions . ' séances'" :price="$pack4PerSession" :duration="$regularDuration"
+                    description="L'engagement idéal pour un accompagnement complet et des résultats durables."
+                    :total-price="$pack4Price" :total-sessions="$pack4Sessions" badge="Meilleur prix" unit="/ séance" />
+            </div>
+        @endif
     </div>
 </section>

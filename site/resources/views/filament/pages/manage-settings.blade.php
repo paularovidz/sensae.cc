@@ -146,6 +146,18 @@
                     <label class="st-label">Adresse</label>
                     <input type="text" wire:model="data.contact_address" class="st-input" placeholder="123 rue de la Paix, 62370 Audruicq">
                 </div>
+                <div class="st-grid-2">
+                    <div class="st-field">
+                        <label class="st-label">ID Typeform (contact)</label>
+                        <span class="st-hint">Formulaire de contact général</span>
+                        <input type="text" wire:model="data.typeform_id" class="st-input" placeholder="EjSgPPjE">
+                    </div>
+                    <div class="st-field">
+                        <label class="st-label">ID Typeform (carte cadeau)</label>
+                        <span class="st-hint">Formulaire pour offrir une séance</span>
+                        <input type="text" wire:model="data.typeform_gift_id" class="st-input" placeholder="AbCdEfGh">
+                    </div>
+                </div>
             </div>
 
             {{-- Social --}}

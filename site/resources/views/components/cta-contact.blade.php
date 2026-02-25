@@ -1,7 +1,7 @@
 @props(['label' => 'Ouverture en août', 'star' => false])
 
 <button
-    data-tf-popup="EjSgPPjE"
+    data-tf-popup="{{ $contact['typeform_id'] ?? 'EjSgPPjE' }}"
     data-tf-iframe-props="title=Contact sensaë"
     data-tf-medium="snippet"
     data-tf-size="90"

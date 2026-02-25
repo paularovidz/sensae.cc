@@ -318,7 +318,7 @@
             margin-top: 2rem;
             opacity: 0;
         }
-        .ps-cta a {
+        .ps-cta a, .ps-cta-btn {
             display: inline-flex;
             align-items: center;
             gap: 10px;
@@ -327,13 +327,31 @@
             background: var(--ps-violet);
             color: var(--ps-white);
             text-decoration: none;
+            font-family: 'Satoshi', system-ui, sans-serif;
             font-size: clamp(0.9rem, 2.5vw, 1.05rem);
             font-weight: 500;
             letter-spacing: 0.04em;
-            transition: background 0.3s, transform 0.3s;
+            border: 1px solid transparent;
+            transition: background 0.3s, transform 0.3s, border-color 0.3s;
         }
-        .ps-cta a:hover {
+        .ps-cta a:hover, .ps-cta-btn:hover {
             background: var(--ps-violet-deep);
+            transform: scale(1.03);
+        }
+        .ps-cta-duo {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .ps-cta-btn--outline {
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.3);
+            cursor: pointer;
+        }
+        .ps-cta-btn--outline:hover {
+            background: rgba(255,255,255,0.08);
+            border-color: rgba(255,255,255,0.5);
             transform: scale(1.03);
         }
         .ps-cta-star {
@@ -622,6 +640,7 @@
 
     @yield('sections')
 
+    <script src="//embed.typeform.com/next/embed.js" defer></script>
     <script src="/js/gsap.min.js"></script>
     <script src="/js/ScrollTrigger.min.js"></script>
     <script src="/js/ScrollToPlugin.min.js"></script>

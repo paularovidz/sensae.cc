@@ -11,7 +11,7 @@ class Article extends Model
 
     protected $fillable = [
         'title', 'slug', 'content', 'image', 'excerpt',
-        'author', 'categories', 'is_published', 'published_at',
+        'author', 'categories', 'is_published',
     ];
 
     protected function casts(): array
@@ -19,16 +19,11 @@ class Article extends Model
         return [
             'is_published' => 'boolean',
             'categories' => 'array',
-            'published_at' => 'datetime',
         ];
     }
 
     public function scopePublished($query)
     {
-        return $query->where('is_published', true)
-            ->where(function ($q) {
-                $q->whereNull('published_at')
-                    ->orWhere('published_at', '<=', now());
-            });
+        return $query->where('is_published', true);
     }
 }
