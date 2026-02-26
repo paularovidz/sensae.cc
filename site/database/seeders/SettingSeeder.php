@@ -45,9 +45,45 @@ class SettingSeeder extends Seeder
                 'cta_action' => '',
             ]), 'type' => 'json', 'group' => 'menu', 'label' => 'Configuration du menu'],
 
+            // Footer
+            ['key' => 'footer', 'value' => json_encode([
+                'description' => 'sensëa est une salle multi-sensorielle basée à Audruicq. Fondée par Céline Delcloy, éducatrice spécialisée libéral depuis 2023 et formée par Pétrarque, redécouvrez vos sens et profitez d\'une bulle de paix lors de séances adaptées à tous et toutes.',
+                'columns' => [
+                    [
+                        'title' => 'Ressources',
+                        'links' => [
+                            ['label' => 'Comprendre', 'url' => '/comprendre-sens/'],
+                            ['label' => 'Conseils', 'url' => '/conseils/'],
+                            ['label' => 'FAQ', 'url' => '/faq/'],
+                        ],
+                    ],
+                    [
+                        'title' => 'Liens rapides',
+                        'links' => [
+                            ['label' => 'Salle snoezelen Calais', 'url' => '/salle-snoezelen-calais/'],
+                            ['label' => 'Salle snoezelen Dunkerque', 'url' => '/salle-snoezelen-dunkerque/'],
+                            ['label' => 'Salle snoezelen Boulogne-sur-mer', 'url' => '/salle-snoezelen-boulogne-sur-mer/'],
+                            ['label' => 'Salle snoezelen Saint-Omer', 'url' => '/salle-snoezelen-saint-omer/'],
+                            ['label' => 'Salle snoezelen Ardres', 'url' => '/salle-snoezelen-ardres/'],
+                            ['label' => 'Salle snoezelen Pas-de-Calais', 'url' => '/salle-snoezelen-pas-de-calais/'],
+                        ],
+                    ],
+                ],
+                'bottom_links' => [
+                    ['label' => 'Mentions légales', 'url' => '/mentions-legales/'],
+                ],
+                'credit_name' => 'Paul Delcloy',
+                'credit_url' => 'https://pauld.fr',
+            ]), 'type' => 'json', 'group' => 'footer', 'label' => 'Configuration du footer'],
+
             // Rating (CTA section)
             ['key' => 'rating_score', 'value' => '', 'type' => 'string', 'group' => 'rating', 'label' => 'Note (ex: 4.95/5)'],
             ['key' => 'rating_label', 'value' => '', 'type' => 'string', 'group' => 'rating', 'label' => 'Libellé (ex: Avis Google)'],
+
+            // Map
+            ['key' => 'map_base_name', 'value' => 'Audruicq', 'type' => 'string', 'group' => 'map', 'label' => 'Nom du lieu de base'],
+            ['key' => 'map_base_latitude', 'value' => '50.8792100', 'type' => 'string', 'group' => 'map', 'label' => 'Latitude du lieu de base'],
+            ['key' => 'map_base_longitude', 'value' => '2.0746580', 'type' => 'string', 'group' => 'map', 'label' => 'Longitude du lieu de base'],
 
             // SEO
             ['key' => 'seo_title', 'value' => 'sensaë - Salle Snoezelen', 'type' => 'string', 'group' => 'seo', 'label' => 'Titre du site'],

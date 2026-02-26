@@ -4,9 +4,11 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Media;
+use App\Models\Setting;
 use App\Services\ImageService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
 class MediaApiController extends Controller
@@ -62,7 +64,7 @@ class MediaApiController extends Controller
         $uploaded = [];
 
         foreach ($request->file('files') as $file) {
-            $result = $imageService->storeAsAvif($file);
+            $result = $imageService->storeAsAvif($file, 'media', $request->input('folder'));
 
             $media = Media::create([
                 'slug' => $result['slug'],
@@ -101,9 +103,83 @@ class MediaApiController extends Controller
             'folder' => 'nullable|string|max:100',
         ]);
 
-        $media->update($request->only(['slug', 'alt', 'folder']));
+        $newSlug = $request->input('slug', $media->slug);
+        $newFolder = $request->has('folder') ? $request->input('folder') : $media->folder;
+        $slugChanged = $newSlug !== $media->slug;
+        $folderChanged = $newFolder !== $media->folder;
 
-        return response()->json(['success' => true]);
+        // Move/rename file on disk when slug or folder changes
+        if (($slugChanged || $folderChanged) && $media->path) {
+            $disk = Storage::disk('public');
+            $oldPath = $media->path;
+            $extension = pathinfo($oldPath, PATHINFO_EXTENSION);
+
+            $newDir = $newFolder ? 'media/' . $newFolder : dirname($oldPath);
+            $newPath = $newDir . '/' . $newSlug . '.' . $extension;
+
+            if ($disk->exists($oldPath) && $newPath !== $oldPath) {
+                $targetDir = dirname($disk->path($newPath));
+                if (!is_dir($targetDir)) {
+                    mkdir($targetDir, 0755, true);
+                }
+
+                $disk->move($oldPath, $newPath);
+                $media->path = $newPath;
+            }
+        }
+
+        $oldSlug = $media->slug;
+        $fields = $request->only(['slug', 'alt', 'folder']);
+        if (isset($media->path) && ($slugChanged || $folderChanged)) {
+            $fields['path'] = $media->path;
+        }
+        $media->update($fields);
+
+        // Propagate slug rename across all references
+        if ($slugChanged) {
+            $this->propagateSlugRename($oldSlug, $newSlug);
+        }
+
+        return response()->json(['success' => true, 'url' => $media->getPublicUrl()]);
+    }
+
+    /**
+     * Propagate a media slug rename across all dynamic references.
+     */
+    private function propagateSlugRename(string $oldSlug, string $newSlug): void
+    {
+        // Settings JSON values (menu logo_slug, image_slug in submenus, etc.)
+        $settings = Setting::where('type', 'json')
+            ->where('value', 'like', '%' . $oldSlug . '%')
+            ->get();
+
+        foreach ($settings as $setting) {
+            $updated = str_replace(
+                ['"' . $oldSlug . '"', "\"$oldSlug\""],
+                ['"' . $newSlug . '"', "\"$newSlug\""],
+                $setting->value
+            );
+            if ($updated !== $setting->value) {
+                $setting->update(['value' => $updated]);
+                \Illuminate\Support\Facades\Cache::forget('setting.' . $setting->key);
+                \Illuminate\Support\Facades\Cache::forget('settings.group.' . $setting->group);
+            }
+        }
+
+        // HTML content fields (slug="old-slug" in <x-image> components)
+        $contentTables = [
+            'articles' => 'content',
+            'pages' => 'content',
+            'sens' => 'content',
+        ];
+
+        foreach ($contentTables as $table => $column) {
+            DB::table($table)
+                ->where($column, 'like', '%' . $oldSlug . '%')
+                ->update([
+                    $column => DB::raw("REPLACE($column, '\"$oldSlug\"', '\"$newSlug\"')"),
+                ]);
+        }
     }
 
     public function destroy(Media $media): JsonResponse

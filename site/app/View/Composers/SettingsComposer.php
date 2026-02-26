@@ -18,13 +18,23 @@ class SettingsComposer
             'cta_action' => '',
         ]);
 
+        $footer = Setting::get('footer', [
+            'description' => '',
+            'columns' => [],
+            'bottom_links' => [],
+            'credit_name' => '',
+            'credit_url' => '',
+        ]);
+
         $view->with([
             'colors' => Setting::getGroup('colors'),
             'contact' => Setting::getGroup('contact'),
             'social' => Setting::getGroup('social'),
             'seo' => Setting::getGroup('seo'),
             'rating' => Setting::getGroup('rating'),
+            'mapSettings' => Setting::getGroup('map'),
             'menu' => $menu,
+            'footer' => $footer,
         ]);
     }
 }

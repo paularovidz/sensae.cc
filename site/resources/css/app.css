@@ -211,6 +211,9 @@ h3, .h3 {
 h4, .h4 {
     font-size: 1.82rem;
 }
+h5, .h5 {
+    font-size: 1.35rem;
+}
 
 li {
   position: relative;
@@ -219,6 +222,11 @@ li {
     padding-left: 1.8em;
     margin-top: 0.5em;
     margin-bottom: 0.5em;
+}
+.prose-styles :where(strong):not(:where([class~=not-prose],[class~=not-prose] *)) {
+    --tw-font-weight: var(--font-weight-normal);
+    font-weight: var(--font-weight-normal);
+    color: #d299ff;
 }
 ul:not(.list-unstyled) li::before {
     --tw-content: "";

@@ -24,7 +24,8 @@ Route::middleware(['web', 'auth'])->prefix('admin/media-api')->group(function ()
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
-Route::get('/comprendre/{slug}', [SensController::class, 'show'])->name('sens.show');
+Route::get('/comprendre-sens', [SensController::class, 'index'])->name('sens.index');
+Route::get('/comprendre-sens/{slug}', [SensController::class, 'show'])->name('sens.show');
 
 Route::get('/conseils', [ArticleController::class, 'index'])->name('articles.index');
 Route::get('/conseils/{slug}', [ArticleController::class, 'show'])->name('articles.show');

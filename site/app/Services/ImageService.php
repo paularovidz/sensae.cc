@@ -8,7 +8,7 @@ use Illuminate\Support\Str;
 
 class ImageService
 {
-    public function storeAsAvif(UploadedFile $file, string $directory = 'media'): array
+    public function storeAsAvif(UploadedFile $file, string $directory = 'media', ?string $folder = null): array
     {
         $image = $this->loadImage($file);
         if (!$image) {
@@ -22,7 +22,8 @@ class ImageService
         $slug = $this->uniqueSlug($slug);
 
         $filename = $slug . '.avif';
-        $relativePath = $directory . '/' . date('Y/m') . '/' . $filename;
+        $subDir = $folder ?: date('Y/m');
+        $relativePath = $directory . '/' . $subDir . '/' . $filename;
         $absolutePath = Storage::disk('public')->path($relativePath);
 
         $dir = dirname($absolutePath);

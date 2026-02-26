@@ -99,6 +99,10 @@
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M11.48 3.499a.562.562 0 0 1 1.04 0l2.125 5.111a.563.563 0 0 0 .475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 0 0-.182.557l1.285 5.385a.562.562 0 0 1-.84.61l-4.725-2.885a.562.562 0 0 0-.586 0L6.982 20.54a.562.562 0 0 1-.84-.61l1.285-5.386a.562.562 0 0 0-.182-.557l-4.204-3.602a.562.562 0 0 1 .321-.988l5.518-.442a.563.563 0 0 0 .475-.345L11.48 3.5Z" /></svg>
                     Avis
                 </button>
+                <button type="button" class="st-tab" :class="{ active: tab === 'map' }" @click="tab = 'map'">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" /></svg>
+                    Carte
+                </button>
                 <button type="button" class="st-tab" :class="{ active: tab === 'seo' }" @click="tab = 'seo'">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" /></svg>
                     SEO
@@ -188,6 +192,28 @@
                         <label class="st-label">Libellé</label>
                         <span class="st-hint">Ex : Avis Google</span>
                         <input type="text" wire:model="data.rating_label" class="st-input" placeholder="Avis Google">
+                    </div>
+                </div>
+            </div>
+
+            {{-- Map --}}
+            <div class="st-panel" :class="{ active: tab === 'map' }">
+                <p class="st-section-desc">Point d'arrivée par défaut pour les cartes itinéraires des pages localisées.</p>
+                <div class="st-field">
+                    <label class="st-label">Nom du lieu</label>
+                    <span class="st-hint">Ex : Audruicq</span>
+                    <input type="text" wire:model="data.map_base_name" class="st-input" placeholder="Audruicq">
+                </div>
+                <div class="st-grid-2">
+                    <div class="st-field">
+                        <label class="st-label">Latitude</label>
+                        <span class="st-hint">Ex : 50.8792100</span>
+                        <input type="text" wire:model="data.map_base_latitude" class="st-input" placeholder="50.8792100">
+                    </div>
+                    <div class="st-field">
+                        <label class="st-label">Longitude</label>
+                        <span class="st-hint">Ex : 2.0746580</span>
+                        <input type="text" wire:model="data.map_base_longitude" class="st-input" placeholder="2.0746580">
                     </div>
                 </div>
             </div>

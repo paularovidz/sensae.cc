@@ -9,7 +9,10 @@ use Filament\Resources\Resource;
 use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Toggle;
+use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
@@ -47,12 +50,11 @@ class PageResource extends Resource
                         'location' => 'Ville / Localisation',
                         'legal' => 'Mentions légales',
                     ])
-                    ->default('default'),
+                    ->default('default')
+                    ->live(),
                 TextInput::make('h1')
                     ->label('H1'),
-                TextInput::make('big_title')
-                    ->label('Sur-titre'),
-                MediaPicker::make('image')
+MediaPicker::make('image')
                     ->label('Image'),
                 RichEditor::make('content')
                     ->label('Contenu')
@@ -62,6 +64,27 @@ class PageResource extends Resource
                 TextInput::make('meta_description')
                     ->label('Meta description')
                     ->maxLength(500),
+                Section::make('Carte / Itinéraire')
+                    ->icon('heroicon-o-map-pin')
+                    ->description('Renseignez le nom de la ville. Les coordonnées et le temps de trajet sont calculés automatiquement à la sauvegarde.')
+                    ->columnSpanFull()
+                    ->schema([
+                        TextInput::make('map_city')
+                            ->label('Ville')
+                            ->placeholder('Ex : Calais'),
+                        Grid::make(3)->schema([
+                            Placeholder::make('computed_lat')
+                                ->label('Latitude')
+                                ->content(fn ($record) => $record?->map_latitude ?? '—'),
+                            Placeholder::make('computed_lng')
+                                ->label('Longitude')
+                                ->content(fn ($record) => $record?->map_longitude ?? '—'),
+                            Placeholder::make('computed_time')
+                                ->label('Temps de trajet')
+                                ->content(fn ($record) => $record?->map_travel_time ? $record->map_travel_time . ' min' : '—'),
+                        ]),
+                    ])
+                    ->visible(fn ($get) => $get('template') === 'location'),
                 Toggle::make('is_published')
                     ->label('Publié')
                     ->default(true),
