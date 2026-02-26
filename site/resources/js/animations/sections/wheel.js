@@ -131,10 +131,12 @@ export function initWheel() {
     }, '-=0.4');
   }
 
+  // Stagger from the topmost visible bubble (angle π/2 = index activeCount/4)
+  const topIndex = Math.round(activeCount / 4);
   entranceTl.fromTo(allBubbles.slice(0, activeCount), { scale: 0, opacity: 0 }, {
     scale: 1, opacity: 1,
     duration: 0.8,
-    stagger: WHEEL.bubbleStagger,
+    stagger: { each: WHEEL.bubbleStagger, from: topIndex },
     ease: EASE.reveal,
   }, '-=0.6');
 

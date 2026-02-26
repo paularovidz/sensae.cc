@@ -26,7 +26,16 @@
             <div
                 class="navbar hidden lg:flex lg:items-center">
                 @foreach ($menu['entries'] ?? [] as $entry)
-                    @if (($entry['type'] ?? 'link') === 'link')
+                    @if (($entry['type'] ?? 'link') === 'typeform')
+                        <button
+                            data-tf-popup="{{ $contact['typeform_id'] ?? 'EjSgPPjE' }}"
+                            data-tf-iframe-props="title=Contact sensaë"
+                            data-tf-medium="snippet"
+                            data-tf-size="90"
+                            class="nav-link text-white transition rounded-full hover:bg-white/5 cursor-pointer">
+                            {{ $entry['label'] }}
+                        </button>
+                    @elseif (($entry['type'] ?? 'link') === 'link')
                         <a href="{{ $entry['url'] ?? '#' }}"
                             class="nav-link text-white transition rounded-full hover:bg-white/5">
                             {{ $entry['label'] }}
@@ -138,7 +147,17 @@
 
     <div class="flex flex-col justify-center min-h-full px-8 py-20 space-y-2">
         @foreach ($menu['entries'] ?? [] as $menuIndex => $entry)
-            @if (($entry['type'] ?? 'link') === 'link')
+            @if (($entry['type'] ?? 'link') === 'typeform')
+                <button
+                    data-tf-popup="{{ $contact['typeform_id'] ?? 'EjSgPPjE' }}"
+                    data-tf-iframe-props="title=Contact sensaë"
+                    data-tf-medium="snippet"
+                    data-tf-size="90"
+                    data-mobile-item
+                    class="block px-4 py-3 text-2xl font-medium text-text-light hover:text-primary transition text-left cursor-pointer">
+                    {{ $entry['label'] }}
+                </button>
+            @elseif (($entry['type'] ?? 'link') === 'link')
                 <a href="{{ $entry['url'] ?? '#' }}" data-mobile-item
                     class="block px-4 py-3 text-2xl font-medium text-text-light hover:text-primary transition">
                     {{ $entry['label'] }}

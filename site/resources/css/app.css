@@ -22,30 +22,6 @@ html {
   inherits: false;
 }
 
-/* satoshi-regular - latin */
-@font-face {
-  font-display: swap;
-  font-family: 'Satoshi';
-  font-style: normal;
-  font-weight: 400;
-  src: url('../fonts/satoshi-regular.woff2') format('woff2');
-}
-/* satoshi-regular - latin */
-@font-face {
-  font-display: swap;
-  font-family: 'Satoshi';
-  font-style: normal;
-  font-weight: 500;
-  src: url('../fonts/satoshi-medium.woff2') format('woff2');
-}
-/* Amandine - latin */
-@font-face {
-  font-display: swap;
-  font-family: 'Amandine';
-  font-style: normal;
-  font-weight: 400;
-  src: url('../fonts/amandine.woff2') format('woff2');
-}
 
 ::selection {
   background: var(--color-primary-override, #721ad6);
@@ -166,6 +142,7 @@ html {
 [data-hero-cta],
 [data-hero-image] {
   visibility: hidden;
+  opacity: 0;
 }
 
 @media (prefers-reduced-motion: reduce) {

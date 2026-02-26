@@ -5,8 +5,11 @@
 @section('content')
     <section class="py-16">
         <div class="max-w-6xl mx-auto px-4 sm:px-6">
-            <h1 data-animate="fade-up" class="text-3xl md:text-4xl font-bold text-text-light font-secondary">Conseils & Articles</h1>
-            <p data-animate="fade-up" data-animate-delay="0.1" class="mt-4 text-text-default">Découvrez nos articles sur la stimulation multisensorielle et le Snoezelen.</p>
+            <div class="mx-auto max-w-2xl text-center">
+                <x-pill text="Comprendre" />
+                <h1 data-animate="fade-up" class="text-3xl md:text-4xl font-bold text-text-light">Des conseils <span class="font-secondary italic">pleins de sens</span></h1>
+                <p data-animate="fade-up" data-animate-delay="0.1" class="mt-4 text-text-default">Découvrez nos articles sur la stimulation multisensorielle et le Snoezelen.</p>
+            </div>
 
             <div data-animate-grid class="mt-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 @forelse($articles as $article)
@@ -24,12 +27,12 @@
                                     @endforeach
                                 </div>
                             @endif
-                            <a class="text-lg font-bold text-text-light font-secondary">{{ $article->title }}</a>
+                            <a href="{{ route('articles.show', $article->slug) }}" class="text-lg font-bold text-text-light">{{ $article->title }}</a>
                             @if($article->excerpt)
                                 <p class="mt-2 text-sm text-text-default line-clamp-2">{{ $article->excerpt }}</p>
                             @endif
                         </div>
-                    </a>
+                    </div>
                 @empty
                     <p class="text-text-default col-span-full text-center py-12">Aucun article pour le moment.</p>
                 @endforelse

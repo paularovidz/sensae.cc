@@ -63,7 +63,7 @@ class ManageMenu extends Page
                             ->itemLabel(fn (array $state): ?string => $state['label'] ?? 'Nouvelle entrée')
                             ->addActionLabel('Ajouter une entrée')
                             ->schema([
-                                Grid::make(3)->schema([
+                                Grid::make(2)->schema([
                                     TextInput::make('label')
                                         ->label('Libellé')
                                         ->required()
@@ -73,14 +73,16 @@ class ManageMenu extends Page
                                         ->options([
                                             'link' => 'Lien simple',
                                             'dropdown' => 'Menu déroulant',
+                                            'typeform' => 'Typeform (contact)',
                                         ])
                                         ->default('link')
                                         ->required()
                                         ->live(),
-                                    TextInput::make('url')
-                                        ->label('URL')
-                                        ->helperText('Relatif (/page) ou absolu (https://...). Pour un dropdown, lien au clic sur le libellé.'),
                                 ]),
+                                TextInput::make('url')
+                                    ->label('URL')
+                                    ->visible(fn ($get) => in_array($get('type'), ['link', 'dropdown', null]))
+                                    ->helperText('Relatif (/page) ou absolu (https://...). Pour un dropdown, lien au clic sur le libellé.'),
                                 Repeater::make('submenus')
                                     ->label('Sous-menus')
                                     ->visible(fn ($get) => $get('type') === 'dropdown')
