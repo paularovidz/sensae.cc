@@ -22,7 +22,6 @@ jobs:
       ops-api: ${{ steps.filter.outputs.ops-api }}
       frontend: ${{ steps.filter.outputs.frontend }}
       ops-frontend: ${{ steps.filter.outputs.ops-frontend }}
-      www: ${{ steps.filter.outputs.www }}
       site: ${{ steps.filter.outputs.site }}
       docker-compose: ${{ steps.filter.outputs.docker-compose }}
     steps:
@@ -39,8 +38,6 @@ jobs:
               - 'frontend/**'
             ops-frontend:
               - 'ops/frontend/**'
-            www:
-              - 'www/**'
             site:
               - 'site/**'
             docker-compose:
@@ -171,40 +168,6 @@ jobs:
           retention-days: 1
 
   # ============================================
-  # Build www (only if www/ changed)
-  # ============================================
-  build-www:
-    runs-on: ubuntu-latest
-    needs: changes
-    if: needs.changes.outputs.www == 'true' || github.event_name == 'workflow_dispatch'
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: www/package-lock.json
-
-      - name: Install dependencies
-        working-directory: www
-        run: npm ci
-
-      - name: Build
-        working-directory: www
-        run: npm run build
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: www-dist
-          path: www/dist
-          retention-days: 1
-
-  # ============================================
   # Build Site (only if site/ changed)
   # ============================================
   build-site:
@@ -307,13 +270,6 @@ jobs:
           name: frontend-dist
           path: frontend-dist
 
-      - name: Download www artifact
-        if: needs.changes.outputs.www == 'true' || github.event_name == 'workflow_dispatch'
-        uses: actions/download-artifact@v4
-        with:
-          name: www-dist
-          path: www-dist
-
       - name: Download OPS frontend artifact
         if: needs.changes.outputs.ops-frontend == 'true' || github.event_name == 'workflow_dispatch'
         uses: actions/download-artifact@v4
@@ -342,14 +298,6 @@ jobs:
             -e "ssh -i ~/.ssh/deploy_key" \
             frontend-dist/ \
             ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/home/deploy/apps/snoezelen/frontend/dist/
-
-      - name: Deploy www
-        if: needs.changes.outputs.www == 'true' || github.event_name == 'workflow_dispatch'
-        run: |
-          rsync -avz --delete \
-            -e "ssh -i ~/.ssh/deploy_key" \
-            www-dist/ \
-            ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/home/deploy/apps/snoezelen/www/dist/
 
       - name: Deploy API
         if: needs.changes.outputs.api == 'true' || github.event_name == 'workflow_dispatch'
