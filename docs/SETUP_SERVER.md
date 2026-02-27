@@ -126,6 +126,8 @@ cd ~/apps/snoezelen
 
 ### Site vitrine (sensae.cc)
 
+Reverse proxy vers le container Laravel (port 8000). SSL et gzip gérés par Cloudflare.
+
 ```bash
 sudo nano /etc/nginx/sites-available/sensae.cc
 ```
@@ -133,32 +135,23 @@ sudo nano /etc/nginx/sites-available/sensae.cc
 ```nginx
 server {
     listen 80;
-    server_name sensae.cc www.sensae.cc;
+    server_name www.sensae.cc;
+    return 301 https://sensae.cc$request_uri;
+}
 
-    root /home/deploy/apps/snoezelen/www/dist;
-    index index.html;
+server {
+    listen 80;
+    server_name sensae.cc;
 
-    # Gzip
-    gzip on;
-    gzip_types text/plain text/css application/json application/javascript text/xml application/xml text/javascript image/svg+xml;
-
-    # Cache static assets
-    location /_astro/ {
-        expires 1y;
-        add_header Cache-Control "public, immutable";
-    }
-
-    location /images/ {
-        expires 1y;
-        add_header Cache-Control "public, immutable";
-    }
+    client_max_body_size 20M;
 
     location / {
-        try_files $uri $uri/ $uri.html =404;
+        proxy_pass http://127.0.0.1:8000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto https;
     }
-
-    # Trailing slash
-    rewrite ^([^.]*[^/])$ $1/ permanent;
 }
 ```
 
