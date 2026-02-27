@@ -67,7 +67,7 @@ class ListArticles extends ListRecords
 
                         $article = Article::create([
                             'title' => $result['seo_title'],
-                            'slug' => Str::slug($result['seo_title']),
+                            'slug' => Str::cleanSlug($result['seo_title']),
                             'content' => $result['content'],
                             'excerpt' => $result['meta_description'],
                             'is_published' => false,

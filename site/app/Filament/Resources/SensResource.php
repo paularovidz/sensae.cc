@@ -38,7 +38,7 @@ class SensResource extends Resource
                     ->label('Titre')
                     ->required()
                     ->live(onBlur: true)
-                    ->afterStateUpdated(fn ($set, $state) => $set('slug', \Illuminate\Support\Str::slug($state))),
+                    ->afterStateUpdated(fn ($set, $state) => $set('slug', \Illuminate\Support\Str::cleanSlug($state))),
                 TextInput::make('slug')
                     ->required()
                     ->unique(ignoreRecord: true),
