@@ -93,6 +93,9 @@ class SettingSeeder extends Seeder
             ['key' => 'seo_plausible_domain', 'value' => '', 'type' => 'string', 'group' => 'seo', 'label' => 'Domaine Plausible'],
             ['key' => 'seo_schema_type', 'value' => 'LocalBusiness', 'type' => 'string', 'group' => 'seo', 'label' => 'Type Schema.org'],
             ['key' => 'seo_schema_price_range', 'value' => '€€', 'type' => 'string', 'group' => 'seo', 'label' => 'Fourchette de prix'],
+
+            // IA
+            ['key' => 'ai_default_tone', 'value' => 'nous', 'type' => 'string', 'group' => 'ai', 'label' => 'Tonalité par défaut'],
         ];
 
         foreach ($settings as $setting) {
