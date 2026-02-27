@@ -4,7 +4,7 @@
     "type": "project",
     "require": {
         "php": ">=8.2",
-        "firebase/php-jwt": "^6.10",
+        "firebase/php-jwt": "^6.10 || ^7.0",
         "vlucas/phpdotenv": "^5.6",
         "guzzlehttp/guzzle": "^7.8",
         "phpmailer/phpmailer": "^6.9"
