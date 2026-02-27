@@ -24,7 +24,7 @@
 
     {{-- Section 1 — Pourquoi --}}
     <section class="ps-section" data-ps="1" style="background:#0d0520;">
-        <div class="ps-num">01</div>
+        <div class="ps-num" aria-hidden="true">01</div>
         <div class="ps-orb" style="width:400px;height:400px;background:radial-gradient(circle,rgba(210,153,255,0.15),transparent 70%);top:30%;right:-100px;"></div>
         <div class="ps-section-inner">
             <h2 class="ps-title">Un cadeau qui a du sens</h2>
@@ -37,7 +37,7 @@
 
     {{-- Section 2 — L'espace --}}
     <section class="ps-section" data-ps="2" style="background:#1a0a3e;">
-        <div class="ps-num">02</div>
+        <div class="ps-num" aria-hidden="true">02</div>
         <div class="ps-orb" style="width:350px;height:350px;background:radial-gradient(circle,rgba(210,153,255,0.12),transparent 70%);top:20%;left:-50px;"></div>
         <div class="ps-orb" style="width:250px;height:250px;background:radial-gradient(circle,rgba(114,26,214,0.15),transparent 70%);bottom:15%;right:10%;"></div>
         <div class="ps-section-inner">
@@ -57,7 +57,7 @@
 
     {{-- Section 3 — La séance --}}
     <section class="ps-section" data-ps="3" style="background:#0a1a2e;">
-        <div class="ps-num">03</div>
+        <div class="ps-num" aria-hidden="true">03</div>
         <div class="ps-orb" style="width:300px;height:300px;background:radial-gradient(circle,rgba(26,107,122,0.2),transparent 70%);top:40%;left:10%;"></div>
         <div class="ps-section-inner">
             <h2 class="ps-title">Parent et bébé, ensemble</h2>
@@ -77,7 +77,7 @@
 
     {{-- Section 4 — Bienfaits --}}
     <section class="ps-section" data-ps="4" style="background:#080810;">
-        <div class="ps-num">04</div>
+        <div class="ps-num" aria-hidden="true">04</div>
         <div class="ps-pulse"></div>
         <div class="ps-pulse-outer"></div>
         <div class="ps-section-inner" style="position:relative;z-index:10;">
@@ -90,7 +90,7 @@
 
     {{-- Section 5 — Le souvenir --}}
     <section class="ps-section" data-ps="5" style="background:#0f0a08;">
-        <div class="ps-num">05</div>
+        <div class="ps-num" aria-hidden="true">05</div>
         <div class="ps-orb" style="width:400px;height:400px;background:radial-gradient(circle,rgba(255,214,153,0.08),transparent 70%);bottom:10%;left:50%;transform:translateX(-50%);"></div>
         <div class="ps-section-inner">
             <h2 class="ps-title">Ce qu'on offre vraiment</h2>

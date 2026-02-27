@@ -27,7 +27,6 @@
 
         html {
             background: var(--ps-bg);
-            scroll-snap-type: y mandatory;
         }
         body {
             background: var(--ps-bg);
@@ -35,6 +34,8 @@
             font-family: 'Satoshi', system-ui, sans-serif;
             -webkit-font-smoothing: antialiased;
             overflow-x: hidden;
+            scroll-snap-type: y mandatory;
+            -webkit-overflow-scrolling: touch;
         }
         @media (pointer: fine) {
             body { cursor: none; }
@@ -46,6 +47,7 @@
             position: relative;
             width: 100%;
             height: 100vh;
+            height: 100dvh;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -145,7 +147,7 @@
         /* --- Scroll indicator --- */
         .ps-scroll-hint {
             position: absolute;
-            bottom: 5vh;
+            bottom: calc(5vh + env(safe-area-inset-bottom, 0px));
             left: 50%;
             transform: translateX(-50%);
             display: flex;
@@ -369,7 +371,7 @@
         /* --- Start button (intro) --- */
         .ps-start {
             position: absolute;
-            bottom: 5vh;
+            bottom: calc(5vh + env(safe-area-inset-bottom, 0px));
             left: 50%;
             transform: translateX(-50%);
             z-index: 10;
@@ -583,7 +585,7 @@
 
         /* --- Reduced motion --- */
         @media (prefers-reduced-motion: reduce) {
-            html { scroll-snap-type: none; }
+            body { scroll-snap-type: none; }
             .ps-section { height: auto; min-height: 60vh; padding: 4rem 0; scroll-snap-align: none; }
             .ps-num, .ps-title, .ps-subtitle, .ps-line, .ps-small,
             .ps-duo-card, .ps-pill, .ps-cta, .ps-scroll-hint {
@@ -605,8 +607,9 @@
 </head>
 <body>
 
-    <div class="ps-cursor" data-ps-cursor></div>
-    <a href="/" class="ps-home">sensaë</a>
+    <div class="ps-cursor" data-ps-cursor aria-hidden="true"></div>
+    <a href="/" class="ps-home" aria-label="Retour à l'accueil sensaë">sensaë</a>
+    <a href="#ps-main" class="skip-link" style="position:absolute;top:-100%;left:1rem;z-index:9999;padding:.75rem 1.5rem;background:var(--ps-violet);color:#fff;border-radius:0 0 .5rem .5rem;font-weight:500;text-decoration:none;transition:top .2s;" onfocus="this.style.top='0'" onblur="this.style.top='-100%'">Aller au contenu</a>
 
     {{-- Sound toggle --}}
     <button class="ps-sound" data-immersive-sound aria-pressed="false" aria-label="Activer le son ambiant">
@@ -638,7 +641,9 @@
         <span class="ps-nav-label">Scrollez</span>
     </nav>
 
+    <main id="ps-main">
     @yield('sections')
+    </main>
 
     <script src="//embed.typeform.com/next/embed.js" defer></script>
     <script src="/js/gsap.min.js"></script>

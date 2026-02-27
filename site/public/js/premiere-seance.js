@@ -17,7 +17,7 @@
   const cursor = document.querySelector('[data-ps-cursor]');
   const isMobile = matchMedia('(pointer: coarse)').matches;
   if (!isMobile && cursor) {
-    gsap.set(cursor, { autoAlpha: 1 });
+    gsap.set(cursor, { opacity: 1 });
     const setX = gsap.quickSetter(cursor, 'x', 'px');
     const setY = gsap.quickSetter(cursor, 'y', 'px');
     document.addEventListener('mousemove', (e) => {
@@ -29,11 +29,13 @@
   /* ---- Block scroll until interaction ---- */
   let scrollLocked = true;
   document.documentElement.style.overflow = 'hidden';
+  document.body.style.overflow = 'hidden';
 
   function unlockScroll() {
     if (!scrollLocked) return;
     scrollLocked = false;
     document.documentElement.style.overflow = '';
+    document.body.style.overflow = '';
     showNav();
     ScrollTrigger.refresh();
   }
