@@ -10,12 +10,24 @@
   gsap.registerPlugin(ScrollTrigger);
   if (ScrollToPlugin) gsap.registerPlugin(ScrollToPlugin);
 
+  /* ---- Mobile detection ---- */
+  const isMobile = matchMedia('(pointer: coarse)').matches;
+
+  /* ---- Disable CSS snap — JS-driven snap on all devices ---- */
+  var currentSection = 0;
+  var animating = false;
+
+  document.documentElement.style.scrollSnapType = 'none';
+  document.body.style.scrollSnapType = 'none';
+  document.querySelectorAll('.ps-section').forEach(function (s) {
+    s.style.scrollSnapAlign = 'none';
+  });
+
   /* ---- Reduced motion check ---- */
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
   /* ---- Custom cursor (desktop only) ---- */
   const cursor = document.querySelector('[data-ps-cursor]');
-  const isMobile = matchMedia('(pointer: coarse)').matches;
   if (!isMobile && cursor) {
     gsap.set(cursor, { opacity: 1 });
     const setX = gsap.quickSetter(cursor, 'x', 'px');
@@ -75,10 +87,12 @@
         window.dispatchEvent(new CustomEvent('immersive-start'));
       }
 
+      currentSection = index; animating = true;
       gsap.to(window, {
         scrollTo: { y: target, offsetY: 0 },
         duration: 0.8,
         ease: 'power2.inOut',
+        onComplete: function () { animating = false; },
       });
     });
   });
@@ -162,12 +176,14 @@
       // Unlock and smooth scroll after fade starts
       setTimeout(() => {
         unlockScroll();
+        currentSection = 1; animating = true;
         const s1 = document.querySelector('[data-ps="1"]');
         if (s1) {
           gsap.to(window, {
             scrollTo: { y: s1, offsetY: 0 },
             duration: 1.2,
             ease: 'power3.inOut',
+            onComplete: function () { animating = false; },
           });
         }
       }, 300);
@@ -331,5 +347,71 @@
       .fromTo(sub, { opacity: 0 }, { opacity: 1, duration: 0.9, ease: 'power2.out' }, 0.6)
       .fromTo(cta, { opacity: 0 }, { opacity: 1, duration: 0.8, ease: 'power2.out' }, 1.1);
   });
+
+  /* ---- JS-driven section snap (all devices) ---- */
+  var allSections = gsap.utils.toArray('.ps-section');
+
+  function goToSection(index) {
+    if (animating || index < 0 || index >= allSections.length) return;
+    animating = true;
+    currentSection = index;
+    gsap.to(window, {
+      scrollTo: { y: allSections[index], offsetY: 0 },
+      duration: 0.8,
+      ease: 'power2.inOut',
+      onComplete: function () {
+        animating = false;
+        ScrollTrigger.refresh();
+      },
+    });
+  }
+
+  if (isMobile) {
+    /* ---- Mobile: touch-driven snap ---- */
+    var touchStartY = 0;
+
+    document.addEventListener('touchstart', function (e) {
+      if (scrollLocked) return;
+      touchStartY = e.touches[0].clientY;
+    }, { passive: true });
+
+    document.addEventListener('touchmove', function (e) {
+      if (!scrollLocked) e.preventDefault();
+    }, { passive: false });
+
+    document.addEventListener('touchend', function (e) {
+      if (scrollLocked || animating) return;
+      var deltaY = touchStartY - e.changedTouches[0].clientY;
+      if (deltaY > 40) goToSection(currentSection + 1);
+      else if (deltaY < -40) goToSection(currentSection - 1);
+    }, { passive: true });
+
+  } else {
+    /* ---- Desktop: wheel + keyboard snap ---- */
+    var wheelReady = true;
+
+    document.addEventListener('wheel', function (e) {
+      if (scrollLocked) return;
+      e.preventDefault();
+      if (animating || !wheelReady) return;
+
+      wheelReady = false;
+      setTimeout(function () { wheelReady = true; }, 1000);
+
+      if (e.deltaY > 0) goToSection(currentSection + 1);
+      else if (e.deltaY < 0) goToSection(currentSection - 1);
+    }, { passive: false });
+
+    document.addEventListener('keydown', function (e) {
+      if (scrollLocked || animating) return;
+      if (e.key === 'ArrowDown' || e.key === 'PageDown' || e.key === ' ') {
+        e.preventDefault();
+        goToSection(currentSection + 1);
+      } else if (e.key === 'ArrowUp' || e.key === 'PageUp') {
+        e.preventDefault();
+        goToSection(currentSection - 1);
+      }
+    });
+  }
 
 })();

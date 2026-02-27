@@ -36,6 +36,7 @@
             overflow-x: hidden;
             scroll-snap-type: y mandatory;
             -webkit-overflow-scrolling: touch;
+            overscroll-behavior-y: contain;
         }
         @media (pointer: fine) {
             body { cursor: none; }
@@ -53,7 +54,6 @@
             justify-content: center;
             overflow: hidden;
             scroll-snap-align: start;
-            scroll-snap-stop: always;
         }
 
         .ps-section-inner {
@@ -581,6 +581,13 @@
         }
         @media (pointer: coarse) {
             .ps-cursor { display: none !important; }
+        }
+
+        /* --- Mobile: stable viewport height --- */
+        @media (max-width: 640px) {
+            .ps-section {
+                height: 100svh;
+            }
         }
 
         /* --- Reduced motion --- */
