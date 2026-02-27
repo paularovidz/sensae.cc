@@ -496,6 +496,27 @@
             .ps-sound-label { display: none; }
         }
 
+        /* --- Sound hint --- */
+        .ps-sound-hint {
+            position: fixed;
+            top: 56px;
+            right: 24px;
+            z-index: 49;
+            font-size: 0.65rem;
+            letter-spacing: 0.06em;
+            color: rgba(210, 153, 255, 0.6);
+            pointer-events: none;
+            opacity: 0;
+            animation: ps-hint-shimmer 2.5s ease-in-out infinite;
+        }
+        @keyframes ps-hint-shimmer {
+            0%, 100% { opacity: var(--ps-hint-o, 0); }
+            50% { opacity: calc(var(--ps-hint-o, 0) * 1.6); }
+        }
+        @media (max-width: 640px) {
+            .ps-sound-hint { right: 12px; top: 46px; font-size: 0.6rem; }
+        }
+
         /* --- Right-side scroll indicator --- */
         .ps-nav {
             position: fixed;
@@ -628,6 +649,7 @@
         </span>
         <span class="ps-sound-label">Son</span>
     </button>
+    <span class="ps-sound-hint" aria-hidden="true">Son recommandé</span>
 
     {{-- Right-side scroll indicator --}}
     <nav class="ps-nav" aria-hidden="true">

@@ -164,10 +164,21 @@
     introTl.to(s0Start, { opacity: 1, duration: 1.2, ease: 'power2.out' }, 2.2);
   }
 
+  // Sound hint — fade in after intro, dismiss on start or sound toggle
+  const soundHint = document.querySelector('.ps-sound-hint');
+  if (soundHint) {
+    introTl.to(soundHint, { '--ps-hint-o': 1, duration: 1, ease: 'power2.out' }, 3);
+    const dismissHint = () => gsap.to(soundHint, { '--ps-hint-o': 0, duration: 0.6 });
+    const soundBtn = document.querySelector('[data-immersive-sound]');
+    if (soundBtn) soundBtn.addEventListener('click', dismissHint, { once: true });
+    setTimeout(dismissHint, 10000);
+  }
+
   // Start button → unlock + smooth scroll to section 1 + audio
   if (s0Start) {
     s0Start.addEventListener('click', () => {
-      // Fade out intro content smoothly before scrolling
+      // Fade out intro content + sound hint
+      if (soundHint) gsap.to(soundHint, { '--ps-hint-o': 0, duration: 0.4 });
       gsap.to([s0Title, s0Sub, s0Start], {
         opacity: 0, y: -20, duration: 0.6, ease: 'power2.in', stagger: 0.05,
       });
