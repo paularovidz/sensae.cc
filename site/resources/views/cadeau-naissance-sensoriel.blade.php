@@ -111,12 +111,7 @@
             <h2 class="ps-title" style="font-size:clamp(2rem,6vw,3.8rem);">Le plus beau cadeau<br>ne se met pas dans une boîte</h2>
             <p class="ps-subtitle">Il se vit, se ressent, et se partage.</p>
             <div class="ps-cta ps-cta-duo">
-                <a href="https://sensae.cc/booking" target="_blank" class="ps-cta-btn">
-                    Réserver une séance
-                    <span class="ps-cta-star">
-                        <svg width="16" height="16" viewBox="0 0 20 19" fill="none"><path d="M10 0.5C9.554 8.769 9.188 9.099 0 9.5C9.188 9.901 9.554 10.231 10 18.5C10.446 10.231 10.813 9.901 20 9.5C10.813 9.099 10.446 8.769 10 0.5Z" fill="currentColor"/></svg>
-                    </span>
-                </a>
+                <x-cta-booking :star="true" />
                 <button data-tf-popup="{{ $contact['typeform_gift_id'] ?? $contact['typeform_id'] ?? 'EjSgPPjE' }}" data-tf-iframe-props="title=Offrir une séance sensaë" data-tf-medium="snippet" data-tf-size="90" class="ps-cta-btn ps-cta-btn--outline">
                     Offrir une séance
                     <span class="ps-cta-star">

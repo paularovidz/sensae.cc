@@ -42,17 +42,5 @@
         </div>
     </div>
 
-    <a href="https://sensae.cc/booking" target="_blank"
-       class="group/btn inline-flex items-center justify-between gap-4 w-full px-6 py-3.5 rounded-full font-medium transition {{ $highlight ? 'bg-primary text-text-light hover:opacity-90' : 'border border-border text-text-light hover:border-primary/50 hover:bg-primary/5' }}">
-        <span>Réserver</span>
-        <span class="flex h-7 w-7 items-center justify-center rounded-full bg-white/15">
-            <img
-                src="{{ asset('storage/star.svg') }}"
-                alt=""
-                class="h-4 w-4 transition-all duration-300 group-hover/btn:rotate-180"
-                loading="lazy"
-                decoding="async"
-            >
-        </span>
-    </a>
+    <x-cta-booking :star="true" class="group/btn justify-between w-full px-6 py-3.5 {{ $highlight ? '' : 'bg-transparent border border-border hover:border-primary/50 hover:bg-primary/5' }}" />
 </div>

@@ -1,4 +1,4 @@
-@props(['label' => 'Ouverture en août', 'star' => false])
+@props(['label' => 'Ouverture en août 2026', 'star' => false])
 
 <button
     data-tf-popup="{{ $contact['typeform_id'] ?? 'EjSgPPjE' }}"

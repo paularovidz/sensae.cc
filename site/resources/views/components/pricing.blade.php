@@ -44,15 +44,7 @@
                         class="text-4xl md:text-5xl font-medium text-text-light font-secondary leading-none">{{ $discoveryPrice }}<span
                             class="text-3xl md:text-4xl">€</span></span>
                 </div>
-                <a href="https://sensae.cc/booking" target="_blank"
-                    class="group inline-flex items-center justify-between gap-4 px-6 py-3.5 rounded-full font-medium transition bg-primary text-text-light hover:opacity-90">
-                    <span>Réserver</span>
-                    <span class="flex h-7 w-7 items-center justify-center rounded-full bg-white/15">
-                        <img src="{{ asset('storage/star.svg') }}" alt=""
-                            class="h-4 w-4 transition-all duration-300 group-hover:rotate-180" loading="lazy"
-                            decoding="async">
-                    </span>
-                </a>
+                <x-cta-booking :star="true" class="justify-between px-6 py-3.5" />
             </div>
         </div>
 

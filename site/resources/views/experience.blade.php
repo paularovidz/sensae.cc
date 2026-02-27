@@ -72,7 +72,7 @@
         <div data-xp-ripples></div>
         <p class="xp-text" data-xp-text="6">Chaque s&eacute;ance est une invitation &agrave; ressentir.</p>
         <div class="xp-cta" data-xp-cta>
-            <a href="https://sensae.cc/booking" target="_blank" rel="noopener">R&eacute;server une s&eacute;ance <span class="xp-cta-star-wrap"><img src="/storage/star.svg" alt="" class="xp-cta-star" width="16" height="16"></span></a>
+            <x-cta-booking :star="true" class="xp-cta-inline" />
         </div>
     </section>
 @endsection

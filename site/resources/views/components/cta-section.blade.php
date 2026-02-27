@@ -31,7 +31,7 @@
             <div class="flex flex-wrap-reverse items-center gap-x-16 gap-y-6 md:flex-nowrap lg:justify-end">
                 {{-- Button --}}
                 <div data-animate="fade-up" data-animate-delay="0.1" class="relative {{ $hasRating ? 'after:hidden after:sm:block after:absolute after:top-0 after:left-[120%] after:h-full after:w-px after:rotate-[18deg] after:bg-primary/35' : '' }}">
-                    <x-cta-contact label="Réserver une séance" :star="true" />
+                    <x-cta-booking :star="true" />
                 </div>
 
                 {{-- Rating (only if configured in BO) --}}

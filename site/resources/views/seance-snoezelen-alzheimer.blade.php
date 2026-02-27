@@ -111,12 +111,7 @@
             <h2 class="ps-title" style="font-size:clamp(2rem,6vw,3.8rem);">On ne perd jamais<br>la capacité de ressentir</h2>
             <p class="ps-subtitle">Le Snoezelen ne guérit pas.<br>Il offre des instants de présence, de douceur et de dignité.</p>
             <div class="ps-cta">
-                <a href="https://sensae.cc/booking" target="_blank">
-                    Réserver une séance
-                    <span class="ps-cta-star">
-                        <svg width="16" height="16" viewBox="0 0 20 19" fill="none"><path d="M10 0.5C9.554 8.769 9.188 9.099 0 9.5C9.188 9.901 9.554 10.231 10 18.5C10.446 10.231 10.813 9.901 20 9.5C10.813 9.099 10.446 8.769 10 0.5Z" fill="currentColor"/></svg>
-                    </span>
-                </a>
+                <x-cta-booking :star="true" />
             </div>
         </div>
         <div class="ps-orb" style="width:500px;height:500px;background:radial-gradient(circle,rgba(255,214,153,0.1),transparent 70%);top:50%;left:50%;transform:translate(-50%,-50%);"></div>
