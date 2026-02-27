@@ -4,7 +4,7 @@ import { useAuthStore } from '@/stores/auth'
 
 const authStore = useAuthStore()
 
-const email = ref('votre@email.com')
+const email = ref('')
 const loading = ref(false)
 const error = ref(null)
 
@@ -27,7 +27,7 @@ async function handleSubmit() {
 
 function resetForm() {
   authStore.resetMagicLinkState()
-  email.value = 'votre@email.com'
+  email.value = ''
 }
 </script>
 
