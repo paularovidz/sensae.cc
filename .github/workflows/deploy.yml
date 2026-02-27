@@ -23,6 +23,7 @@ jobs:
       frontend: ${{ steps.filter.outputs.frontend }}
       ops-frontend: ${{ steps.filter.outputs.ops-frontend }}
       site: ${{ steps.filter.outputs.site }}
+      nginx: ${{ steps.filter.outputs.nginx }}
       docker-compose: ${{ steps.filter.outputs.docker-compose }}
     steps:
       - uses: actions/checkout@v4
@@ -40,6 +41,8 @@ jobs:
               - 'ops/frontend/**'
             site:
               - 'site/**'
+            nginx:
+              - 'deploy/nginx/**'
             docker-compose:
               - 'docker-compose.prod.yml'
 
@@ -261,6 +264,7 @@ jobs:
         with:
           sparse-checkout: |
             docker-compose.prod.yml
+            deploy/nginx
           sparse-checkout-cone-mode: false
 
       - name: Download frontend artifact
@@ -290,6 +294,25 @@ jobs:
           scp -i ~/.ssh/deploy_key \
             docker-compose.prod.yml \
             ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/home/deploy/apps/snoezelen/
+
+      - name: Deploy Nginx configs
+        if: needs.changes.outputs.nginx == 'true' || github.event_name == 'workflow_dispatch'
+        run: |
+          ssh -i ~/.ssh/deploy_key ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << 'EOF'
+            sudo mkdir -p /etc/nginx/sites-available /etc/nginx/sites-enabled
+          EOF
+          rsync -avz \
+            -e "ssh -i ~/.ssh/deploy_key" \
+            --rsync-path="sudo rsync" \
+            deploy/nginx/ \
+            ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/etc/nginx/sites-available/
+          ssh -i ~/.ssh/deploy_key ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << 'EOF'
+            sudo ln -sf /etc/nginx/sites-available/sensae.cc /etc/nginx/sites-enabled/
+            sudo ln -sf /etc/nginx/sites-available/suivi.sensae.cc /etc/nginx/sites-enabled/
+            sudo ln -sf /etc/nginx/sites-available/ops.sensae.cc /etc/nginx/sites-enabled/
+            sudo ln -sf /etc/nginx/sites-available/pma.sensae.cc /etc/nginx/sites-enabled/
+            sudo nginx -t && sudo systemctl reload nginx
+          EOF
 
       - name: Deploy frontend
         if: needs.changes.outputs.frontend == 'true' || github.event_name == 'workflow_dispatch'
