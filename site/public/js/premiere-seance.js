@@ -355,6 +355,7 @@
     if (animating || index < 0 || index >= allSections.length) return;
     animating = true;
     currentSection = index;
+    setActiveNav(index);
     gsap.to(window, {
       scrollTo: { y: allSections[index], offsetY: 0 },
       duration: 0.8,
@@ -388,15 +389,20 @@
 
   } else {
     /* ---- Desktop: wheel + keyboard snap ---- */
-    var wheelReady = true;
+    var wheelLocked = false;
+    var wheelTimer;
 
     document.addEventListener('wheel', function (e) {
       if (scrollLocked) return;
       e.preventDefault();
-      if (animating || !wheelReady) return;
 
-      wheelReady = false;
-      setTimeout(function () { wheelReady = true; }, 1000);
+      // Reset unlock timer on EVERY wheel event (even ignored ones)
+      // — absorbs all trackpad momentum before accepting next scroll
+      clearTimeout(wheelTimer);
+      wheelTimer = setTimeout(function () { wheelLocked = false; }, 300);
+
+      if (animating || wheelLocked) return;
+      wheelLocked = true;
 
       if (e.deltaY > 0) goToSection(currentSection + 1);
       else if (e.deltaY < 0) goToSection(currentSection - 1);

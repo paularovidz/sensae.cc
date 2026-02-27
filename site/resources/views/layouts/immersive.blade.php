@@ -563,6 +563,7 @@
         @media (max-width: 640px) {
             .ps-nav { right: 12px; }
             .ps-nav-label { display: none; }
+            .ps-cta a, .ps-cta-btn {padding: 8px 20px;}
         }
 
         /* --- Custom cursor --- */
