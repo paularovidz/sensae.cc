@@ -224,15 +224,10 @@ h1, h2, h3, h4, h5, h6 {
     color: var(--color-white);
 }
 h2, .h2 {
-    font-size: 2.656rem;
+  font-size: 1.5rem;
 }
-
-h3, .h3 {
-    font-size: 1.968rem;
-}
-
-h4, .h4 {
-    font-size: 1.82rem;
+h3, .h3, h4, .h4 {
+    font-size: 1.4rem;
 }
 h5, .h5 {
     font-size: 1.35rem;
@@ -540,10 +535,18 @@ li {
   .wheel-container {
     --wh-circle-w: 92vw;
     --wh-circle-h: 29vw;
-    --wh-orbit: 52vw;
+    --wh-orbit: 60vw;
     --wh-bubble: 48px;
     height: min(80vh, calc(var(--wh-orbit) - var(--wh-offset) + var(--wh-bubble)));
     max-width: 100vw;
+  }
+  .wheel-center {
+    border-width: calc(1vw + 8px);
+  }
+  .wheel-glow {
+    width: calc(var(--wh-circle-w) + 4px);
+    height: calc(var(--wh-circle-w) + 4px);
+    transform: translateX(-50%) translateY(calc(var(--wh-circle-w) - var(--wh-circle-h) - 2px));
   }
   .wheel-bubble-label {
     font-size: 0.7rem;
@@ -738,12 +741,6 @@ tbody tr:nth-child(even) {
 [data-lk], [data-lkb] {
   cursor: pointer;
 }
-
-@media (max-width: 440px) {
-  h2, .h2 {
-    font-size: 2rem;
-  }
-}
 @media (min-width: 440px) {
   .container {
     max-width: 440px;
@@ -755,9 +752,6 @@ tbody tr:nth-child(even) {
   }
 }
 @media (min-width: 768px) {
-  h3, .h3 {
-    font-size: 2.46rem;
-  }
   .section-spacing-lg>section, .has-call-to-action {
     padding-top: calc(var(--spacing) * 32);
   }
@@ -766,6 +760,12 @@ tbody tr:nth-child(even) {
   }
   h2, .h2 {
     font-size: 3.32rem;
+  }
+  h3, .h3 {
+    font-size: 2.46rem;
+  }
+  h4, .h4 {
+    font-size: 1.82rem;
   }
 }
 @media (min-width: 1024px) {

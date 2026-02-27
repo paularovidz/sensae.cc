@@ -23,7 +23,7 @@
                     </div>
                 </div>
                 <div class="relative overflow-hidden order-2">
-                    <x-image slug="centrer-sens" alt="" class="min-w-full rounded-tr-3xl lg:object-right-top h-[400px] object-cover object-top md:min-h-full lg:object-cover" loading="lazy"/>
+                    <x-image slug="centrer-sens" alt="" class="min-w-full rounded-tr-3xl lg:object-right-top h-[200px] sm:h-[400px] object-cover object-top md:min-h-full lg:object-cover" loading="lazy"/>
                 </div>
             </div>
             <div data-tilt
@@ -38,7 +38,7 @@
                     </div>
                 </div>
                 <div class="relative overflow-hidden order-2 lg:order-1">
-                    <x-image slug="preserver-confort" alt="" class="min-w-full rounded-tr-3xl lg:object-right-top h-[400px] object-cover object-top md:min-h-full lg:object-cover" loading="lazy"/>
+                    <x-image slug="preserver-confort" alt="" class="min-w-full rounded-tr-3xl lg:object-right-to h-[200px] sm:h-[400px] object-cover object-top md:min-h-full lg:object-cover" loading="lazy"/>
                 </div>
             </div>
             <div data-tilt
@@ -56,7 +56,7 @@
                     </div>
                 </div>
                 <div class="relative overflow-hidden max-lg:order-2">
-                    <x-image slug="concentrer-essentiel" alt="" class="pointer-events-none absolute inset-0 size-full min-h-full rounded-tl-3xl object-cover" loading="lazy"/>
+                    <x-image slug="concentrer-essentiel" alt="" class="md:absolute inset-0 size-full min-h-full rounded-tl-3xl object-cover" loading="lazy"/>
                 </div>
             </div>
         </div>

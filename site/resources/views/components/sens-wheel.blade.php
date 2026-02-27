@@ -69,7 +69,7 @@
 </div>
 
 {{-- Marquee des sens --}}
-<div class="wheel-marquee overflow-hidden mt-12" data-animate="fade-up" data-animate-delay="0.3">
+<div class="wheel-marquee overflow-hidden mt-6 md:mt-12" data-animate="fade-up" data-animate-delay="0.3">
     <div class="wheel-marquee-track">
         @for ($i = 0; $i < 10; $i++)
             @foreach ($sens as $item)

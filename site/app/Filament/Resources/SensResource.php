@@ -38,10 +38,12 @@ class SensResource extends Resource
                     ->label('Titre')
                     ->required()
                     ->live(onBlur: true)
-                    ->afterStateUpdated(fn ($set, $state) => $set('slug', \Illuminate\Support\Str::cleanSlug($state))),
+                    ->afterStateUpdated(fn ($set, $state, $record) => $record?->is_published ? null : $set('slug', \Illuminate\Support\Str::cleanSlug($state))),
                 TextInput::make('slug')
                     ->required()
-                    ->unique(ignoreRecord: true),
+                    ->unique(ignoreRecord: true)
+                    ->disabled(fn ($record) => $record?->is_published)
+                    ->dehydrated(),
                 Select::make('category')
                     ->label('Catégorie')
                     ->options([

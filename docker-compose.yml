@@ -125,6 +125,7 @@ services:
       DB_USERNAME: ${DB_USER:-snoezelen}
       DB_PASSWORD: ${DB_PASS:-snoezelen_secret}
       SENSAE_API_URL: http://api
+      VITE_HOST_PORT: 5174
       SESSION_DRIVER: database
       CACHE_STORE: database
     volumes:
