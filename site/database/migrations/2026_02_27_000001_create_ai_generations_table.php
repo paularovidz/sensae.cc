@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -22,10 +23,19 @@ return new class extends Migration
             $table->foreignUuid('article_id')->nullable()->constrained('articles')->nullOnDelete();
             $table->timestamp('created_at')->useCurrent();
         });
+
+        DB::table('settings')->insertOrIgnore([
+            'key' => 'ai_default_tone',
+            'value' => 'nous',
+            'type' => 'string',
+            'group' => 'ai',
+            'label' => 'Tonalité par défaut',
+        ]);
     }
 
     public function down(): void
     {
         Schema::dropIfExists('ai_generations');
+        DB::table('settings')->where('key', 'ai_default_tone')->delete();
     }
 };
