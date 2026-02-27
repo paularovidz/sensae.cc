@@ -36,6 +36,7 @@ function initMobileMenu() {
         if (isOpen) return;
         isOpen = true;
 
+        toggle.setAttribute('aria-expanded', 'true');
         menu.classList.remove('hidden');
         document.documentElement.style.overflow = 'hidden';
 
@@ -67,6 +68,7 @@ function initMobileMenu() {
         if (!isOpen) return;
         isOpen = false;
 
+        toggle.setAttribute('aria-expanded', 'false');
         const origin = getClipOrigin();
 
         const tl = gsap.timeline({
@@ -94,7 +96,7 @@ function initMobileMenu() {
     });
 }
 
-// Desktop megamenu — GSAP hover animation
+// Desktop megamenu — GSAP hover + Enter key for keyboard
 function initDesktopDropdowns() {
     const dropdowns = document.querySelectorAll('[data-dropdown]');
 
@@ -104,12 +106,16 @@ function initDesktopDropdowns() {
         const children = panel?.querySelectorAll(':scope > div');
         if (!panel) return;
 
+        const trigger = wrapper.querySelector('button, a');
         let openTl = null;
         let closeTimer = null;
+        let isOpen = false;
 
         function show() {
+            if (isOpen) return;
             clearTimeout(closeTimer);
             if (openTl) openTl.kill();
+            isOpen = true;
 
             gsap.set(panel, { visibility: 'visible', opacity: 0 });
 
@@ -131,11 +137,16 @@ function initDesktopDropdowns() {
             if (chevron) {
                 gsap.to(chevron, { rotation: 180, duration: 0.3, ease: 'power2.out' });
             }
+
+            if (trigger) trigger.setAttribute('aria-expanded', 'true');
         }
 
         function hide() {
+            clearTimeout(closeTimer);
             closeTimer = setTimeout(() => {
+                if (!isOpen) return;
                 if (openTl) openTl.kill();
+                isOpen = false;
 
                 gsap.to(panel, {
                     opacity: 0, scale: 0.97, y: -4, filter: 'blur(4px)',
@@ -149,11 +160,56 @@ function initDesktopDropdowns() {
                 if (chevron) {
                     gsap.to(chevron, { rotation: 0, duration: 0.2, ease: 'power2.in' });
                 }
-            }, 80); // small delay to prevent flicker
+
+                if (trigger) trigger.setAttribute('aria-expanded', 'false');
+            }, 80);
         }
 
+        function hideImmediate() {
+            clearTimeout(closeTimer);
+            if (openTl) openTl.kill();
+            isOpen = false;
+            gsap.set(panel, { visibility: 'hidden', clearProps: 'all' });
+            if (children?.length) gsap.set(children, { clearProps: 'all' });
+            if (chevron) gsap.set(chevron, { rotation: 0 });
+            if (trigger) trigger.setAttribute('aria-expanded', 'false');
+        }
+
+        // Mouse: hover to open/close
         wrapper.addEventListener('mouseenter', show);
         wrapper.addEventListener('mouseleave', hide);
+
+        // Mouse: click on chevron toggles (prevents <a> navigation)
+        if (chevron) {
+            chevron.closest('svg').addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (isOpen) { hideImmediate(); } else { show(); }
+            });
+        }
+
+        // Keyboard: Enter/Space on trigger toggles dropdown
+        trigger?.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                if (isOpen) { hideImmediate(); } else { show(); }
+            }
+        });
+
+        // Close when focus leaves wrapper entirely
+        wrapper.addEventListener('focusout', (e) => {
+            if (isOpen && !wrapper.contains(e.relatedTarget)) {
+                hideImmediate();
+            }
+        });
+
+        // Escape closes immediately
+        wrapper.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && isOpen) {
+                hideImmediate();
+                trigger?.focus();
+            }
+        });
     });
 }
 

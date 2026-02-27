@@ -103,8 +103,8 @@ export function initWheel() {
     },
   });
 
-  entranceTl.fromTo(container, { autoAlpha: 0 }, {
-    autoAlpha: 1,
+  entranceTl.fromTo(container, { opacity: 0 }, {
+    opacity: 1,
     duration: DURATION.slow,
     ease: EASE.reveal,
   });

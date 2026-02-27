@@ -2,19 +2,19 @@ import gsap from 'gsap';
 import { DURATION, EASE, SCROLL } from '../config';
 
 const ANIMATION_MAP = {
-  'fade-up':    { y: 20, autoAlpha: 0 },
-  'fade-in':    { autoAlpha: 0 },
-  'fade-left':  { x: -20, autoAlpha: 0 },
-  'fade-right': { x: 20, autoAlpha: 0 },
-  'scale-in':   { scale: 0.97, autoAlpha: 0 },
+  'fade-up':    { y: 20, opacity: 0 },
+  'fade-in':    { opacity: 0 },
+  'fade-left':  { x: -20, opacity: 0 },
+  'fade-right': { x: 20, opacity: 0 },
+  'scale-in':   { scale: 0.97, opacity: 0 },
 };
 
 const TO_MAP = {
-  'fade-up':    { y: 0, autoAlpha: 1 },
-  'fade-in':    { autoAlpha: 1 },
-  'fade-left':  { x: 0, autoAlpha: 1 },
-  'fade-right': { x: 0, autoAlpha: 1 },
-  'scale-in':   { scale: 1, autoAlpha: 1 },
+  'fade-up':    { y: 0, opacity: 1 },
+  'fade-in':    { opacity: 1 },
+  'fade-left':  { x: 0, opacity: 1 },
+  'fade-right': { x: 0, opacity: 1 },
+  'scale-in':   { scale: 1, opacity: 1 },
 };
 
 export function initScrollReveals() {

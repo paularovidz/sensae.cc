@@ -23,6 +23,30 @@ html {
 }
 
 
+/* Accessibility: skip link */
+.skip-link {
+  position: absolute;
+  top: -100%;
+  left: 1rem;
+  z-index: 9999;
+  padding: 0.75rem 1.5rem;
+  background: var(--color-primary);
+  color: #fff;
+  border-radius: 0 0 0.5rem 0.5rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition: top 0.2s;
+}
+.skip-link:focus {
+  top: 0;
+}
+
+/* Accessibility: focus visible */
+*:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
 ::selection {
   background: var(--color-primary-override, #721ad6);
   color: #fff;
@@ -133,6 +157,7 @@ html {
 }
 
 /* GSAP: prevent FOUC — elements hidden until GSAP reveals them */
+/* opacity only (not visibility:hidden) so elements stay focusable for keyboard/SR */
 [data-animate],
 [data-animate-grid] > *,
 [data-wheel-container],
@@ -141,7 +166,6 @@ html {
 [data-hero-subtitle],
 [data-hero-cta],
 [data-hero-image] {
-  visibility: hidden;
   opacity: 0;
 }
 
@@ -154,7 +178,6 @@ html {
   [data-hero-subtitle],
   [data-hero-cta],
   [data-hero-image] {
-    visibility: visible !important;
     opacity: 1 !important;
     transform: none !important;
   }

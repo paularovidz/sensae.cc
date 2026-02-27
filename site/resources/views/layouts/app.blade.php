@@ -116,9 +116,11 @@
     @endif
 </head>
 <body class="bg-body text-text-default min-h-screen flex flex-col">
+    <a href="#main-content" class="skip-link">Aller au contenu principal</a>
+
     @include('partials.header')
 
-    <main class="section-spacing-lg fit-to-screen">
+    <main id="main-content" class="section-spacing-lg fit-to-screen">
         @yield('content')
     </main>
 

@@ -13,10 +13,10 @@ function initCardGrids() {
 
     gsap.fromTo(items, {
       y: 24,
-      autoAlpha: 0,
+      opacity: 0,
     }, {
       y: 0,
-      autoAlpha: 1,
+      opacity: 1,
       duration: DURATION.normal,
       stagger: STAGGER.cards,
       ease: EASE.reveal,

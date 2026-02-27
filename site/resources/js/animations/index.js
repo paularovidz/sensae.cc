@@ -11,7 +11,7 @@ gsap.defaults({
 export function initAnimations() {
   if (prefersReducedMotion()) {
     gsap.set('[data-animate], [data-animate-grid] > *, [data-wheel-container], [data-hero-h1], [data-hero-title], [data-hero-subtitle], [data-hero-cta], [data-hero-image]', {
-      autoAlpha: 1, y: 0, x: 0, scale: 1,
+      opacity: 1, y: 0, x: 0, scale: 1,
     });
     return;
   }

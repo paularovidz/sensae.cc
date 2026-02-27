@@ -10,7 +10,7 @@
 @endif
 <header data-header class="header group/header mt-5 transform sticky-header">
     <div class="relative container">
-        <nav
+        <nav aria-label="Navigation principale"
             class="hs-dropdown relative flex items-center justify-between px-2 py-2.5 [--auto-close:inside] [--gpu-acceleration:false] [--strategy:absolute] lg:[--strategy:static]">
             {{-- Logo / Texte --}}
             <a href="{{ route('home') }}" class="logo flex items-center gap-2 shrink-0">
@@ -44,20 +44,22 @@
                         <div data-dropdown class="relative flex items-center">
                             @if (!empty($entry['url']))
                                 <a href="{{ $entry['url'] }}"
-                                    class="nav-link text-white transition rounded-full hover:bg-white/5 flex items-center gap-1">
+                                    class="nav-link text-white transition rounded-full hover:bg-white/5 flex items-center gap-1"
+                                    aria-expanded="false" aria-haspopup="true">
                                     {{ $entry['label'] }}
                                     <svg data-dropdown-chevron class="w-4 h-4" fill="none"
-                                        viewBox="0 0 24 24" stroke="currentColor">
+                                        viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                             d="M19 9l-7 7-7-7" />
                                     </svg>
                                 </a>
                             @else
                                 <button
-                                    class="nav-link text-white transition rounded-full hover:bg-white/5 flex items-center gap-1">
+                                    class="nav-link text-white transition rounded-full hover:bg-white/5 flex items-center gap-1"
+                                    aria-expanded="false" aria-haspopup="true">
                                     {{ $entry['label'] }}
                                     <svg data-dropdown-chevron class="w-4 h-4" fill="none"
-                                        viewBox="0 0 24 24" stroke="currentColor">
+                                        viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                             d="M19 9l-7 7-7-7" />
                                     </svg>
@@ -123,8 +125,8 @@
                 @endif
 
                 {{-- Burger mobile --}}
-                <button data-mobile-toggle class="lg:hidden p-2 text-text-default hover:text-primary transition">
-                    <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <button data-mobile-toggle class="lg:hidden p-2 text-text-default hover:text-primary transition" aria-label="Ouvrir le menu" aria-expanded="false" aria-controls="mobile-menu">
+                    <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M4 6h16M4 12h16M4 18h16" />
                     </svg>
@@ -137,10 +139,10 @@
 </header>
 
 {{-- Menu mobile fullscreen --}}
-<div data-mobile-menu class="fixed inset-0 z-[60] hidden lg:!hidden bg-body/95 backdrop-blur-xl overflow-y-auto">
+<div data-mobile-menu id="mobile-menu" role="dialog" aria-modal="true" aria-label="Menu de navigation" class="fixed inset-0 z-[60] hidden lg:!hidden bg-body/95 backdrop-blur-xl overflow-y-auto">
     {{-- Close button --}}
-    <button data-mobile-close class="absolute top-7 right-6 p-2 text-text-default hover:text-primary transition z-10">
-        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <button data-mobile-close class="absolute top-7 right-6 p-2 text-text-default hover:text-primary transition z-10" aria-label="Fermer le menu">
+        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
         </svg>
     </button>
