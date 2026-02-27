@@ -38,85 +38,114 @@
         </div>
     </section>
 
-    {{-- Itinéraire --}}
-    @if($page->map_city && $page->map_latitude && $page->map_longitude)
-        @php
-            $baseName = $mapSettings['map_base_name'] ?? 'Audruicq';
-            $baseLat = (float) ($mapSettings['map_base_latitude'] ?? 50.8792100);
-            $baseLng = (float) ($mapSettings['map_base_longitude'] ?? 2.0746580);
-        @endphp
-        <section>
-            <div class="container">
-                <div class="mx-auto max-w-5xl">
+    {{-- Carte --}}
+    @php
+        $baseName = $mapSettings['map_base_name'] ?? 'Audruicq';
+        $baseLat = (float) ($mapSettings['map_base_latitude'] ?? 50.8792100);
+        $baseLng = (float) ($mapSettings['map_base_longitude'] ?? 2.0746580);
+        $hasItineraire = $page->map_city && $page->map_latitude && $page->map_longitude;
+    @endphp
+    <section>
+        <div class="container">
+            <div class="mx-auto max-w-5xl">
+                @if($hasItineraire)
                     <div class="mb-8 text-center" data-animate="fade-up">
                         <p class="text-secondary mb-2 text-sm font-medium uppercase tracking-wider">Itinéraire</p>
                         <h2 class="font-secondary text-3xl text-white md:text-4xl">
-                            Votre espace multi-sensoriel à {{ $page->map_travel_time }} minutes de {{ $page->map_city }}
+                            Votre espace multi-sensoriel à <span class="text-primary">{{ $page->map_travel_time }} minutes</span> de {{ $page->map_city }}
                         </h2>
                     </div>
-
-                    <div data-animate="fade-up" data-animate-delay="0.1" class="map-itineraire-wrapper overflow-hidden rounded-2xl border border-border/30">
-                        <div id="map-itineraire" class="h-[300px] w-full md:h-[350px]"></div>
+                @else
+                    <div class="mb-8 text-center" data-animate="fade-up">
+                        <p class="text-secondary mb-2 text-sm font-medium uppercase tracking-wider">Nous trouver</p>
+                        <h2 class="font-secondary text-3xl text-white md:text-4xl">
+                            Nous trouver à {{ $baseName }}
+                        </h2>
                     </div>
+                @endif
 
+                <div data-animate="fade-up" data-animate-delay="0.1" class="map-itineraire-wrapper overflow-hidden rounded-2xl border border-border/30">
+                    <div id="map-itineraire" class="h-[300px] w-full md:h-[350px]"></div>
+                </div>
+
+                @if($hasItineraire)
                     <p data-animate="fade-up" data-animate-delay="0.2" class="mt-6 text-center text-lg text-white/70">
                         Notre salle sensaë à {{ $baseName }} est facilement accessible depuis {{ $page->map_city }} en voiture.
                     </p>
-                </div>
+                @else
+                    <p data-animate="fade-up" data-animate-delay="0.2" class="mt-6 text-center text-lg text-white/70">
+                        L'adresse définitive sera communiquée à l'ouverture de la salle Snoezelen.<br>
+                        À proximité de Calais, Saint-Omer, Dunkerque et Boulogne-sur-Mer.
+                    </p>
+                @endif
             </div>
-        </section>
+        </div>
+    </section>
 
-        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-        <style>
-            .map-itineraire-wrapper { position: relative; }
-            .map-itineraire-wrapper::after {
-                content: "";
-                position: absolute;
-                inset: 0;
-                background: linear-gradient(180deg, rgba(114,26,214,0.05) 0%, rgba(114,26,214,0.08) 100%);
-                pointer-events: none;
-                z-index: 10;
-            }
-            .map-itineraire-wrapper > div { filter: brightness(1.4) contrast(1.2); }
-            .marker-itineraire { background: transparent !important; border: none !important; }
-            .marker-itineraire svg { filter: drop-shadow(0 4px 12px rgba(114,26,214,0.6)); }
-            .leaflet-popup-content-wrapper { background: rgba(20,15,30,0.95) !important; border: 1px solid rgba(114,26,214,0.3) !important; border-radius: 12px !important; box-shadow: 0 8px 32px rgba(114,26,214,0.3) !important; }
-            .leaflet-popup-tip { background: rgba(20,15,30,0.95) !important; }
-            .leaflet-popup-content { margin: 12px 16px !important; color: #fff !important; }
-            .leaflet-control-attribution { background: rgba(20,15,30,0.8) !important; color: rgba(255,255,255,0.5) !important; font-size: 10px !important; }
-            .leaflet-control-attribution a { color: rgba(210,153,255,0.7) !important; }
-            @keyframes pulse-itineraire {
-                0% { transform: translate(-50%,-50%) scale(1); opacity: 0.6; }
-                50% { transform: translate(-50%,-50%) scale(1.5); opacity: 0; }
-                100% { transform: translate(-50%,-50%) scale(1); opacity: 0; }
-            }
-        </style>
-        <script>
-            document.addEventListener('DOMContentLoaded', function () {
-                if (typeof L === 'undefined') return;
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        .map-itineraire-wrapper { position: relative; }
+        .map-itineraire-wrapper::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, rgba(114,26,214,0.05) 0%, rgba(114,26,214,0.08) 100%);
+            pointer-events: none;
+            z-index: 10;
+        }
+        .map-itineraire-wrapper > div { filter: brightness(1.4) contrast(1.2); }
+        .marker-itineraire { background: transparent !important; border: none !important; }
+        .marker-itineraire svg { filter: drop-shadow(0 4px 12px rgba(114,26,214,0.6)); }
+        .leaflet-popup-content-wrapper { background: rgba(20,15,30,0.95) !important; border: 1px solid rgba(114,26,214,0.3) !important; border-radius: 12px !important; box-shadow: 0 8px 32px rgba(114,26,214,0.3) !important; }
+        .leaflet-popup-tip { background: rgba(20,15,30,0.95) !important; }
+        .leaflet-popup-content { margin: 12px 16px !important; color: #fff !important; }
+        .leaflet-control-attribution { background: rgba(20,15,30,0.8) !important; color: rgba(255,255,255,0.5) !important; font-size: 10px !important; }
+        .leaflet-control-attribution a { color: rgba(210,153,255,0.7) !important; }
+        @keyframes pulse-itineraire {
+            0% { transform: translate(-50%,-50%) scale(1); opacity: 0.6; }
+            50% { transform: translate(-50%,-50%) scale(1.5); opacity: 0; }
+            100% { transform: translate(-50%,-50%) scale(1); opacity: 0; }
+        }
+    </style>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            if (typeof L === 'undefined') return;
 
-                var villeLat = {{ $page->map_latitude }};
-                var villeLng = {{ $page->map_longitude }};
-                var baseLat = {{ $baseLat }};
-                var baseLng = {{ $baseLng }};
+            var baseLat = {{ $baseLat }};
+            var baseLng = {{ $baseLng }};
+            var baseName = @json($baseName);
+            var hasItineraire = {{ $hasItineraire ? 'true' : 'false' }};
+
+            var map = L.map('map-itineraire', {
+                scrollWheelZoom: false,
+                zoomControl: false,
+            });
+
+            L.control.zoom({ position: 'bottomright' }).addTo(map);
+
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; OSM &copy; CARTO',
+                subdomains: 'abcd',
+                maxZoom: 19,
+            }).addTo(map);
+
+            // Marqueur base (principal, avec pulse)
+            var baseIcon = L.divIcon({
+                className: 'marker-itineraire',
+                html: '<div style="position:relative;"><div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:50px;height:50px;background:rgba(114,26,214,0.3);border-radius:50%;animation:pulse-itineraire 2s infinite;"></div><svg width="40" height="50" viewBox="0 0 48 60" fill="none" style="position:relative;z-index:10;"><path d="M24 0C10.745 0 0 10.745 0 24c0 16.8 24 36 24 36s24-19.2 24-36C48 10.745 37.255 0 24 0z" fill="#721ad6"/><circle cx="24" cy="22" r="10" fill="white"/><circle cx="24" cy="22" r="5" fill="#721ad6"/></svg></div>',
+                iconSize: [40, 50],
+                iconAnchor: [20, 50],
+                popupAnchor: [0, -50],
+            });
+            L.marker([baseLat, baseLng], { icon: baseIcon }).addTo(map);
+
+            if (hasItineraire) {
+                var villeLat = {{ $page->map_latitude ?? 0 }};
+                var villeLng = {{ $page->map_longitude ?? 0 }};
                 var villeName = @json($page->map_city);
-                var baseName = @json($baseName);
 
-                var map = L.map('map-itineraire', {
-                    scrollWheelZoom: false,
-                    zoomControl: false,
-                }).setView([(villeLat + baseLat) / 2, (villeLng + baseLng) / 2], 11);
-
-                L.control.zoom({ position: 'bottomright' }).addTo(map);
-
-                L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-                    attribution: '&copy; OSM &copy; CARTO',
-                    subdomains: 'abcd',
-                    maxZoom: 19,
-                }).addTo(map);
-
-                // Route pré-calculée (stockée en BDD, zéro appel API)
+                // Route pré-calculée
                 var routeCoords = @json($page->map_route_geometry);
                 if (routeCoords) {
                     var latLngs = routeCoords.map(function (c) { return [c[1], c[0]]; });
@@ -137,21 +166,14 @@
                 });
                 L.marker([villeLat, villeLng], { icon: villeIcon }).addTo(map);
 
-                // Marqueur base (principal, avec pulse)
-                var baseIcon = L.divIcon({
-                    className: 'marker-itineraire',
-                    html: '<div style="position:relative;"><div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:50px;height:50px;background:rgba(114,26,214,0.3);border-radius:50%;animation:pulse-itineraire 2s infinite;"></div><svg width="40" height="50" viewBox="0 0 48 60" fill="none" style="position:relative;z-index:10;"><path d="M24 0C10.745 0 0 10.745 0 24c0 16.8 24 36 24 36s24-19.2 24-36C48 10.745 37.255 0 24 0z" fill="#721ad6"/><circle cx="24" cy="22" r="10" fill="white"/><circle cx="24" cy="22" r="5" fill="#721ad6"/></svg></div>',
-                    iconSize: [40, 50],
-                    iconAnchor: [20, 50],
-                    popupAnchor: [0, -50],
-                });
-                L.marker([baseLat, baseLng], { icon: baseIcon }).addTo(map);
-
-                // Ajuster la vue
                 map.fitBounds([[villeLat, villeLng], [baseLat, baseLng]], { padding: [50, 50], maxZoom: 12 });
-            });
-        </script>
-    @endif
+            } else {
+                map.setView([baseLat, baseLng], 9);
+            }
+        });
+    </script>
+
+    <x-pricing :discovery-only="true" />
 
     <x-cta-section />
 @endsection

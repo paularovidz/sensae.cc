@@ -5,7 +5,7 @@
 
 @section('content')
     {{-- Hero / Intro --}}
-    <section class="section-gradient relative after:top-0">
+    <section class="hero relative banner-gradient">
         <div class="container space-y-12 md:space-y-16">
             <div class="mx-auto max-w-2xl text-center" data-animate="fade-up">
                 <x-pill text="Tarifs" />

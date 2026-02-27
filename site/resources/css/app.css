@@ -228,7 +228,7 @@ li {
     font-weight: var(--font-weight-normal);
     color: #d299ff;
 }
-ul:not(.list-unstyled) li::before {
+.prose-styles ul:not(.list-unstyled) li::before {
     --tw-content: "";
     content: var(--tw-content);
     height: calc(var(--spacing) * 1.5);
@@ -241,7 +241,7 @@ ul:not(.list-unstyled) li::before {
     border-radius: 3.40282e+38px;
 }
 
-ul:not(.list-unstyled) li::after {
+.prose-styles ul:not(.list-unstyled) li::after {
     --tw-content: "";
     content: var(--tw-content);
     top: 0.35em;

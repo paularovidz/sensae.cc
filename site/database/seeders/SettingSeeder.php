@@ -96,7 +96,7 @@ class SettingSeeder extends Seeder
         ];
 
         foreach ($settings as $setting) {
-            Setting::updateOrCreate(
+            Setting::firstOrCreate(
                 ['key' => $setting['key']],
                 $setting
             );
