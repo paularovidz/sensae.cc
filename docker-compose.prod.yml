@@ -74,7 +74,7 @@ services:
       - snoezelen_network
 
   # ============================================
-  # Site vitrine Laravel
+  # Site vitrine Laravel (sensae.cc)
   # ============================================
   site:
     image: ghcr.io/${GITHUB_REPO}-site:latest
@@ -94,6 +94,8 @@ services:
       DB_USERNAME: ${DB_USER}
       DB_PASSWORD: ${DB_PASS}
       SENSAE_API_URL: http://api
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4o-mini}
       SESSION_DRIVER: database
       CACHE_STORE: database
     volumes:
