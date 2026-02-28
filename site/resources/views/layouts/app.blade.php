@@ -125,5 +125,29 @@
     </main>
 
     @include('partials.footer')
+
+    {{-- Plausible opt-out toggle (used in legal pages) --}}
+    <script>
+        document.addEventListener('click', function (e) {
+            var btn = e.target.closest('[data-plausible-toggle]');
+            if (!btn) return;
+            var ignored = localStorage.getItem('plausible_ignore') === 'true';
+            if (ignored) localStorage.removeItem('plausible_ignore');
+            else localStorage.setItem('plausible_ignore', 'true');
+            updatePlausibleToggle(!ignored);
+        });
+        function updatePlausibleToggle(ignored) {
+            document.querySelectorAll('[data-plausible-toggle]').forEach(function (btn) {
+                btn.textContent = ignored ? 'Réactiver les statistiques' : 'Désactiver les statistiques';
+            });
+            document.querySelectorAll('[data-plausible-status]').forEach(function (el) {
+                el.textContent = ignored ? 'Statistiques désactivées.' : 'Statistiques activées.';
+                el.style.color = ignored ? '#e57373' : '#81c784';
+            });
+        }
+        document.addEventListener('DOMContentLoaded', function () {
+            updatePlausibleToggle(localStorage.getItem('plausible_ignore') === 'true');
+        });
+    </script>
 </body>
 </html>

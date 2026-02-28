@@ -8,6 +8,7 @@ use App\Filament\Forms\Components\MediaPicker;
 use Filament\Resources\Resource;
 use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Toggle;
@@ -58,9 +59,20 @@ class PageResource extends Resource
                     ->label('H1'),
 MediaPicker::make('image')
                     ->label('Image'),
+                Toggle::make('html_mode')
+                    ->label('Mode HTML')
+                    ->dehydrated(false)
+                    ->live()
+                    ->columnSpanFull(),
                 RichEditor::make('content')
                     ->label('Contenu')
-                    ->columnSpanFull(),
+                    ->columnSpanFull()
+                    ->visible(fn ($get) => !$get('html_mode')),
+                Textarea::make('content')
+                    ->label('Contenu (HTML)')
+                    ->columnSpanFull()
+                    ->rows(20)
+                    ->visible(fn ($get) => (bool) $get('html_mode')),
                 TextInput::make('meta_title')
                     ->label('Meta title'),
                 TextInput::make('meta_description')
