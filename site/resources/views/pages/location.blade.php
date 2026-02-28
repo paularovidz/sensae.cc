@@ -8,15 +8,15 @@
     <section class="hero relative banner-gradient">
         <div class="container">
             <div class="relative z-10 mx-auto max-w-4xl space-y-10">
-                <p data-animate="fade-in" class="text-xs text-center uppercase">
-                    {{ $page->title }}
-                </p>
-
                 @if($page->h1)
-                    <h1 data-animate="fade-up" class="has-italic-text font-secondary mb-6 text-center text-5xl text-white md:text-6xl/tight">
-                        {!! $page->h1 !!}
+                    <h1 data-animate="fade-in" class="text-xs text-center uppercase">
+                        {{ $page->title }}
                     </h1>
                 @endif
+                
+                <p data-animate="fade-up" class="has-italic-text font-secondary mb-6 text-center text-5xl text-white md:text-6xl/tight">
+                    {!! $page->title !!}
+                </p>
 
                 <div data-animate="fade-up" data-animate-delay="0.1" class="flex flex-wrap items-center justify-center gap-5">
                     <x-cta-contact label="Ouverture en août" :star="true" />

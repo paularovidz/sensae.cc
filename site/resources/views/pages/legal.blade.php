@@ -3,11 +3,21 @@
 @section('title', $page->meta_title ?? $page->title . ' - sensaë')
 
 @section('content')
-    <section class="py-16">
-        <div class="max-w-4xl mx-auto px-4 sm:px-6">
-            <h1 data-animate="fade-up" class="text-3xl font-bold text-text-light font-secondary">{{ $page->title }}</h1>
+    {{-- Hero banner --}}
+    <section class="hero relative">
+        <div class="container">
+            <div class="relative z-10 mx-auto max-w-4xl space-y-10">
+                <h1 data-animate="fade-up" class="has-italic-text font-secondary mb-6 text-center text-5xl text-white md:text-6xl/tight">
+                    {!! $page->title !!}
+                </h1>
+            </div>
+        </div>
+    </section>
 
-            <div data-animate="fade-up" data-animate-delay="0.1" class="mt-8 prose prose-invert max-w-none text-text-default text-sm">
+    {{-- Content --}}
+    <section>
+        <div class="container">
+            <div data-animate="fade-up" class="mx-auto max-w-4xl prose-styles">
                 {!! $page->content !!}
             </div>
         </div>
