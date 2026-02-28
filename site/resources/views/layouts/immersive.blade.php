@@ -12,6 +12,7 @@
     <link rel="manifest" href="/favicon/site.webmanifest" />
 
     @yield('meta')
+    @stack('structured_data')
     <script>if('scrollRestoration' in history)history.scrollRestoration='manual';window.scrollTo(0,0);</script>
     <style>
         @font-face { font-family:'Satoshi'; src:url('/fonts/satoshi-regular.woff2') format('woff2'); font-weight:400; font-display:swap; }

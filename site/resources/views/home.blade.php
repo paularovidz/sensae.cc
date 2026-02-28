@@ -43,6 +43,8 @@
 
     <x-pricing :discovery-only="true" />
 
+    <x-review-schema :reviews="$reviews" />
+
     {{-- Reviews --}}
     @if ($reviews->count())
         <section data-animate-border class="py-16 border-t border-border">
@@ -101,6 +103,7 @@
     @endif
 
     {{-- FAQ --}}
+    <x-faq-schema :faqs="$faqs" />
     <section class="section-gradient relative">
         <div class="container space-y-12 md:space-y-16">
             <div class="mx-auto max-w-2xl text-center" data-animate="fade-up">

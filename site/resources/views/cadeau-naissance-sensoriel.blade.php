@@ -1,5 +1,19 @@
 @extends('layouts.immersive')
 
+@push('structured_data')
+    @php
+        $breadcrumbSchema = [
+            '@context' => 'https://schema.org',
+            '@type' => 'BreadcrumbList',
+            'itemListElement' => [
+                ['@type' => 'ListItem', 'position' => 1, 'name' => 'Accueil', 'item' => url('/')],
+                ['@type' => 'ListItem', 'position' => 2, 'name' => 'Cadeau naissance'],
+            ],
+        ];
+    @endphp
+    <script type="application/ld+json">{!! json_encode($breadcrumbSchema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) !!}</script>
+@endpush
+
 @section('meta')
     <title>Cadeau naissance sensoriel : offrir une séance Snoezelen — sensaë</title>
     <meta name="description" content="Offrez un cadeau de naissance unique : une séance Snoezelen pour éveiller les sens de bébé en douceur. Un moment de connexion parent-enfant inoubliable.">

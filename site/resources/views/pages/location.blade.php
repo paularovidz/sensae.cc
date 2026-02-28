@@ -3,7 +3,17 @@
 @section('title', $page->meta_title ?? $page->title . ' - sensaë')
 @section('meta_description', $page->meta_description ?? '')
 
+@section('breadcrumb')
+    <li><a href="/" class="hover:text-primary transition">Accueil</a></li>
+    <li class="before:content-['/'] before:mx-1.5">{{ $page->title }}</li>
+@endsection
+
 @section('content')
+<x-breadcrumb :items="[
+    ['name' => 'Accueil', 'url' => url('/')],
+    ['name' => $page->title],
+]" />
+
     {{-- Hero banner --}}
     <section class="hero relative banner-gradient">
         <div class="container">

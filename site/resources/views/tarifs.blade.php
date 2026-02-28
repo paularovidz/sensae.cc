@@ -4,8 +4,16 @@
 @section('hideGlow', 'true')
 
 <x-service-schema />
+@section('breadcrumb')
+    <li><a href="/" class="hover:text-primary transition">Accueil</a></li>
+    <li class="before:content-['/'] before:mx-1.5">Tarifs</li>
+@endsection
 
 @section('content')
+<x-breadcrumb :items="[
+    ['name' => 'Accueil', 'url' => url('/')],
+    ['name' => 'Tarifs'],
+]" />
     {{-- Hero / Intro --}}
     <section class="hero relative banner-gradient">
         <div class="container space-y-12 md:space-y-16">
@@ -143,6 +151,7 @@
     </section>
 
     {{-- FAQ Tarifs --}}
+    <x-faq-schema :faqs="$faqs" />
     @if($faqs->count())
         <section class="section-gradient relative">
             <div class="container space-y-12 md:space-y-16">
