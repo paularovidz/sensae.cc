@@ -3,6 +3,8 @@
 @section('title', 'Tarifs - sensaë')
 @section('hideGlow', 'true')
 
+<x-service-schema />
+
 @section('content')
     {{-- Hero / Intro --}}
     <section class="hero relative banner-gradient">

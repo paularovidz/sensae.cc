@@ -97,6 +97,8 @@
     @endphp
     <script type="application/ld+json">{!! json_encode($schemaData, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) !!}</script>
 
+    @stack('structured_data')
+
     <style>
         @font-face { font-display: swap; font-family: 'Satoshi'; font-weight: 400; src: url('/fonts/satoshi-regular.woff2') format('woff2'); }
         @font-face { font-display: swap; font-family: 'Satoshi'; font-weight: 500; src: url('/fonts/satoshi-medium.woff2') format('woff2'); }
