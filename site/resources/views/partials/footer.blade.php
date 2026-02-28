@@ -88,7 +88,7 @@
                         @if(!empty($footer['credit_name']))
                             <li>Réalisé par
                                 @if(!empty($footer['credit_url']))
-                                    <a href="{{ $footer['credit_url'] }}" target="_blank" rel="noopener" class="text-inherit opacity-90 duration-300 hover:text-white">{{ $footer['credit_name'] }}</a>
+                                    <button data-lkb="{{ base64_encode($footer['credit_url']) }}" class="text-inherit opacity-90 duration-300 hover:text-white">{{ $footer['credit_name'] }}</a>
                                 @else
                                     {{ $footer['credit_name'] }}
                                 @endif

@@ -51,7 +51,7 @@
                 <span class="ps-line" style="margin:0;padding:8px 18px;border:1px solid rgba(114,26,214,0.25);border-radius:999px;font-size:0.8rem;" data-ps-item>Odeurs légères</span>
                 <span class="ps-line" style="margin:0;padding:8px 18px;border:1px solid rgba(210,153,255,0.2);border-radius:999px;font-size:0.8rem;" data-ps-item>Fauteuils enveloppants</span>
             </div>
-            <p class="ps-line" style="margin-top:1rem;">Le professionnel ne vous impose <strong>rien</strong>.<br>Une stimulation à la fois, si nécessaire.</p>
+            <p class="ps-line" style="margin-top:1rem;">Je ne vous impose <strong>rien</strong>.<br>Une stimulation à la fois, si nécessaire.</p>
         </div>
     </section>
 
@@ -68,7 +68,7 @@
                 </div>
                 <div class="ps-duo-card" style="border:1px solid rgba(114,26,214,0.35);background:rgba(114,26,214,0.08);">
                     <h3>Guidée</h3>
-                    <p>Le praticien propose, ajuste et sécurise</p>
+                    <p>La praticienne propose, ajuste et sécurise</p>
                 </div>
             </div>
             <p class="ps-subtitle" style="margin-top:1.5rem;">Aucun exercice structuré.<br>Aucune attente de réussite.</p>

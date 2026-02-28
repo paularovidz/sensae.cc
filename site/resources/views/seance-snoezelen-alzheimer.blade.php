@@ -67,7 +67,7 @@
                     <p>Un moment de connexion partagé, au-delà de la maladie</p>
                 </div>
                 <div class="ps-duo-card" style="border:1px solid rgba(114,26,214,0.3);background:rgba(114,26,214,0.06);">
-                    <h3>Avec le praticien</h3>
+                    <h3>Avec la praticienne</h3>
                     <p>Un regard professionnel, attentif aux moindres réactions</p>
                 </div>
             </div>

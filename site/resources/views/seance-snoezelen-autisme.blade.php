@@ -68,7 +68,7 @@
                 </div>
                 <div class="ps-duo-card" style="border:1px solid rgba(114,26,214,0.3);background:rgba(114,26,214,0.06);">
                     <h3>Accompagnement</h3>
-                    <p>Le praticien observe, sécurise et ajuste l'environnement</p>
+                    <p>J'observe, sécurise et ajuste l'environnement</p>
                 </div>
             </div>
             <p class="ps-subtitle" style="margin-top:1.5rem;">Pas de consigne. Pas de « bien » ou « mal » faire.<br>Juste explorer.</p>
@@ -94,7 +94,7 @@
         <div class="ps-orb" style="width:400px;height:400px;background:radial-gradient(circle,rgba(255,214,153,0.08),transparent 70%);bottom:10%;left:50%;transform:translateX(-50%);"></div>
         <div class="ps-section-inner">
             <h2 class="ps-title">Ce que l'on observe</h2>
-            <p class="ps-line">Chaque séance est unique. Le praticien note les <strong>signaux non-verbaux</strong></p>
+            <p class="ps-line">Chaque séance est unique. La praticienne note les <strong>signaux non-verbaux</strong></p>
             <p class="ps-line" style="margin-top:0.5rem;margin-bottom:0.5rem;">Au fil des séances, des <strong>évolutions</strong> apparaissent souvent</p>
             <div class="ps-pills">
                 <div class="ps-pill"><span class="ps-pill-dot"></span>Plus de calme</div>

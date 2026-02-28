@@ -67,7 +67,7 @@
                     <p>Accompagne, observe et partage ce moment de découverte</p>
                 </div>
                 <div class="ps-duo-card" style="border:1px solid rgba(210,153,255,0.35);background:rgba(210,153,255,0.08);">
-                    <h3>Le praticien</h3>
+                    <h3>La praticienne</h3>
                     <p>Guide en douceur, adapte chaque stimulation au bébé</p>
                 </div>
             </div>
