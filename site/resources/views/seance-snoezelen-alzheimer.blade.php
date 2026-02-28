@@ -1,5 +1,19 @@
 @extends('layouts.immersive')
 
+@push('structured_data')
+    @php
+        $breadcrumbSchema = [
+            '@context' => 'https://schema.org',
+            '@type' => 'BreadcrumbList',
+            'itemListElement' => [
+                ['@type' => 'ListItem', 'position' => 1, 'name' => 'Accueil', 'item' => url('/')],
+                ['@type' => 'ListItem', 'position' => 2, 'name' => 'Snoezelen & Alzheimer'],
+            ],
+        ];
+    @endphp
+    <script type="application/ld+json">{!! json_encode($breadcrumbSchema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) !!}</script>
+@endpush
+
 @section('meta')
     <title>Séance Snoezelen et Alzheimer — sensaë</title>
     <meta name="description" content="Comment le Snoezelen accompagne les personnes atteintes d'Alzheimer. Quand les mots s'effacent, les sens restent. Une approche douce et respectueuse.">

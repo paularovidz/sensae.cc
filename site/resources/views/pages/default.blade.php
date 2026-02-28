@@ -3,7 +3,17 @@
 @section('title', $page->meta_title ?? $page->title . ' - sensaë')
 @section('meta_description', $page->meta_description ?? '')
 
+@section('breadcrumb')
+    <li><a href="/" class="hover:text-primary transition">Accueil</a></li>
+    <li class="before:content-['/'] before:mx-1.5">{{ $page->title }}</li>
+@endsection
+
 @section('content')
+<x-breadcrumb :items="[
+    ['name' => 'Accueil', 'url' => url('/')],
+    ['name' => $page->title],
+]" />
+
     <section class="py-16">
         <div class="max-w-4xl mx-auto px-4 sm:px-6">
             <h1 data-animate="fade-up" class="text-3xl md:text-4xl font-bold text-text-light font-secondary">{{ $page->h1 ?? $page->title }}</h1>

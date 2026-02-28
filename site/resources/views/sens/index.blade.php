@@ -3,7 +3,16 @@
 @section('title', 'Apprendre les sens - sensaë')
 @section('meta_description', 'Découvrez les sens stimulés en Snoezelen : goût, odorat, ouïe, toucher, vestibulaire et vue. Comprenez comment l\'approche multi-sensorielle agit.')
 
+@section('breadcrumb')
+    <li><a href="/" class="hover:text-primary transition">Accueil</a></li>
+    <li class="before:content-['/'] before:mx-1.5">Comprendre les sens</li>
+@endsection
+
 @section('content')
+<x-breadcrumb :items="[
+    ['name' => 'Accueil', 'url' => url('/')],
+    ['name' => 'Comprendre les sens'],
+]" />
 <main class="section-spacing-lg fit-to-screen">
 
     {{-- Hero: roue des sens + marquee --}}

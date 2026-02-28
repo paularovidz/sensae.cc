@@ -2,7 +2,16 @@
 
 @section('title', 'Conseils Snoezelen - sensaë')
 
+@section('breadcrumb')
+    <li><a href="/" class="hover:text-primary transition">Accueil</a></li>
+    <li class="before:content-['/'] before:mx-1.5">Conseils</li>
+@endsection
+
 @section('content')
+<x-breadcrumb :items="[
+    ['name' => 'Accueil', 'url' => url('/')],
+    ['name' => 'Conseils'],
+]" />
     <section class="py-16">
         <div class="max-w-6xl mx-auto px-4 sm:px-6">
             <div class="mx-auto max-w-2xl text-center">

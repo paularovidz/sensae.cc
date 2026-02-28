@@ -3,7 +3,18 @@
 @section('title', $sens->title . ' - sensaë')
 @section('meta_description', $sens->excerpt)
 
+@section('breadcrumb')
+    <li><a href="/" class="hover:text-primary transition">Accueil</a></li>
+    <li class="before:content-['/'] before:mx-1.5"><a href="{{ route('sens.index') }}" class="hover:text-primary transition">Comprendre les sens</a></li>
+    <li class="before:content-['/'] before:mx-1.5">{{ $sens->title }}</li>
+@endsection
+
 @section('content')
+<x-breadcrumb :items="[
+    ['name' => 'Accueil', 'url' => url('/')],
+    ['name' => 'Comprendre les sens', 'url' => url('/comprendre-sens')],
+    ['name' => $sens->title],
+]" />
     <article class="py-16">
         <div class="max-w-4xl mx-auto px-4 sm:px-6">
             @if($sens->category)
