@@ -150,6 +150,7 @@
     </section>
 
     {{-- FAQ Tarifs --}}
+    <x-faq-schema :faqs="$faqs" />
     @if($faqs->count())
         <section class="section-gradient relative">
             <div class="container space-y-12 md:space-y-16">

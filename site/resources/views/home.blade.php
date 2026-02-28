@@ -103,6 +103,7 @@
     @endif
 
     {{-- FAQ --}}
+    <x-faq-schema :faqs="$faqs" />
     <section class="section-gradient relative">
         <div class="container space-y-12 md:space-y-16">
             <div class="mx-auto max-w-2xl text-center" data-animate="fade-up">
