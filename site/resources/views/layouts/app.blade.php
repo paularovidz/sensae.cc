@@ -120,6 +120,17 @@
     {{-- Plausible Analytics --}}
     @if(!empty($seo['seo_plausible_domain'] ?? ''))
         <script defer data-domain="{{ $seo['seo_plausible_domain'] }}" src="https://plausible.io/js/script.js"></script>
+        <script>window.plausible=window.plausible||function(){(window.plausible.q=window.plausible.q||[]).push(arguments)};</script>
+        <script>
+            window.addEventListener('message', function (e) {
+                if (e.data.type === 'form-submit' && sessionStorage.getItem('Contact') !== '1') {
+                    sessionStorage.setItem('Contact', '1');
+                    plausible('Contact');
+                } else if (e.data.type === 'form-ready') {
+                    plausible('Ouverture formulaire contact');
+                }
+            });
+        </script>
     @endif
 </head>
 <body class="bg-body text-text-default min-h-screen flex flex-col">
