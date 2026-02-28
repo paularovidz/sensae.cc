@@ -76,8 +76,8 @@
 
             {{-- Bottom bar --}}
             <div class="py-7 text-sm md:text-base">
-                <div class="flex flex-wrap justify-between gap-x-8 gap-y-6">
-                    <ul class="flex flex-wrap gap-y-2 md:flex-nowrap">
+                <div class="flex flex-wrap items-center justify-between gap-x-8 gap-y-6">
+                    <ul class="flex flex-wrap items-center gap-x-4 gap-y-2 md:flex-nowrap">
                         @if(!empty($footer['bottom_links']))
                             @foreach($footer['bottom_links'] as $link)
                                 <li class="inline-block">
@@ -88,7 +88,7 @@
                         @if(!empty($footer['credit_name']))
                             <li>Réalisé par
                                 @if(!empty($footer['credit_url']))
-                                    <button data-lkb="{{ base64_encode($footer['credit_url']) }}" class="text-inherit opacity-90 duration-300 hover:text-white">{{ $footer['credit_name'] }}</a>
+                                    <button data-lkb="{{ base64_encode($footer['credit_url']) }}" class="text-inherit opacity-90 duration-300 hover:text-white">{{ $footer['credit_name'] }}</button>
                                 @else
                                     {{ $footer['credit_name'] }}
                                 @endif

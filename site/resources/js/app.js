@@ -1,4 +1,6 @@
 import gsap from 'gsap';
+import { ScrollToPlugin } from 'gsap/ScrollToPlugin';
+gsap.registerPlugin(ScrollToPlugin);
 // GSAP Animations — run first, hero is above the fold
 import { initAnimations } from './animations/index';
 
@@ -247,6 +249,16 @@ function formatAvailability(days, nextDate) {
     if (days <= 6) return `Disponible ${dayNames[date.getDay()]}`;
     return `Disponible dans ${days} jours`;
 }
+
+// Smooth anchor scrolling via GSAP (replaces CSS scroll-behavior: smooth)
+document.addEventListener('click', (e) => {
+    const anchor = e.target.closest('a[href^="#"]');
+    if (!anchor) return;
+    const target = document.querySelector(anchor.getAttribute('href'));
+    if (!target) return;
+    e.preventDefault();
+    gsap.to(window, { scrollTo: { y: target, offsetY: 0 }, duration: 0.8, ease: 'power2.inOut' });
+});
 
 // Obfuscated links
 document.addEventListener('click', (e) => {

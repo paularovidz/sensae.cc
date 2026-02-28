@@ -5,9 +5,8 @@
 @source '../**/*.blade.php';
 @source '../**/*.js';
 
-html {
-  scroll-behavior: smooth;
-}
+/* scroll-behavior: smooth removed — conflicts with GSAP ScrollTrigger on iOS,
+   causing intermittent scroll blocking. GSAP handles smooth anchor scrolling. */
 
 /* Register custom properties for GPU-animated conic-gradients */
 @property --glow-angle {

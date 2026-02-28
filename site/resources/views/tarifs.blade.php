@@ -105,7 +105,7 @@
             <div class="mx-auto max-w-2xl text-center" data-animate="fade-up">
                 <x-pill text="Accompagnement" />
                 <h2>Séances <strong>spécialisées</strong></h2>
-                <p class="text-text-default mt-4">L'approche Snoezelen s'adapte à chaque personne. Nous proposons des séances conçues pour des besoins spécifiques.</p>
+                <p class="text-text-default mt-4">L'approche Snoezelen s'adapte à chaque personne. Je propose des séances conçues pour des besoins spécifiques.</p>
             </div>
 
             <div class="grid gap-14 lg:grid-cols-2" data-animate-grid>
