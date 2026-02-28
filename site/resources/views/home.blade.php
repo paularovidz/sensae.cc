@@ -43,6 +43,8 @@
 
     <x-pricing :discovery-only="true" />
 
+    <x-review-schema :reviews="$reviews" />
+
     {{-- Reviews --}}
     @if ($reviews->count())
         <section data-animate-border class="py-16 border-t border-border">
