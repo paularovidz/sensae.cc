@@ -17,7 +17,7 @@
             </div>
 
             <div data-animate="fade-up" data-animate-delay="0.2">
-                <x-sens-wheel :sens="$allSens" :links="true" />
+                <x-sens-wheel :sens="$allSens" :links="false" />
             </div>
         </div>
     </section>
