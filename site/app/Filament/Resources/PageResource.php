@@ -63,15 +63,25 @@ MediaPicker::make('image')
                     ->label('Mode HTML')
                     ->dehydrated(false)
                     ->live()
+                    ->afterStateUpdated(function ($state, $get, $set) {
+                        if ($state) {
+                            $set('content_raw', $get('content'));
+                        } else {
+                            $set('content', $get('content_raw'));
+                        }
+                    })
                     ->columnSpanFull(),
                 RichEditor::make('content')
                     ->label('Contenu')
                     ->columnSpanFull()
                     ->visible(fn ($get) => !$get('html_mode')),
-                Textarea::make('content')
+                Textarea::make('content_raw')
                     ->label('Contenu (HTML)')
-                    ->columnSpanFull()
+                    ->dehydrated(false)
+                    ->live(onBlur: true)
+                    ->afterStateUpdated(fn ($set, $state) => $set('content', $state))
                     ->rows(20)
+                    ->columnSpanFull()
                     ->visible(fn ($get) => (bool) $get('html_mode')),
                 TextInput::make('meta_title')
                     ->label('Meta title'),
