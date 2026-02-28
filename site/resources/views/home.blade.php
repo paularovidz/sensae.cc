@@ -58,6 +58,48 @@
         </section>
     @endif
 
+    {{-- Articles --}}
+    @if ($articles->count())
+        <section data-animate-border class="py-16 border-t border-border">
+            <div class="max-w-6xl mx-auto px-4 sm:px-6">
+                <div class="mx-auto max-w-2xl text-center mb-10">
+                    <x-pill text="Conseils" />
+                    <h2 data-animate="fade-up" class="text-3xl font-bold text-text-light font-secondary">Derniers <strong>articles</strong></h2>
+                </div>
+                <div data-animate-grid class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    @foreach ($articles as $article)
+                        <div data-lk="{{ base64_encode(route('articles.show', $article->slug)) }}" data-tilt class="group block border border-border rounded-2xl overflow-hidden hover:border-primary/50 transition">
+                            @if($article->image)
+                                <div class="aspect-video overflow-hidden">
+                                    <x-image :slug="$article->image" :alt="$article->title" class="w-full h-full object-cover group-hover:scale-105 transition duration-300" />
+                                </div>
+                            @endif
+                            <div class="p-5">
+                                @if($article->categories)
+                                    <div class="flex flex-wrap gap-2 mb-2">
+                                        @foreach($article->categories as $cat)
+                                            <span class="text-xs font-medium text-primary bg-primary/10 px-2 py-1 rounded-full">{{ $cat }}</span>
+                                        @endforeach
+                                    </div>
+                                @endif
+                                <a href="{{ route('articles.show', $article->slug) }}" class="text-lg font-bold text-text-light">{{ $article->title }}</a>
+                                @if($article->excerpt)
+                                    <p class="mt-2 text-sm text-text-default line-clamp-2">{{ $article->excerpt }}</p>
+                                @endif
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+                <div data-animate="fade-up" class="mt-8 text-center">
+                    <a href="{{ route('articles.index') }}" class="inline-flex items-center gap-2 text-primary hover:underline font-medium">
+                        Voir tous les conseils
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                    </a>
+                </div>
+            </div>
+        </section>
+    @endif
+
     {{-- FAQ --}}
     <section class="section-gradient relative">
         <div class="container space-y-12 md:space-y-16">

@@ -12,7 +12,7 @@ class SitemapController extends Controller
     {
         $staticUrls = [
             ['loc' => '/', 'priority' => '1.0', 'changefreq' => 'weekly'],
-            ['loc' => '/comprendre-sens', 'priority' => '0.8', 'changefreq' => 'weekly'],
+            ['loc' => '/comprendre-sens', 'priority' => '0.8', 'changefreq' => 'monthly'],
             ['loc' => '/conseils', 'priority' => '0.8', 'changefreq' => 'weekly'],
             ['loc' => '/faq', 'priority' => '0.5', 'changefreq' => 'monthly'],
             ['loc' => '/tarifs-snoezelen-audruicq', 'priority' => '0.6', 'changefreq' => 'monthly'],

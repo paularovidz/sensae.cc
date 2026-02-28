@@ -14,7 +14,7 @@
     <url>
         <loc>{{ url('/comprendre-sens/' . $item->slug) }}</loc>
         <lastmod>{{ $item->updated_at->toW3cString() }}</lastmod>
-        <changefreq>weekly</changefreq>
+        <changefreq>monthly</changefreq>
         <priority>0.7</priority>
     </url>
 @endforeach
