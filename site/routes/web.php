@@ -9,6 +9,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\LandingPageController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\SensController;
+use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\TarifsController;
 use App\Http\Controllers\Admin\MediaApiController;
 use Illuminate\Support\Facades\Route;
@@ -21,6 +22,8 @@ Route::middleware(['web', 'auth'])->prefix('admin/media-api')->group(function ()
     Route::delete('/{media}', [MediaApiController::class, 'destroy'])->name('admin.media-api.destroy');
     Route::put('/folders/rename', [MediaApiController::class, 'renameFolder'])->name('admin.media-api.rename-folder');
 });
+
+Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
