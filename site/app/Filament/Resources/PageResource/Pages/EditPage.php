@@ -18,4 +18,13 @@ class EditPage extends EditRecord
             Actions\DeleteAction::make(),
         ];
     }
+
+    protected function mutateFormDataBeforeSave(array $data): array
+    {
+        if (!empty($this->data['html_mode']) && isset($this->data['content_raw'])) {
+            $data['content'] = $this->data['content_raw'];
+        }
+
+        return $data;
+    }
 }
