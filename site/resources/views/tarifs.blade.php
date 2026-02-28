@@ -3,6 +3,7 @@
 @section('title', 'Tarifs - sensaë')
 @section('hideGlow', 'true')
 
+<x-service-schema />
 @section('breadcrumb')
     <li><a href="/" class="hover:text-primary transition">Accueil</a></li>
     <li class="before:content-['/'] before:mx-1.5">Tarifs</li>
