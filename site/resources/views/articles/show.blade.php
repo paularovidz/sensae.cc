@@ -3,7 +3,18 @@
 @section('title', $article->title . ' - sensaë')
 @section('meta_description', $article->excerpt)
 
+@section('breadcrumb')
+    <li><a href="/" class="hover:text-primary transition">Accueil</a></li>
+    <li class="before:content-['/'] before:mx-1.5"><a href="{{ route('articles.index') }}" class="hover:text-primary transition">Conseils</a></li>
+    <li class="before:content-['/'] before:mx-1.5">{{ $article->title }}</li>
+@endsection
+
 @section('content')
+<x-breadcrumb :items="[
+    ['name' => 'Accueil', 'url' => url('/')],
+    ['name' => 'Conseils', 'url' => url('/conseils')],
+    ['name' => $article->title],
+]" />
     <article class="py-16">
         {{-- Header centré --}}
         <div class="article relative mx-auto w-full space-y-8 lg:max-w-4xl px-4 sm:px-6">

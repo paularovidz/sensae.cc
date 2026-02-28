@@ -9,6 +9,14 @@
                         <span class="logo-text font-tertiary">{{ $menu['text'] ?? 'sensaë' }}</span>
                     </a>
 
+                    @hasSection('breadcrumb')
+                        <nav aria-label="Fil d'Ariane" class="text-sm text-text-default/70 mt-2">
+                            <ol class="flex flex-wrap items-center gap-x-1">
+                                @yield('breadcrumb')
+                            </ol>
+                        </nav>
+                    @endif
+
                     @if(!empty($footer['description']))
                         <p class="opacity-90">{{ $footer['description'] }}</p>
                     @endif

@@ -1,5 +1,19 @@
 @extends('layouts.immersive')
 
+@push('structured_data')
+    @php
+        $breadcrumbSchema = [
+            '@context' => 'https://schema.org',
+            '@type' => 'BreadcrumbList',
+            'itemListElement' => [
+                ['@type' => 'ListItem', 'position' => 1, 'name' => 'Accueil', 'item' => url('/')],
+                ['@type' => 'ListItem', 'position' => 2, 'name' => 'Première séance'],
+            ],
+        ];
+    @endphp
+    <script type="application/ld+json">{!! json_encode($breadcrumbSchema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) !!}</script>
+@endpush
+
 @section('meta')
     <title>Comment se passe une première séance Snoezelen ? — sensaë</title>
     <meta name="description" content="Découvrez le déroulement d'une première séance Snoezelen : accueil, découverte sensorielle, exploration, apaisement et retour. On ne peut pas rater une séance.">
