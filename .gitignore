@@ -38,6 +38,9 @@ logs/
 *.tmp
 tmp/
 
+# Claude Code
+.claude/
+
 # Deploy secrets
 deploy/.env*
 deploy/*.key
