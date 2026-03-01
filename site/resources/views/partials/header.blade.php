@@ -112,7 +112,7 @@
                 {{-- CTA --}}
                 @if (!empty($menu['cta_text']))
                     @if (!empty($menu['cta_action']))
-                        <button onclick="{{ $menu['cta_action'] }}"
+                        <button onclick="{!! $menu['cta_action'] !!}"
                             class="hidden sm:inline-flex items-center px-5 py-3 bg-primary text-text-light text-sm rounded-full hover:bg-primary/90 transition">
                             {{ $menu['cta_text'] }}
                         </button>
@@ -202,7 +202,7 @@
         @if (!empty($menu['cta_text']))
             <div class="pt-4 px-4" data-mobile-item>
                 @if (!empty($menu['cta_action']))
-                    <button onclick="{{ $menu['cta_action'] }}"
+                    <button onclick="{!! $menu['cta_action'] !!}"
                         class="w-full px-6 py-3 bg-primary text-text-light text-base font-semibold rounded-full hover:bg-primary/90 transition text-center">
                         {{ $menu['cta_text'] }}
                     </button>
