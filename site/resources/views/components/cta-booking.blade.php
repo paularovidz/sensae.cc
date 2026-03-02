@@ -7,7 +7,7 @@
 
 @php
     $bookingOpen = false;
-    $defaultLabel = $bookingOpen ? 'Réserver une séance' : 'Ouverture en août 2026';
+    $defaultLabel = $bookingOpen ? 'Réserver une séance' : 'Ouverture en août';
     $label = $label ?? $defaultLabel;
 @endphp
 
