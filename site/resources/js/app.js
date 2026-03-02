@@ -98,9 +98,11 @@ function initMobileMenu() {
     });
 }
 
-// Desktop megamenu — GSAP hover + Enter key for keyboard
+// Desktop megamenu — GSAP hover + safe corridor (hover cone)
 function initDesktopDropdowns() {
     const dropdowns = document.querySelectorAll('[data-dropdown]');
+    const CORRIDOR_PAD = 30;
+    const CORRIDOR_TIMEOUT = 400;
 
     dropdowns.forEach(wrapper => {
         const panel = wrapper.querySelector('[data-dropdown-panel]');
@@ -112,6 +114,7 @@ function initDesktopDropdowns() {
         let openTl = null;
         let closeTimer = null;
         let isOpen = false;
+        let corridorCleanup = null;
 
         function show() {
             if (isOpen) return;
@@ -169,6 +172,7 @@ function initDesktopDropdowns() {
 
         function hideImmediate() {
             clearTimeout(closeTimer);
+            if (corridorCleanup) corridorCleanup();
             if (openTl) openTl.kill();
             isOpen = false;
             gsap.set(panel, { visibility: 'hidden', clearProps: 'all' });
@@ -177,9 +181,73 @@ function initDesktopDropdowns() {
             if (trigger) trigger.setAttribute('aria-expanded', 'false');
         }
 
-        // Mouse: hover to open/close
-        wrapper.addEventListener('mouseenter', show);
-        wrapper.addEventListener('mouseleave', hide);
+        // Safe corridor: when mouse leaves wrapper, track movement toward panel
+        function startCorridorWatch() {
+            if (corridorCleanup) corridorCleanup();
+
+            const panelRect = panel.getBoundingClientRect();
+            const triggerRect = trigger.getBoundingClientRect();
+
+            const safetyTimer = setTimeout(() => {
+                cleanup();
+                hide();
+            }, CORRIDOR_TIMEOUT);
+
+            function onMove(e) {
+                // Re-entered the wrapper — stop watching, stay open
+                if (wrapper.contains(e.target)) {
+                    cleanup();
+                    return;
+                }
+
+                // Check if mouse is in safe corridor between trigger and panel
+                const mx = e.clientX;
+                const my = e.clientY;
+
+                // Vertically between trigger top and panel bottom (with padding)
+                if (my < triggerRect.top - CORRIDOR_PAD || my > panelRect.bottom + CORRIDOR_PAD) {
+                    cleanup();
+                    hide();
+                    return;
+                }
+
+                // Horizontal corridor: interpolate from trigger width to panel width
+                // as mouse moves from trigger to panel (cone shape)
+                const top = triggerRect.bottom;
+                const bot = panelRect.top;
+                const t = bot > top ? Math.min(1, Math.max(0, (my - top) / (bot - top))) : 1;
+
+                const coneLeft = triggerRect.left + (panelRect.left - triggerRect.left) * t - CORRIDOR_PAD;
+                const coneRight = triggerRect.right + (panelRect.right - triggerRect.right) * t + CORRIDOR_PAD;
+
+                if (mx < coneLeft || mx > coneRight) {
+                    cleanup();
+                    hide();
+                }
+            }
+
+            function cleanup() {
+                clearTimeout(safetyTimer);
+                document.removeEventListener('mousemove', onMove);
+                corridorCleanup = null;
+            }
+
+            document.addEventListener('mousemove', onMove);
+            corridorCleanup = cleanup;
+        }
+
+        // Mouse: hover with safe corridor
+        wrapper.addEventListener('mouseenter', () => {
+            if (corridorCleanup) corridorCleanup();
+            clearTimeout(closeTimer);
+            show();
+        });
+
+        wrapper.addEventListener('mouseleave', () => {
+            if (isOpen) {
+                startCorridorWatch();
+            }
+        });
 
         // Mouse: click on chevron toggles (prevents <a> navigation)
         if (chevron) {

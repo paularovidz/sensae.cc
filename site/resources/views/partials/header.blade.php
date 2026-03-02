@@ -87,7 +87,7 @@
                                             @foreach ($submenu['links'] ?? [] as $link)
                                                 <li>
                                                     <a href="{{ $link['url'] ?? '#' }}"
-                                                        class="block px-2 py-1.5 text-sm text-text-default hover:text-primary hover:bg-white/5 rounded-md transition">
+                                                        class="block px-2 py-1.5 text-sm text-text-default hover:text-white hover:bg-white/5 rounded-md transition">
                                                         {{ $link['label'] }}
                                                     </a>
                                                 </li>
