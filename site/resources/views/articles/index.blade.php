@@ -32,7 +32,7 @@
                             @if($article->categories)
                                 <div class="flex flex-wrap gap-2 mb-2">
                                     @foreach($article->categories as $cat)
-                                        <span class=uppercase text-xs font-medium text-primary bg-primary/10 px-2 py-1 rounded-full">{{ $cat }}</span>
+                                        <span class="uppercase text-xs font-medium text-primary bg-primary/10 px-2 py-1 rounded-full">{{ $cat }}</span>
                                     @endforeach
                                 </div>
                             @endif
