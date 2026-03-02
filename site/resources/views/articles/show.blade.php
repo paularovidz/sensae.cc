@@ -23,7 +23,7 @@
                     @if($article->categories)
                         <ul class="flex justify-center gap-2 mb-4 list-unstyled">
                             @foreach($article->categories as $cat)
-                                <li class="text-secondary inline-block text-sm font-medium tracking-wider">{{ $cat }}</li>
+                                <li class="uppercase text-secondary inline-block text-sm font-medium tracking-wider">{{ $cat }}</li>
                             @endforeach
                         </ul>
                     @endif
