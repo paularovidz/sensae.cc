@@ -60,7 +60,7 @@
     --color-text-default: var(--color-text-default-override, #C8C1C1);
     --color-text-light: var(--color-text-light-override, #fff6f6);
 
-    --font-primary: 'Satoshi', sans-serif;
+    --font-sans: 'Satoshi', sans-serif;
     --font-secondary: 'Amandine', sans-serif;
     --font-weight-medium: 500;
 
