@@ -19,7 +19,7 @@
     <div data-wheel-orbit class="absolute left-1/2 wheel-orbit">
         @foreach ($wheelItems as $index => $item)
             @if ($links)
-                <a href="{{ route('sens.show', $item->slug) }}" data-wheel-bubble class="absolute wheel-bubble group">
+                <div data-lk="{{ base64_encode(route('sens.show', $item->slug)) }}" data-wheel-bubble class="absolute wheel-bubble group cursor-pointer">
                     <div data-wheel-bubble-inner class="wheel-bubble-inner">
                         <div
                             class="wheel-bubble-img rounded-full overflow-hidden group-hover:border-primary transition-colors duration-300">
@@ -30,7 +30,7 @@
                             {{ $item->title }}
                         </span>
                     </div>
-                </a>
+                </div>
             @else
                 <div data-wheel-bubble class="absolute wheel-bubble">
                     <div data-wheel-bubble-inner class="wheel-bubble-inner">
@@ -49,14 +49,14 @@
     <div class="grid grid-cols-2 sm:grid-cols-3 gap-6">
         @foreach ($sens as $item)
             @if ($links)
-                <a href="{{ route('sens.show', $item->slug) }}" class="group text-center">
+                <div data-lk="{{ base64_encode(route('sens.show', $item->slug)) }}" class="group text-center cursor-pointer">
                     <div
                         class="w-20 h-20 mx-auto rounded-full overflow-hidden border-2 border-primary/30 group-hover:border-primary transition-colors">
                         <x-image :slug="$item->image" :alt="$item->title" class="w-full h-full object-cover" />
                     </div>
                     <span
                         class="block mt-2 text-sm text-text-light font-secondary group-hover:text-primary transition-colors">{{ $item->title }}</span>
-                </a>
+                </div>
             @else
                 <div class="text-center">
                     <div class="w-20 h-20 mx-auto rounded-full overflow-hidden border-2 border-primary/30">
